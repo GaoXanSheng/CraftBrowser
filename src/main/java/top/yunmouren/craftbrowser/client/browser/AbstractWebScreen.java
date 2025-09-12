@@ -40,7 +40,7 @@ public abstract class AbstractWebScreen extends Screen {
         }
         if (!receiverConnected) {
             int[] dim = new int[]{this.texWidth, this.texHeight};
-            receiverConnected = JNISpout.createReceiver("WebViewSpoutCapture_"+SPOUT_ID, dim, spoutPtr);
+            receiverConnected = JNISpout.createReceiver("WebViewSpoutCapture_" + SPOUT_ID, dim, spoutPtr);
             if (!receiverConnected) {
                 Craftbrowser.LOGGER.error("Failed to create Spout receiver! Is the sender running?");
                 return;
@@ -50,6 +50,14 @@ public abstract class AbstractWebScreen extends Screen {
             dynTex = new DynamicTexture(this.texWidth, this.texHeight, true);
         }
         browserManager.resizeViewport(texWidth, texHeight);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        for (int keyCode : heldKeys) {
+            browserManager.keyPress(keyCode, 0, false, true);
+        }
     }
 
     @Override
@@ -102,6 +110,7 @@ public abstract class AbstractWebScreen extends Screen {
             spoutPtr = 0;
         }
     }
+
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> pendingResizeTask = null;
     private final int RESIZE_DELAY_MS = 200; // 延迟200毫秒执行
@@ -144,13 +153,17 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mouseMove(pos[0], pos[1]);
+        boolean dragging = !heldMouseButtons.isEmpty();
+        browserManager.mouseMove(pos[0], pos[1], dragging);
     }
+
+    private final Set<Integer> heldMouseButtons = new HashSet<>();
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
         browserManager.mousePress(pos[0], pos[1], button);
+        heldMouseButtons.add(button); // 记录按下
         return true;
     }
 
@@ -158,6 +171,7 @@ public abstract class AbstractWebScreen extends Screen {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
         browserManager.mouseRelease(pos[0], pos[1], button);
+        heldMouseButtons.remove(button); // 移除按下记录
         return true;
     }
 
@@ -171,24 +185,25 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == GLFW_KEY_ESCAPE) {
-            // 关闭当前 GUI
             this.onClose();
-            return true; // 表示事件已处理
+            return true;
         }
-        boolean isRepeat = heldKeys.contains(keyCode);
-        browserManager.keyPress(keyCode, modifiers, false, isRepeat);
-        heldKeys.add(keyCode);
+
+        if (!heldKeys.contains(keyCode)) {
+            browserManager.keyPress(keyCode, modifiers, false, false); // isReleased=false, isRepeat=false
+            heldKeys.add(keyCode);
+        }
         return true;
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         if (keyCode == GLFW_KEY_ESCAPE) {
-            // 关闭当前 GUI
             this.onClose();
-            return true; // 表示事件已处理
+            return true;
         }
-        browserManager.keyPress(keyCode, modifiers, true, false);
+
+        browserManager.keyPress(keyCode, modifiers, true, false); // isReleased=true
         heldKeys.remove(keyCode);
         return true;
     }
@@ -198,10 +213,5 @@ public abstract class AbstractWebScreen extends Screen {
         browserManager.loadUrl("https://example.com/");
         heldKeys.clear();
         Minecraft.getInstance().setScreen(null);
-    }
-
-    @Override
-    public boolean isPauseScreen() {
-        return false;
     }
 }

@@ -15,11 +15,11 @@ import java.util.Optional;
 
 import static top.yunmouren.craftbrowser.server.network.NetworkHandler.CHANNEL;
 
+
 public class Server {
     // -----------------------
     // 网络部分
     // -----------------------
-    private static final String PROTOCOL_VERSION = "1.0";
     private static int packetId = 0;
 
 
@@ -43,7 +43,15 @@ public class Server {
     // 网络注册
     // -----------------------
     private void registerPackets() {
-        NetworkHandler.register();
+        // 把每一个 packet 注册在这里
+        CHANNEL.registerMessage(
+                nextId(),
+                NetworkHandler.SimpleNetwork.class,
+                NetworkHandler.SimpleNetwork::encode,
+                NetworkHandler.SimpleNetwork::decode,
+                NetworkHandler.SimpleNetwork::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+        );
     }
 
     private static int nextId() {

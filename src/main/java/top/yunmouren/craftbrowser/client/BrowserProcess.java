@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 管理 WebViewSpoutCapture 子进程
@@ -59,6 +60,9 @@ public class BrowserProcess {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (process != null && process.isAlive()) {
                     process.destroyForcibly();
+                    try {
+                        process.waitFor(5, TimeUnit.SECONDS); // 等待最多 5 秒
+                    } catch (InterruptedException ignored) {}
                     Craftbrowser.LOGGER.info("WebViewSpoutCapture process stopped on JVM exit");
                 }
             }));

@@ -8,8 +8,17 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class WebScreen extends AbstractWebScreen {
 
     public WebScreen(String url) {
+        // 调用带布尔参数的构造函数，默认 false
+        this(url, false);
+    }
+
+    public WebScreen(String url, boolean loadCustomizeURL) {
         super(new TextComponent("WebScreen"));
-        browserManager.loadUrl(url);
+        if (loadCustomizeURL) {
+            browserManager.loadCustomizeURL(url);
+        } else {
+            browserManager.loadUrl(url);
+        }
     }
     public WebScreen() {
         super(new TextComponent("WebScreen"));

@@ -50,9 +50,6 @@ public class NetworkHandler {
 
     // ------------------ 消息类 ------------------
     public record SimpleNetwork(NetworkMessageType head, String body) {
-        public SimpleNetwork(NetworkMessageType head) {
-            this(head, null);
-        }
 
         public static void encode(SimpleNetwork msg, FriendlyByteBuf buffer) {
             buffer.writeEnum(msg.head);

@@ -68,15 +68,24 @@ public class BrowserManager {
     }
 
     // ---------------- Mouse Events (Unchanged) ----------------
-    public void mouseMove(int x, int y) {
+    public void mouseMove(int x, int y, boolean dragging) {
         if (session != null) {
+            // 如果拖拽，button 填上按下的键；否则 None
+            MouseButtonType buttonType = dragging ? MouseButtonType.Left : MouseButtonType.None;
+
             Map<String, Object> params = Map.of(
-                    "type", MouseEventType.MouseMoved, "x", x, "y", y,
-                    "modifiers", 0, "button", MouseButtonType.None, "clickCount", 0
+                    "type", MouseEventType.MouseMoved, // 仍然是 MouseMoved
+                    "x", x,
+                    "y", y,
+                    "modifiers", 0,
+                    "button", buttonType,
+                    "clickCount", 0
             );
+
             session.send("Input.dispatchMouseEvent", params);
         }
     }
+
 
     public void mousePress(int x, int y, int button) {
         if (session != null) {
