@@ -1,7 +1,7 @@
 # CraftBrowser
 
 ## Features
-- CEF 139.0.280
+- CEF 139.0.280.0
 - Spout2
 ## System Requirements
 - Minecraft 1.18.2
