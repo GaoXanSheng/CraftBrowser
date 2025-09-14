@@ -21,7 +21,7 @@ public class NetworkHandler {
     private static int packetId = 0;
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(MOD_ID, "main"),
+            ResourceLocation.fromNamespaceAndPath(MOD_ID, "main"),
             () -> PROTOCOL_VERSION,               // Supplier<String>
             PROTOCOL_VERSION::equals,      // Predicate<String> 客户端
             PROTOCOL_VERSION::equals       // Predicate<String> 服务端

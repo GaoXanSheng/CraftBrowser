@@ -7,10 +7,13 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import top.yunmouren.craftbrowser.client.browser.MissingNCEFScreen;
 import top.yunmouren.craftbrowser.client.browser.WebScreen;
 
+import static top.yunmouren.craftbrowser.client.BrowserProcess.checkNCEFExists;
+
 @Mixin(Minecraft.class)
-public class CustomLoading {
+public class CheckNCEFExistsLoadingScreen {
     @Unique
     private boolean craftBrowser$hasRedirected = false;
 
@@ -20,9 +23,10 @@ public class CustomLoading {
 
         if (!craftBrowser$hasRedirected && !(guiScreen instanceof WebScreen)) {
             craftBrowser$hasRedirected = true;
-
-            WebScreen webScreen = new WebScreen("http://127.0.0.1:5500/index.html", true);
-            mc.setScreen(webScreen);
+            if (!checkNCEFExists()) {
+                var missingNCEFScreen = new MissingNCEFScreen();
+                mc.setScreen(missingNCEFScreen);
+            }
 
             ci.cancel();
         }

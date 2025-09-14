@@ -15,7 +15,9 @@ import org.lwjgl.opengl.GL11;
 import spout.JNISpout;
 import top.yunmouren.craftbrowser.Craftbrowser;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
@@ -31,7 +33,7 @@ public abstract class AbstractWebScreen extends Screen {
     private int texHeight = mc.getWindow().getScreenHeight();
     private boolean receiverConnected = false;
     public final BrowserManager browserManager = new BrowserManager();
-    private final Set<Integer> heldKeys = new HashSet<>();
+    private final Map<Integer, Long> heldKeys = new HashMap<>();
 
     protected AbstractWebScreen(Component p_96550_) {
         super(p_96550_);
@@ -55,8 +57,8 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        for (int keyCode : heldKeys) {
-            browserManager.keyPress(keyCode, 0, false, true);
+        for (int keyCode : heldKeys.keySet()) {
+            browserManager.keyPress(keyCode, 0, false, true); // isRepeat = true
         }
     }
 
@@ -189,10 +191,15 @@ public abstract class AbstractWebScreen extends Screen {
             return true;
         }
 
-        if (!heldKeys.contains(keyCode)) {
+        long now = System.currentTimeMillis();
+        Long lastTime = heldKeys.get(keyCode);
+
+        // 没有按过，或者超过200ms，才算新的按下
+        if (lastTime == null || now - lastTime >= 500) {
             browserManager.keyPress(keyCode, modifiers, false, false); // isReleased=false, isRepeat=false
-            heldKeys.add(keyCode);
+            heldKeys.put(keyCode, now); // 更新最后触发时间
         }
+
         return true;
     }
 
@@ -204,7 +211,7 @@ public abstract class AbstractWebScreen extends Screen {
         }
 
         browserManager.keyPress(keyCode, modifiers, true, false); // isReleased=true
-        heldKeys.remove(keyCode);
+        heldKeys.remove(keyCode); // 释放时清除记录
         return true;
     }
 

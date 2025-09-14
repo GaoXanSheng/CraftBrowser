@@ -6,6 +6,7 @@ import top.yunmouren.craftbrowser.Craftbrowser;
 
 import java.io.*;
 import java.net.ServerSocket;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -82,7 +83,13 @@ public class BrowserProcess {
             Craftbrowser.LOGGER.error("Error reading process stream: {}", e.getMessage());
         }
     }
+    public static boolean checkNCEFExists() {
+        Path modsDir = Minecraft.getInstance().gameDirectory.toPath().resolve("NCEF");
+        Path exePath = modsDir.resolve("NCEF.exe");
 
+        return Files.exists(modsDir) && Files.isDirectory(modsDir)
+                && Files.exists(exePath) && Files.isRegularFile(exePath);
+    }
     @NotNull
     private ProcessBuilder getProcessBuilder() {
         Path modsDir = Minecraft.getInstance().gameDirectory.toPath().resolve("NCEF");
