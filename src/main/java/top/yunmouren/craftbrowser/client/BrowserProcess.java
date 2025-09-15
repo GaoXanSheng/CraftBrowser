@@ -3,6 +3,7 @@ package top.yunmouren.craftbrowser.client;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import top.yunmouren.craftbrowser.Craftbrowser;
+import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -100,9 +101,20 @@ public class BrowserProcess {
 
         Map<String, String> env = builder.environment();
         env.put("LANG", "en_US.UTF-8");
-        env.put("BROWSER_PORT", String.valueOf(BrowserPort));
-        env.put("SPOUT_ID", SPOUT_ID);
-
+        if (Config.CLIENT.customizeBrowserPortEnabled.get()){
+            env.put("BROWSER_PORT", Config.CLIENT.customizeBrowserPort.get().toString());
+        }else {
+            env.put("BROWSER_PORT", String.valueOf(BrowserPort));
+        }
+        if (Config.CLIENT.customizeSpoutIDEnabled.get()){
+            env.put("SPOUT_ID", Config.CLIENT.customizeSpoutID.get());
+        }else {
+            env.put("SPOUT_ID", SPOUT_ID);
+        }
+        env.put("MAXFPS", Config.CLIENT.browserMaxfps.get().toString());
+        if (Config.CLIENT.customizeLoadingScreenEnabled.get()){
+            env.put("CUSTOMIZE_LOADING_SCREEN_URL", Config.CLIENT.customizeLoadingScreenUrl.get());
+        }
         builder.inheritIO(); // 输出到父进程控制台
         return builder;
     }

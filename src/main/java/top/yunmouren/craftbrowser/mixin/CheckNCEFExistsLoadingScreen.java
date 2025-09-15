@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import top.yunmouren.craftbrowser.client.browser.MissingNCEFScreen;
-import top.yunmouren.craftbrowser.client.browser.WebScreen;
 
 import static top.yunmouren.craftbrowser.client.BrowserProcess.checkNCEFExists;
 
@@ -21,14 +20,13 @@ public class CheckNCEFExistsLoadingScreen {
     public void redirScreen(Screen guiScreen, CallbackInfo ci) {
         Minecraft mc = (Minecraft) (Object) this;
 
-        if (!craftBrowser$hasRedirected && !(guiScreen instanceof WebScreen)) {
+        if (!craftBrowser$hasRedirected && !(guiScreen instanceof MissingNCEFScreen)) {
             craftBrowser$hasRedirected = true;
-            if (!checkNCEFExists()) {
-                var missingNCEFScreen = new MissingNCEFScreen();
-                mc.setScreen(missingNCEFScreen);
-            }
 
-            ci.cancel();
+            if (!checkNCEFExists()) {
+                mc.execute(() -> mc.setScreen(new MissingNCEFScreen()));
+                ci.cancel();
+            }
         }
     }
 }

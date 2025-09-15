@@ -9,12 +9,14 @@ import io.webfolder.cdp.type.constant.MouseEventType;
 import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.BrowserProcess;
+import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class BrowserManager {
+    public static BrowserManager Instance = new BrowserManager();
     private Session session;
 
     // Helper record to store all necessary key event information
@@ -28,7 +30,11 @@ public class BrowserManager {
     }
 
     public BrowserManager() {
-        init("127.0.0.1", BrowserProcess.BrowserPort);
+        if (Config.CLIENT.customizeBrowserPortEnabled.get()){
+            init("127.0.0.1", Config.CLIENT.customizeBrowserPort.get());
+        }else {
+            init("127.0.0.1", BrowserProcess.BrowserPort);
+        }
     }
 
     public BrowserManager(String host, int port) {
@@ -205,7 +211,13 @@ public class BrowserManager {
         }
         session.send("Page.navigate", Map.of("url", url));
     }
-
+    public void customizeLoadingScreenUrl(){
+            if (Config.CLIENT.customizeLoadingScreenEnabled.get()){
+                 this.loadCustomizeURL(Config.CLIENT.customizeLoadingScreenUrl.get());
+            }else {
+                this.loadCustomizeURL("https://example.com");
+            }
+    }
     public void loadCustomizeURL(String url) {
         if (session == null || url == null || url.isEmpty()) return;
         session.send("Page.navigate", Map.of("url", url));
