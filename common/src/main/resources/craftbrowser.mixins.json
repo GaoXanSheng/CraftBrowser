@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "top.yunmouren.craftbrowser.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "minVersion": "0.8",
+  "client": [
+    "CheckNCEFExistsLoadingScreen"
+  ],
+  "mixins": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
