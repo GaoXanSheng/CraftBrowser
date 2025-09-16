@@ -20,16 +20,17 @@ public class CheckNCEFExistsLoadingScreen {
     @Inject(at = @At("HEAD"), method = "setScreen", cancellable = true)
     public void redirScreen(Screen guiScreen, CallbackInfo ci) {
         Minecraft mc = (Minecraft) (Object) this;
-
-        if (!craftBrowser$hasRedirected && !(guiScreen instanceof MissingNCEFScreen)) {
+        if (!craftBrowser$hasRedirected) {
             craftBrowser$hasRedirected = true;
-
-            if (!craftbrowser$checkNCEFExists()) {
-                mc.execute(() -> mc.setScreen(new MissingNCEFScreen()));
-                ci.cancel();
+            if (!(guiScreen instanceof MissingNCEFScreen)) {
+                if (!craftbrowser$checkNCEFExists()) {
+                    mc.execute(() -> mc.setScreen(new MissingNCEFScreen()));
+                    ci.cancel();
+                }
             }
         }
     }
+
     @Unique
     private static boolean craftbrowser$checkNCEFExists() {
         Path modsDir = Minecraft.getInstance().gameDirectory.toPath().resolve("NCEF");

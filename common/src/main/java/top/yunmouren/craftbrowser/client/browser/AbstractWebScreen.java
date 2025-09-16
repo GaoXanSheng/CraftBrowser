@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.*;
 
 public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
@@ -34,8 +34,16 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        for (int keyCode : heldKeys.keySet()) {
-            browserManager.keyPress(keyCode, 0, false, true); // isRepeat = true
+        long now = System.currentTimeMillis();
+        for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
+            int keyCode = entry.getKey();
+            long lastTime = entry.getValue();
+
+            // 设定重复延迟，比如 200ms
+            if (now - lastTime >= 200) {
+                browserManager.keyPress(keyCode, 0, false, true); // repeat
+                entry.setValue(now);
+            }
         }
     }
     @Override
@@ -141,32 +149,26 @@ public abstract class AbstractWebScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW_KEY_ESCAPE) {
+        if (keyCode == GLFW_KEY_ESCAPE && (modifiers & GLFW_MOD_SHIFT) != 0) {
             this.onClose();
             return true;
         }
 
-        long now = System.currentTimeMillis();
-        Long lastTime = heldKeys.get(keyCode);
-
-        // 没有按过，或者超过200ms，才算新的按下
-        if (lastTime == null || now - lastTime >= 500) {
-            browserManager.keyPress(keyCode, modifiers, false, false); // isReleased=false, isRepeat=false
-            heldKeys.put(keyCode, now); // 更新最后触发时间
-        }
+        browserManager.keyPress(keyCode, modifiers, false, false);
+        heldKeys.put(keyCode, System.currentTimeMillis());
 
         return true;
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW_KEY_ESCAPE) {
+        if (keyCode == GLFW_KEY_ESCAPE && (modifiers & GLFW_MOD_SHIFT) != 0) {
             this.onClose();
             return true;
         }
 
-        browserManager.keyPress(keyCode, modifiers, true, false); // isReleased=true
-        heldKeys.remove(keyCode); // 释放时清除记录
+        browserManager.keyPress(keyCode, modifiers, true, false);
+        heldKeys.remove(keyCode);
         return true;
     }
 

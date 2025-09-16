@@ -17,8 +17,8 @@ public class BrowserRender extends JNISpout {
     public BrowserRender(){
         super();
         this.spoutPtr = this.init();
-        if (Config.CLIENT.customizeSpoutIDEnabled){
-            receiverConnected = this.createReceiver(Config.CLIENT.customizeSpoutID, dim, spoutPtr);
+        if (Config.CLIENT.customizeSpoutIDEnabled.get()){
+            receiverConnected = this.createReceiver(Config.CLIENT.customizeSpoutID.get(), dim, spoutPtr);
         }else {
             receiverConnected = this.createReceiver("WebViewSpoutCapture_" + BrowserProcess.SPOUT_ID, dim, spoutPtr);
         }

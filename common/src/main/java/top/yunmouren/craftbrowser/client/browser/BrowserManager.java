@@ -30,8 +30,8 @@ public class BrowserManager {
     }
 
     public BrowserManager() {
-        if (Config.CLIENT.customizeBrowserPortEnabled){
-            init("127.0.0.1", Config.CLIENT.customizeBrowserPort);
+        if (Config.CLIENT.customizeBrowserPortEnabled.get()){
+            init("127.0.0.1", Config.CLIENT.customizeBrowserPort.get());
         }else {
             init("127.0.0.1", BrowserProcess.BrowserPort);
         }
@@ -212,8 +212,8 @@ public class BrowserManager {
         session.send("Page.navigate", Map.of("url", url));
     }
     public void customizeLoadingScreenUrl(){
-            if (Config.CLIENT.customizeLoadingScreenEnabled){
-                 this.loadCustomizeURL(Config.CLIENT.customizeLoadingScreenUrl);
+            if (Config.CLIENT.customizeLoadingScreenEnabled.get()){
+                 this.loadCustomizeURL(Config.CLIENT.customizeLoadingScreenUrl.get());
             }else {
                 this.loadCustomizeURL("https://example.com");
             }
