@@ -7,7 +7,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import top.yunmouren.craftbrowser.client.config.Config;
 import top.yunmouren.craftbrowser.client.gui.MissingNCEFScreen;
+import top.yunmouren.craftbrowser.client.gui.WebScreen;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +27,12 @@ public class CheckNCEFExistsLoadingScreen {
             if (!(guiScreen instanceof MissingNCEFScreen)) {
                 if (!craftbrowser$checkNCEFExists()) {
                     mc.execute(() -> mc.setScreen(new MissingNCEFScreen()));
+                    ci.cancel();
+                }
+            }
+            if (!(guiScreen instanceof WebScreen)) {
+                if (Config.CLIENT.openCustomWebOnStart.get()) {
+                    mc.execute(() -> mc.setScreen(new WebScreen(Config.CLIENT.customURL.get(), Config.CLIENT.useCustomURL.get())));
                     ci.cancel();
                 }
             }

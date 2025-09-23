@@ -16,11 +16,14 @@ public class Config {
         // 所有配置值
         public final ConfigSpec.ConfigValue<Boolean> customizeLoadingScreenEnabled;
         public final ConfigSpec.ConfigValue<String> customizeLoadingScreenUrl;
-
+        public final ConfigSpec.ConfigValue<Boolean> openCustomWebOnStart;
+        public final ConfigSpec.ConfigValue<Boolean> useCustomURL;
+        public final ConfigSpec.ConfigValue<String> customURL;
         public final ConfigSpec.ConfigValue<Integer> browserMaxfps;
         public final ConfigSpec.ConfigValue<Boolean> customizeBrowserPortEnabled;
         public final ConfigSpec.ConfigValue<Integer> customizeBrowserPort;
-
+        public final ConfigSpec.ConfigValue<Integer> keyPressDelay;
+        public final ConfigSpec.ConfigValue<Integer> scrollWheelPixels;
         public final ConfigSpec.ConfigValue<Boolean> customizeSpoutIDEnabled;
         public final ConfigSpec.ConfigValue<String> customizeSpoutID;
 
@@ -34,14 +37,29 @@ public class Config {
             customizeLoadingScreenUrl = builder
                     .comment("Customize the web address for loading the screen")
                     .define("CustomizeLoadingScreenUrl", "");
+            openCustomWebOnStart = builder
+                    .comment("Open custom web page on game start")
+                    .define("OpenCustomWebOnStart", false);
+            useCustomURL = builder
+                    .comment("Whether to use custom URL")
+                    .define("UseCustomURL", false);
+            customURL = builder
+                    .comment("Custom URL to open")
+                    .define("CustomURL", "https://example.com");
             builder.pop();
 
             builder.push("BrowserConfig");
-            browserMaxfps = builder.comment("Maximum frame rate of browser").defineInRange("MaxFps", 120, 30, 240);
+            browserMaxfps = builder.comment("Maximum frame rate of browser [15-240]").defineInRange("MaxFps", 120, 15, 240);
             customizeBrowserPortEnabled = builder
-                    .comment("Do you use customize spout ID instead of random")
+                    .comment("Do you use customize spout ID instead of random [0-65535]")
                     .define("CustomizeBrowserPortEnabled", false);
             customizeBrowserPort = builder.comment("customizeBrowserPort").defineInRange("customizeBrowserPort", 9222, 0, 65535);
+            keyPressDelay = builder
+                    .comment("Delay for key press in milliseconds [0-1000]")
+                    .defineInRange("KeyPressDelay", 200, 0, 1000);
+            scrollWheelPixels = builder
+                    .comment("Scroll wheel movement in pixels per tick [1-1000]")
+                    .defineInRange("ScrollWheelPixels", 150, 1, 1000);
             builder.pop();
 
             builder.push("SpoutConfig");

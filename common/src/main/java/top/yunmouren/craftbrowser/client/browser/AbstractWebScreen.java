@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,7 +47,7 @@ public abstract class AbstractWebScreen extends Screen {
             int keyCode = entry.getKey();
             long lastTime = entry.getValue();
 
-            if (now - lastTime >= 200) {
+            if (now - lastTime >= Config.CLIENT.keyPressDelay.get()) {
                 browserManager.keyPress(keyCode, 0, false, true); // repeat
                 entry.setValue(now);
             }
@@ -86,16 +87,15 @@ public abstract class AbstractWebScreen extends Screen {
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> pendingResizeTask = null;
-    private final int RESIZE_DELAY_MS = 200; // 延迟200毫秒执行
 
     @Override
     public void resize(Minecraft minecraft, int width, int height) {
         super.resize(minecraft, width, height);
-        // 取消上一次延迟任务（如果仍未执行）
+
         if (pendingResizeTask != null && !pendingResizeTask.isDone()) {
             pendingResizeTask.cancel(false);
         }
-        // 提交新的延迟任务
+        int RESIZE_DELAY_MS = 200;
         pendingResizeTask = scheduler.schedule(() -> {
             this.texWidth = mc.getWindow().getScreenWidth();
             this.texHeight = mc.getWindow().getScreenHeight();
@@ -151,7 +151,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mouseWheel(pos[0], pos[1], (int) (-delta * 200));
+        browserManager.mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
         return true;
     }
 
