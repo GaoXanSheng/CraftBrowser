@@ -22,18 +22,18 @@
  */
 package io.webfolder.cdp.session;
 
+import io.webfolder.cdp.command.DOM;
+import io.webfolder.cdp.command.Input;
+import io.webfolder.cdp.exception.ElementNotFoundException;
+import io.webfolder.cdp.type.dom.BoxModel;
+
+import java.util.List;
+
 import static io.webfolder.cdp.type.constant.MouseButtonType.Left;
 import static io.webfolder.cdp.type.constant.MouseEventType.MousePressed;
 import static io.webfolder.cdp.type.constant.MouseEventType.MouseReleased;
 import static java.lang.Math.floor;
 import static java.lang.String.format;
-
-import java.util.List;
-
-import io.webfolder.cdp.command.DOM;
-import io.webfolder.cdp.command.Input;
-import io.webfolder.cdp.exception.ElementNotFoundException;
-import io.webfolder.cdp.type.dom.BoxModel;
 
 /**
  * Interface representing basic mouse operations.

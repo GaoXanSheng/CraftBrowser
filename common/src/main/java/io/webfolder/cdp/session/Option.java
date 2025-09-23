@@ -22,9 +22,9 @@
  */
 package io.webfolder.cdp.session;
 
-import java.util.List;
-
 import com.google.gson.reflect.TypeToken;
+
+import java.util.List;
 
 /**
  * The HTML &lt;option&gt; element is used to define an item contained in a &lt;select&gt;,

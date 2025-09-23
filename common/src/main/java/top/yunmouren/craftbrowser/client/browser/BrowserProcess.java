@@ -5,7 +5,10 @@ import org.jetbrains.annotations.NotNull;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.config.Config;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

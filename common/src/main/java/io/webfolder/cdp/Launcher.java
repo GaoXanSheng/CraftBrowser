@@ -22,13 +22,10 @@
  */
 package io.webfolder.cdp;
 
-import static java.util.Arrays.asList;
+import io.webfolder.cdp.session.SessionFactory;
 
 import java.io.InputStream;
-import java.util.List;
 import java.util.Scanner;
-
-import io.webfolder.cdp.session.SessionFactory;
 
 public class Launcher {
 

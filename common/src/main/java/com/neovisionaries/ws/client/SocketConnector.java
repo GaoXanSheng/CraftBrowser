@@ -16,15 +16,14 @@
 package com.neovisionaries.ws.client;
 
 
-import java.io.IOException;
-import java.net.*;
-import java.util.Arrays;
-import java.util.Comparator;
-
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.IOException;
+import java.net.*;
+import java.util.Arrays;
+import java.util.Comparator;
 
 
 /**

@@ -6,7 +6,6 @@ import top.yunmouren.craftbrowser.client.browser.util.CdpUtil;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper.KeyEventInfo;
 
-
 import java.util.HashMap;
 import java.util.Map;
 

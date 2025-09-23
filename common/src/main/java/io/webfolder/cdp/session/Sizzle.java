@@ -22,13 +22,13 @@
  */
 package io.webfolder.cdp.session;
 
-import static java.lang.Boolean.TRUE;
-
-import java.util.Scanner;
-
 import io.webfolder.cdp.command.DOM;
 import io.webfolder.cdp.type.dom.Node;
 import io.webfolder.cdp.type.runtime.RemoteObject;
+
+import java.util.Scanner;
+
+import static java.lang.Boolean.TRUE;
 
 public interface Sizzle {
 

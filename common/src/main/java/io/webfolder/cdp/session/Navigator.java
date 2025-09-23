@@ -22,18 +22,18 @@
  */
 package io.webfolder.cdp.session;
 
-import static java.lang.Boolean.TRUE;
-import static java.lang.String.valueOf;
-import static java.util.Collections.emptyMap;
+import io.webfolder.cdp.command.DOM;
+import io.webfolder.cdp.command.Network;
+import io.webfolder.cdp.exception.CdpException;
+import io.webfolder.cdp.type.runtime.RemoteObject;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.webfolder.cdp.command.DOM;
-import io.webfolder.cdp.command.Network;
-import io.webfolder.cdp.exception.CdpException;
-import io.webfolder.cdp.type.runtime.RemoteObject;
+import static java.lang.Boolean.TRUE;
+import static java.lang.String.valueOf;
+import static java.util.Collections.emptyMap;
 
 public interface Navigator {
 

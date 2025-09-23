@@ -22,36 +22,8 @@
  */
 package io.webfolder.cdp.session;
 
-import static io.webfolder.cdp.event.Events.LogEntryAdded;
-import static io.webfolder.cdp.event.Events.NetworkResponseReceived;
-import static io.webfolder.cdp.event.Events.PageLoadEventFired;
-import static io.webfolder.cdp.event.Events.RuntimeConsoleAPICalled;
-import static io.webfolder.cdp.type.constant.ImageFormat.Png;
-import static io.webfolder.cdp.type.page.ResourceType.Document;
-import static io.webfolder.cdp.type.page.ResourceType.XHR;
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-import static java.lang.Math.floor;
-import static java.lang.String.format;
-import static java.lang.String.valueOf;
-import static java.lang.ThreadLocal.withInitial;
-import static java.lang.reflect.Proxy.newProxyInstance;
-import static java.util.Locale.ENGLISH;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Predicate;
-
 import com.google.gson.Gson;
 import com.neovisionaries.ws.client.WebSocket;
-
 import io.webfolder.cdp.command.CSS;
 import io.webfolder.cdp.command.DOM;
 import io.webfolder.cdp.command.Emulation;
@@ -72,6 +44,30 @@ import io.webfolder.cdp.type.log.LogEntry;
 import io.webfolder.cdp.type.network.Response;
 import io.webfolder.cdp.type.page.GetLayoutMetricsResult;
 import io.webfolder.cdp.type.runtime.RemoteObject;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
+
+import static io.webfolder.cdp.event.Events.*;
+import static io.webfolder.cdp.type.constant.ImageFormat.Png;
+import static io.webfolder.cdp.type.page.ResourceType.Document;
+import static io.webfolder.cdp.type.page.ResourceType.XHR;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.lang.Math.floor;
+import static java.lang.String.format;
+import static java.lang.String.valueOf;
+import static java.lang.ThreadLocal.withInitial;
+import static java.lang.reflect.Proxy.newProxyInstance;
+import static java.util.Locale.ENGLISH;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class Session implements AutoCloseable,
                                 Selector     ,

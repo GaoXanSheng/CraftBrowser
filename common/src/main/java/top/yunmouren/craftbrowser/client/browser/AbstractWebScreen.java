@@ -1,7 +1,10 @@
 package top.yunmouren.craftbrowser.client.browser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -14,9 +17,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT;
 
 public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
@@ -39,7 +46,6 @@ public abstract class AbstractWebScreen extends Screen {
             int keyCode = entry.getKey();
             long lastTime = entry.getValue();
 
-            // 设定重复延迟，比如 200ms
             if (now - lastTime >= 200) {
                 browserManager.keyPress(keyCode, 0, false, true); // repeat
                 entry.setValue(now);
@@ -144,7 +150,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mouseWheel(pos[0], pos[1], (int) (-delta * 100));
+        browserManager.mouseWheel(pos[0], pos[1], (int) (-delta * 200));
         return true;
     }
 

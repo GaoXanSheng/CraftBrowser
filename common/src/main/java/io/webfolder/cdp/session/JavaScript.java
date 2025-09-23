@@ -22,19 +22,8 @@
  */
 package io.webfolder.cdp.session;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-import static java.lang.String.format;
-import static java.lang.String.valueOf;
-import static java.util.Arrays.asList;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import io.webfolder.cdp.command.Runtime;
 import io.webfolder.cdp.exception.CdpException;
 import io.webfolder.cdp.type.constant.ObjectType;
@@ -42,6 +31,16 @@ import io.webfolder.cdp.type.runtime.CallArgument;
 import io.webfolder.cdp.type.runtime.CallFunctionOnResult;
 import io.webfolder.cdp.type.runtime.EvaluateResult;
 import io.webfolder.cdp.type.runtime.RemoteObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringJoiner;
+
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
+import static java.lang.String.valueOf;
+import static java.util.Arrays.asList;
 
 public interface JavaScript {
 

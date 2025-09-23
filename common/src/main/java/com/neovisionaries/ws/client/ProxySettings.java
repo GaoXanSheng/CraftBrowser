@@ -16,6 +16,9 @@
 package com.neovisionaries.ws.client;
 
 
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -23,9 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 
 
 /**

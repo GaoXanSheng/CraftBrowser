@@ -22,9 +22,15 @@
  */
 package io.webfolder.cdp.session;
 
-import static java.lang.String.format;
-import static java.util.Base64.getDecoder;
-import static java.util.Collections.emptyMap;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.neovisionaries.ws.client.WebSocket;
+import io.webfolder.cdp.annotation.Domain;
+import io.webfolder.cdp.annotation.Returns;
+import io.webfolder.cdp.exception.CdpException;
+import io.webfolder.cdp.logger.CdpLogger;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -35,16 +41,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.neovisionaries.ws.client.WebSocket;
-
-import io.webfolder.cdp.annotation.Domain;
-import io.webfolder.cdp.annotation.Returns;
-import io.webfolder.cdp.exception.CdpException;
-import io.webfolder.cdp.logger.CdpLogger;
+import static java.lang.String.format;
+import static java.util.Base64.getDecoder;
+import static java.util.Collections.emptyMap;
 
 class SessionInvocationHandler implements InvocationHandler {
 

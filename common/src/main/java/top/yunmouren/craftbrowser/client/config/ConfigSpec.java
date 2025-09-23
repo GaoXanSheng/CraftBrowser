@@ -1,12 +1,12 @@
 package top.yunmouren.craftbrowser.client.config;
 
+import net.minecraft.client.Minecraft;
+import top.yunmouren.craftbrowser.Craftbrowser;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-
-import net.minecraft.client.Minecraft;
-import top.yunmouren.craftbrowser.Craftbrowser;
 
 public class ConfigSpec {
     private final Map<String, ConfigValue<?>> values = new LinkedHashMap<>();
