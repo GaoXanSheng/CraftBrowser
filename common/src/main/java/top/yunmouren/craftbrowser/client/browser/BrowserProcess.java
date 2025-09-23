@@ -21,7 +21,7 @@ public class BrowserProcess {
 
     /** 动态随机端口，用于 CEF remote debugging */
     public static final int BrowserPort = generateRandomPort();
-    public static final String SPOUT_ID = generateRandomString(5);
+    public static final String SPOUT_ID = generateRandomString(10);
 
     public BrowserProcess() {
         startBrowserProcess();

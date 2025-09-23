@@ -45,6 +45,7 @@ public abstract class AbstractWebScreen extends Screen {
                 entry.setValue(now);
             }
         }
+
     }
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
