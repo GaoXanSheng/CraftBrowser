@@ -1,8 +1,9 @@
-package top.yunmouren.craftbrowser.client.browser;
+package top.yunmouren.craftbrowser.client.gui;
 
 import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import top.yunmouren.craftbrowser.client.browser.AbstractWebScreen;
 
 @OnlyIn(Dist.CLIENT)
 public class WebScreen extends AbstractWebScreen {

@@ -7,8 +7,6 @@ import spout.JNISpout;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.config.Config;
 
-import static top.yunmouren.craftbrowser.client.BrowserProcess.SPOUT_ID;
-
 
 public class BrowserRender extends JNISpout {
     private long spoutPtr = 0;
@@ -19,11 +17,7 @@ public class BrowserRender extends JNISpout {
     public BrowserRender(){
         super();
         this.spoutPtr = this.init();
-        if (Config.CLIENT.customizeSpoutIDEnabled.get()){
-            receiverConnected = this.createReceiver(Config.CLIENT.customizeSpoutID.get(), dim, spoutPtr);
-        }else {
-            receiverConnected = this.createReceiver("WebViewSpoutCapture_" + SPOUT_ID, dim, spoutPtr);
-        }
+        receiverConnected = this.createReceiver(Config.CLIENT.customizeSpoutID.get(), dim, spoutPtr);
         if (!receiverConnected) {
             Craftbrowser.LOGGER.error("Failed to create Spout receiver! Is the sender running?");
         }

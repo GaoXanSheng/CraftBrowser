@@ -1,4 +1,4 @@
-package top.yunmouren.craftbrowser.client.browser;
+package top.yunmouren.craftbrowser.client.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.Util;

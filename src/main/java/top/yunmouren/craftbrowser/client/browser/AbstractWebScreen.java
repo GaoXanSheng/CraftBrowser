@@ -7,8 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -17,9 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.*;
 
-@OnlyIn(Dist.CLIENT)
 public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
     private int texWidth = mc.getWindow().getScreenWidth();
@@ -36,13 +33,21 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        for (int keyCode : heldKeys.keySet()) {
-            browserManager.keyPress(keyCode, 0, false, true); // isRepeat = true
-        }
-    }
+        long now = System.currentTimeMillis();
+        for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
+            int keyCode = entry.getKey();
+            long lastTime = entry.getValue();
 
+            // 设定重复延迟，比如 200ms
+            if (now - lastTime >= 200) {
+                browserManager.keyPress(keyCode, 0, false, true); // repeat
+                entry.setValue(now);
+            }
+        }
+
+    }
     @Override
-    public void render(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull PoseStack guiGraphics, int mouseX, int mouseY, float partialTicks) {
         var render = browserRender.render(texWidth, texHeight);
         if (render == 0) {
             return;
@@ -56,7 +61,7 @@ public abstract class AbstractWebScreen extends Screen {
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder buffer = tessellator.getBuilder();
 
-        Matrix4f matrix = poseStack.last().pose();
+        Matrix4f matrix = guiGraphics.last().pose();
         int guiWidth = mc.getWindow().getGuiScaledWidth();
         int guiHeight = mc.getWindow().getGuiScaledHeight();
         buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
@@ -67,7 +72,7 @@ public abstract class AbstractWebScreen extends Screen {
         tessellator.end();
 
         RenderSystem.enableDepthTest();
-        super.render(poseStack, mouseX, mouseY, partialTicks);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
 
@@ -144,32 +149,26 @@ public abstract class AbstractWebScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW_KEY_ESCAPE) {
+        if (keyCode == GLFW_KEY_ESCAPE && (modifiers & GLFW_MOD_SHIFT) != 0) {
             this.onClose();
             return true;
         }
 
-        long now = System.currentTimeMillis();
-        Long lastTime = heldKeys.get(keyCode);
-
-        // 没有按过，或者超过200ms，才算新的按下
-        if (lastTime == null || now - lastTime >= 500) {
-            browserManager.keyPress(keyCode, modifiers, false, false); // isReleased=false, isRepeat=false
-            heldKeys.put(keyCode, now); // 更新最后触发时间
-        }
+        browserManager.keyPress(keyCode, modifiers, false, false);
+        heldKeys.put(keyCode, System.currentTimeMillis());
 
         return true;
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW_KEY_ESCAPE) {
+        if (keyCode == GLFW_KEY_ESCAPE && (modifiers & GLFW_MOD_SHIFT) != 0) {
             this.onClose();
             return true;
         }
 
-        browserManager.keyPress(keyCode, modifiers, true, false); // isReleased=true
-        heldKeys.remove(keyCode); // 释放时清除记录
+        browserManager.keyPress(keyCode, modifiers, true, false);
+        heldKeys.remove(keyCode);
         return true;
     }
 

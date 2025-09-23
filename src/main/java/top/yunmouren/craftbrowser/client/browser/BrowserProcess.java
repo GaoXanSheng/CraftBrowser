@@ -1,4 +1,4 @@
-package top.yunmouren.craftbrowser.client;
+package top.yunmouren.craftbrowser.client.browser;
 
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
@@ -6,11 +6,8 @@ import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.io.*;
-import java.net.ServerSocket;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -19,10 +16,6 @@ import java.util.concurrent.TimeUnit;
 public class BrowserProcess {
 
     private Process process;
-
-    /** 动态随机端口，用于 CEF remote debugging */
-    public static final int BrowserPort = generateRandomPort();
-    public static final String SPOUT_ID = generateRandomString(5);
 
     public BrowserProcess() {
         startBrowserProcess();
@@ -56,7 +49,7 @@ public class BrowserProcess {
             outputThread.setDaemon(true);
             outputThread.start();
 
-            Craftbrowser.LOGGER.info("WebViewSpoutCapture started on port {}", BrowserPort);
+            Craftbrowser.LOGGER.info("WebViewSpoutCapture started on port {}", Config.CLIENT.customizeBrowserPort.get());
 
             // JVM 退出时强制销毁
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -84,13 +77,7 @@ public class BrowserProcess {
             Craftbrowser.LOGGER.error("Error reading process stream: {}", e.getMessage());
         }
     }
-    public static boolean checkNCEFExists() {
-        Path modsDir = Minecraft.getInstance().gameDirectory.toPath().resolve("NCEF");
-        Path exePath = modsDir.resolve("NCEF.exe");
 
-        return Files.exists(modsDir) && Files.isDirectory(modsDir)
-                && Files.exists(exePath) && Files.isRegularFile(exePath);
-    }
     @NotNull
     private ProcessBuilder getProcessBuilder() {
         Path modsDir = Minecraft.getInstance().gameDirectory.toPath().resolve("NCEF");
@@ -101,41 +88,13 @@ public class BrowserProcess {
 
         Map<String, String> env = builder.environment();
         env.put("LANG", "en_US.UTF-8");
-        if (Config.CLIENT.customizeBrowserPortEnabled.get()){
-            env.put("BROWSER_PORT", Config.CLIENT.customizeBrowserPort.get().toString());
-        }else {
-            env.put("BROWSER_PORT", String.valueOf(BrowserPort));
-        }
-        if (Config.CLIENT.customizeSpoutIDEnabled.get()){
-            env.put("SPOUT_ID", Config.CLIENT.customizeSpoutID.get());
-        }else {
-            env.put("SPOUT_ID", SPOUT_ID);
-        }
-        env.put("MAXFPS", Config.CLIENT.browserMaxfps.get().toString());
-        if (Config.CLIENT.customizeLoadingScreenEnabled.get()){
-            env.put("CUSTOMIZE_LOADING_SCREEN_URL", Config.CLIENT.customizeLoadingScreenUrl.get());
-        }
+        env.put("BROWSER_PORT", String.valueOf(Config.CLIENT.customizeBrowserPort.get()));
+        env.put("SPOUT_ID", Config.CLIENT.customizeSpoutID.get());
+        env.put("MAXFPS",Config.CLIENT.browserMaxfps.get().toString());
+        env.put("CUSTOMIZE_LOADING_SCREEN_URL", Config.CLIENT.customizeLoadingScreenUrl.get());
         builder.inheritIO(); // 输出到父进程控制台
         return builder;
     }
 
-    private static String generateRandomString(int length) {
-        final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return sb.toString();
-    }
 
-    private static int generateRandomPort() {
-        for (int i = 0; i < 10; i++) { // 最多重试 10 次
-            try (ServerSocket socket = new ServerSocket(0)) {
-                return socket.getLocalPort();
-            } catch (IOException ignored) { }
-        }
-        Craftbrowser.LOGGER.error("Failed to get random port after multiple attempts, using fallback port 9222");
-        return 9222; // 失败时使用默认端口
-    }
 }

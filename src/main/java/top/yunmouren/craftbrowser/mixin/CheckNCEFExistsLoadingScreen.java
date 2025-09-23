@@ -7,9 +7,11 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.yunmouren.craftbrowser.client.browser.MissingNCEFScreen;
+import top.yunmouren.craftbrowser.client.gui.MissingNCEFScreen;
 
-import static top.yunmouren.craftbrowser.client.BrowserProcess.checkNCEFExists;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 
 @Mixin(Minecraft.class)
 public class CheckNCEFExistsLoadingScreen {
@@ -23,10 +25,18 @@ public class CheckNCEFExistsLoadingScreen {
         if (!craftBrowser$hasRedirected && !(guiScreen instanceof MissingNCEFScreen)) {
             craftBrowser$hasRedirected = true;
 
-            if (!checkNCEFExists()) {
+            if (!craftbrowser$checkNCEFExists()) {
                 mc.execute(() -> mc.setScreen(new MissingNCEFScreen()));
                 ci.cancel();
             }
         }
+    }
+    @Unique
+    private static boolean craftbrowser$checkNCEFExists() {
+        Path modsDir = Minecraft.getInstance().gameDirectory.toPath().resolve("NCEF");
+        Path exePath = modsDir.resolve("NCEF.exe");
+
+        return Files.exists(modsDir) && Files.isDirectory(modsDir)
+                && Files.exists(exePath) && Files.isRegularFile(exePath);
     }
 }
