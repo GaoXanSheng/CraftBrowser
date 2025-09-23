@@ -42,18 +42,17 @@ public class BrowserManager {
     }
 
     private void init(String host, int port) {
-        try {
-            Launcher launcher = new Launcher(new SessionFactory(host, port));
-            List<SessionInfo> pages = launcher.factory.list();
+        try (SessionFactory factory = new SessionFactory(host, port)) {
+            List<SessionInfo> pages = factory.list();
             if (!pages.isEmpty()) {
-                SessionInfo info = pages.get(0);
-                session = launcher.factory.connect(info.getId());
-                Craftbrowser.LOGGER.error("Connected to browser page: {}", info.getUrl());
+                SessionInfo info = pages.get(0); // 这里可以根据 URL/title 筛选
+                session = factory.connect(info.getId());
+                Craftbrowser.LOGGER.info("Connected to browser page: {}", info.getUrl());
             } else {
-                Craftbrowser.LOGGER.error("No pages found on debug port {}", port);
+                Craftbrowser.LOGGER.warn("No pages found on debug port {}", port);
             }
         } catch (Exception e) {
-            Craftbrowser.LOGGER.error(e.getMessage());
+            Craftbrowser.LOGGER.error("Error connecting to Chrome DevTools: ", e);
         }
     }
 

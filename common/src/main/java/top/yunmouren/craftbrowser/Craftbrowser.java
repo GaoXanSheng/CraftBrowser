@@ -13,7 +13,6 @@ public final class Craftbrowser {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public static void init() {
-        Config.CLIENT.load();
         if (Platform.getEnvironment() == Env.CLIENT) {
             Config.CLIENT.load();
             new BrowserProcess();
