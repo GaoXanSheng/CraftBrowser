@@ -30,7 +30,7 @@ public class MissingNCEFScreen extends Screen {
         this.addRenderableWidget(new Button(
                 x, y, buttonWidth, buttonHeight,
                 label,
-                button -> Util.getPlatform().openUri("https://github.com/GaoXanSheng/NCEF/releases")
+                button -> Util.getPlatform().openUri("https://github.com/GaoXanSheng/CraftBrowser/releases")
         ));
 
     }
