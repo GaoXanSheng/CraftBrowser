@@ -1,7 +1,7 @@
 package top.yunmouren.craftbrowser.client.browser;
 
 import io.webfolder.cdp.session.Session;
-import top.yunmouren.craftbrowser.config.Config;
+import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.Map;
 
@@ -22,11 +22,7 @@ public class BrowserPageHandler {
     }
 
     public void customizeLoadingScreenUrl() {
-        if (Config.CLIENT.customizeLoadingScreenEnabled.get()) {
-            this.loadCustomizeURL(Config.CLIENT.customizeLoadingScreenUrl.get());
-        } else {
-            this.loadCustomizeURL("https://example.com");
-        }
+        this.loadCustomizeURL(Config.CLIENT.customizeLoadingScreenUrl.get());
     }
 
     public void loadCustomizeURL(String url) {

@@ -3,7 +3,7 @@ package top.yunmouren.craftbrowser.client.browser;
 import io.webfolder.cdp.session.Session;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
-import top.yunmouren.craftbrowser.config.Config;
+import top.yunmouren.craftbrowser.client.config.Config;
 
 public class BrowserManager {
     public static BrowserManager Instance = new BrowserManager();
@@ -15,9 +15,7 @@ public class BrowserManager {
 
     public BrowserManager() {
         String host = "127.0.0.1";
-        int port = Config.CLIENT.customizeBrowserPortEnabled.get()
-                ? Config.CLIENT.customizeBrowserPort.get()
-                : BrowserProcess.getBrowserPort();
+        int port =  Config.CLIENT.customizeBrowserPort.get();
 
         this.lifecycleManager = new BrowserLifecycleManager(host, port);
         Session session = this.lifecycleManager.getSession();

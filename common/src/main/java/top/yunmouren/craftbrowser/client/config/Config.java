@@ -1,4 +1,10 @@
-package top.yunmouren.craftbrowser.config;
+package top.yunmouren.craftbrowser.client.config;
+
+import top.yunmouren.craftbrowser.Craftbrowser;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Config {
     public static final Client CLIENT = new Client();
@@ -52,11 +58,38 @@ public class Config {
         public void load() {
             try {
                 spec.load();
+                if (!Config.CLIENT.customizeBrowserPortEnabled.get()) {
+                    Config.CLIENT.customizeBrowserPort.set(generateRandomPort());
+                }
+                if (!Config.CLIENT.customizeSpoutIDEnabled.get()){
+                    Config.CLIENT.customizeSpoutID.set("WebViewSpoutCapture_" + generateRandomString(10));
+                }
+                if (!Config.CLIENT.customizeLoadingScreenEnabled.get()){
+                    Config.CLIENT.customizeLoadingScreenUrl.set("https://example.com/");
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        private static String generateRandomString(int length) {
+            final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            ThreadLocalRandom random = ThreadLocalRandom.current();
+            StringBuilder sb = new StringBuilder(length);
+            for (int i = 0; i < length; i++) {
+                sb.append(chars.charAt(random.nextInt(chars.length())));
+            }
+            return sb.toString();
+        }
 
+        private static int generateRandomPort() {
+            for (int i = 0; i < 10; i++) { // 最多重试 10 次
+                try (ServerSocket socket = new ServerSocket(0)) {
+                    return socket.getLocalPort();
+                } catch (IOException ignored) { }
+            }
+            Craftbrowser.LOGGER.error("Failed to get random port after multiple attempts, using fallback port 9222");
+            return 9222; // 失败时使用默认端口
+        }
         /** 保存配置 */
         public void save() {
             try {
