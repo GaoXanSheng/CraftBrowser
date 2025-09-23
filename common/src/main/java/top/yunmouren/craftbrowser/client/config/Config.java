@@ -86,6 +86,7 @@ public class Config {
         public void load() {
             try {
                 spec.load();
+                this.save();
                 if (!Config.CLIENT.customizeBrowserPortEnabled.get()) {
                     Config.CLIENT.customizeBrowserPort.set(generateRandomPort());
                 }
