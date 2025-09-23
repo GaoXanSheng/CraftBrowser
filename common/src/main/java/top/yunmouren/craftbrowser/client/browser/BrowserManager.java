@@ -6,8 +6,6 @@ import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 public class BrowserManager {
-    public static BrowserManager Instance = new BrowserManager();
-
     private final BrowserLifecycleManager lifecycleManager;
     private final BrowserMouseHandler mouseHandler;
     private final BrowserKeyHandler keyHandler;

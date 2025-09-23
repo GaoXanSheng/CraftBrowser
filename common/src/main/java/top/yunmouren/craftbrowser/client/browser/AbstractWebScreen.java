@@ -29,7 +29,7 @@ public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
     private int texWidth = mc.getWindow().getScreenWidth();
     private int texHeight = mc.getWindow().getScreenHeight();
-    public final BrowserManager browserManager = BrowserManager.Instance;
+    public final BrowserManager browserManager = new BrowserManager();
     private final Map<Integer, Long> heldKeys = new HashMap<>();
     private final BrowserRender browserRender = new BrowserRender();
 
@@ -53,6 +53,7 @@ public abstract class AbstractWebScreen extends Screen {
         }
 
     }
+
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         var render = browserRender.render(texWidth, texHeight);
