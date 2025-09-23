@@ -20,7 +20,7 @@ public class BrowserRender extends JNISpout {
         if (Config.CLIENT.customizeSpoutIDEnabled.get()){
             receiverConnected = this.createReceiver(Config.CLIENT.customizeSpoutID.get(), dim, spoutPtr);
         }else {
-            receiverConnected = this.createReceiver("WebViewSpoutCapture_" + BrowserProcess.SPOUT_ID, dim, spoutPtr);
+            receiverConnected = this.createReceiver("WebViewSpoutCapture_" + BrowserProcess.getBrowserPort(), dim, spoutPtr);
         }
         if (!receiverConnected) {
             Craftbrowser.LOGGER.error("Failed to create Spout receiver! Is the sender running?");

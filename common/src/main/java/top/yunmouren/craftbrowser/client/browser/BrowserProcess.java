@@ -19,10 +19,17 @@ public class BrowserProcess {
 
     private Process process;
 
-    /** 动态随机端口，用于 CEF remote debugging */
-    public static final int BrowserPort = generateRandomPort();
-    public static final String SPOUT_ID = generateRandomString(10);
+    private static class Holder {
+        private static final int BROWSER_PORT = generateRandomPort();
+        private static final String SPOUT_ID = generateRandomString(10);
+    }
 
+    public static int getBrowserPort() {
+        return Holder.BROWSER_PORT;
+    }
+    public static String getSpoutId(){
+        return Holder.SPOUT_ID;
+    }
     public BrowserProcess() {
         startBrowserProcess();
     }
@@ -55,7 +62,7 @@ public class BrowserProcess {
             outputThread.setDaemon(true);
             outputThread.start();
 
-            Craftbrowser.LOGGER.info("WebViewSpoutCapture started on port {}", BrowserPort);
+            Craftbrowser.LOGGER.info("WebViewSpoutCapture started on port {}", getBrowserPort());
 
             // JVM 退出时强制销毁
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -97,12 +104,12 @@ public class BrowserProcess {
         if (Config.CLIENT.customizeBrowserPortEnabled.get()){
             env.put("BROWSER_PORT", Config.CLIENT.customizeBrowserPort.get().toString());
         }else {
-            env.put("BROWSER_PORT", String.valueOf(BrowserPort));
+            env.put("BROWSER_PORT", String.valueOf(getBrowserPort()));
         }
         if (Config.CLIENT.customizeSpoutIDEnabled.get()){
             env.put("SPOUT_ID", Config.CLIENT.customizeSpoutID.get());
         }else {
-            env.put("SPOUT_ID", SPOUT_ID);
+            env.put("SPOUT_ID", getSpoutId());
         }
         env.put("MAXFPS",Config.CLIENT.browserMaxfps.get().toString());
         if (Config.CLIENT.customizeLoadingScreenEnabled.get()){

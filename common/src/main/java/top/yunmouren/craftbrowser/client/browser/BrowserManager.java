@@ -17,7 +17,7 @@ public class BrowserManager {
         String host = "127.0.0.1";
         int port = Config.CLIENT.customizeBrowserPortEnabled.get()
                 ? Config.CLIENT.customizeBrowserPort.get()
-                : BrowserProcess.BrowserPort;
+                : BrowserProcess.getBrowserPort();
 
         this.lifecycleManager = new BrowserLifecycleManager(host, port);
         Session session = this.lifecycleManager.getSession();
