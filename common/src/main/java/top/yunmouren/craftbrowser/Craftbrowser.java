@@ -15,6 +15,7 @@ public final class Craftbrowser {
     public static void init() {
         if (Platform.getEnvironment() == Env.CLIENT) {
             Config.CLIENT.load();
+            Config.CLIENT.save();
             new BrowserProcess();
         }
     }

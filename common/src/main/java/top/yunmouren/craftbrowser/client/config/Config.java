@@ -30,47 +30,57 @@ public class Config {
         public Client() {
             ConfigSpec.Builder builder = new ConfigSpec.Builder();
 
-            builder.push("CustomizeLoadingScreen");
+            // ------------------ Loading Screen ------------------
+            builder.push("LoadingScreen");
             customizeLoadingScreenEnabled = builder
-                    .comment("Do you use loading screen instead of example")
-                    .define("CustomizeLoadingScreenEnabled", false);
+                    .comment("Enable custom loading screen")
+                    .define("Enabled", false);
             customizeLoadingScreenUrl = builder
-                    .comment("Customize the web address for loading the screen")
-                    .define("CustomizeLoadingScreenUrl", "");
+                    .comment("Custom loading screen URL")
+                    .define("Url", "https://example.com");
             openCustomWebOnStart = builder
                     .comment("Open custom web page on game start")
-                    .define("OpenCustomWebOnStart", false);
+                    .define("OpenOnStart", false);
             useCustomURL = builder
-                    .comment("Whether to use custom URL")
-                    .define("UseCustomURL", false);
+                    .comment("Use custom URL on start")
+                    .define("UseCustomUrl", false);
             customURL = builder
-                    .comment("Custom URL to open")
-                    .define("CustomURL", "https://example.com");
+                    .comment("Custom URL to open on start")
+                    .define("CustomUrl", "https://example.com");
             builder.pop();
 
-            builder.push("BrowserConfig");
-            browserMaxfps = builder.comment("Maximum frame rate of browser [15-240]").defineInRange("MaxFps", 120, 15, 240);
+            // ------------------ Browser ------------------
+            builder.push("Browser");
+            browserMaxfps = builder
+                    .comment("Maximum browser frame rate [15-240]")
+                    .defineInRange("MaxFps", 120, 15, 240);
             customizeBrowserPortEnabled = builder
-                    .comment("Do you use customize spout ID instead of random [0-65535]")
-                    .define("CustomizeBrowserPortEnabled", false);
-            customizeBrowserPort = builder.comment("customizeBrowserPort").defineInRange("customizeBrowserPort", 9222, 0, 65535);
+                    .comment("Enable custom browser port")
+                    .define("CustomPortEnabled", false);
+            customizeBrowserPort = builder
+                    .comment("Custom browser port [0-65535]")
+                    .defineInRange("CustomPort", 9222, 0, 65535);
             keyPressDelay = builder
-                    .comment("Delay for key press in milliseconds [0-1000]")
+                    .comment("Key press delay in ms [0-1000]")
                     .defineInRange("KeyPressDelay", 200, 0, 1000);
             scrollWheelPixels = builder
-                    .comment("Scroll wheel movement in pixels per tick [1-1000]")
+                    .comment("Scroll wheel step in pixels [1-1000]")
                     .defineInRange("ScrollWheelPixels", 150, 1, 1000);
             builder.pop();
 
-            builder.push("SpoutConfig");
+            // ------------------ Spout ------------------
+            builder.push("Spout");
             customizeSpoutIDEnabled = builder
-                    .comment("Do you use spout ID instead of random")
-                    .define("CustomizeSpoutIDEnabled",false);
-            customizeSpoutID = builder.comment("Customize the spout ID").define("CustomizeSpoutID","");
+                    .comment("Enable custom spout ID")
+                    .define("CustomIdEnabled", false);
+            customizeSpoutID = builder
+                    .comment("Custom spout ID")
+                    .define("CustomId", "NCEF");
             builder.pop();
 
             this.spec = builder.build("craftbrowser_settings.toml");
         }
+
 
         /** 加载配置 */
         public void load() {
