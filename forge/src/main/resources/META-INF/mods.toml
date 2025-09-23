@@ -1,17 +1,15 @@
 modLoader = "javafml"
 loaderVersion = "[47,)"
-#issueTrackerURL = ""
-license = "GNU LGPL 3.0"
+issueTrackerURL = "https://github.com/GaoXanSheng/CraftBrowser/issues"
+license = "MIT"
 
 [[mods]]
 modId = "craftbrowser"
 version = "${version}"
-displayName = "craftbrowser"
+displayName = "Craftbrowser"
 authors = "GaoXuShenG"
-description = '''
-ElectronCraft
-'''
-#logoFile = ""
+description = ''''''
+logoFile = "icon.png"
 
 [[dependencies.craftbrowser]]
 modId = "forge"

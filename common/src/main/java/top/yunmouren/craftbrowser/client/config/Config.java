@@ -39,7 +39,7 @@ public class Config {
             builder.push("BrowserConfig");
             browserMaxfps = builder.comment("Maximum frame rate of browser").defineInRange("MaxFps", 120, 30, 240);
             customizeBrowserPortEnabled = builder
-                    .comment("Do you use customize browser port instead of random")
+                    .comment("Do you use customize spout ID instead of random")
                     .define("CustomizeBrowserPortEnabled", false);
             customizeBrowserPort = builder.comment("customizeBrowserPort").defineInRange("customizeBrowserPort", 9222, 0, 65535);
             builder.pop();
