@@ -44,18 +44,18 @@ public class BrowserMenuBackground extends MenuBackground {
         loadUrl(url);
     }
     public void loadUrl(String url) {
-        this.url = url;
-        if (url.startsWith("[source:web]")) {
-            url = url.substring("[source:web]".length());
-        }
-        browserManager.loadUrl(url);
+            this.url = url;
+            if (url.startsWith("[source:web]")) {
+                url = url.substring("[source:web]".length());
+            }
+            browserManager.loadUrl(url);
     }
     public void customizeLoadingScreenUrl(){
         browserManager.customizeLoadingScreenUrl();
     }
     @Override
     public boolean isFocusable() {
-        return false;
+        return true;
     }
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
