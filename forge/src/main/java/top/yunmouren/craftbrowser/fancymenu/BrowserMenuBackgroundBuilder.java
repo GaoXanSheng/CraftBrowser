@@ -25,7 +25,7 @@ public class BrowserMenuBackgroundBuilder extends MenuBackgroundBuilder<BrowserM
                 back.loadUrl(url.url);
             }
             // 延迟 1 tick 再通知 FancyMenu 保存
-            Minecraft.getInstance().execute(() -> consumer.accept(back));
+            consumer.accept(back);
             Minecraft.getInstance().setScreen(screen);
         });
 
@@ -36,11 +36,13 @@ public class BrowserMenuBackgroundBuilder extends MenuBackgroundBuilder<BrowserM
 
     @Override
     public BrowserMenuBackground deserializeBackground(SerializedMenuBackground serializedMenuBackground) {
+        var browserMenuBackground = new BrowserMenuBackground(this);
         String url = serializedMenuBackground.getValue("browser_menu_background_url");
 
-        return (url != null)
-                ? new BrowserMenuBackground(this, url)
-                : new BrowserMenuBackground(this);
+        if (url != null) {
+            browserMenuBackground.loadUrl(url);
+        }
+        return browserMenuBackground;
     }
 
     @Override

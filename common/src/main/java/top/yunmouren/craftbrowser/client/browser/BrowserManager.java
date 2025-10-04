@@ -5,6 +5,11 @@ import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.client.config.Config;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 public class BrowserManager {
     private final BrowserLifecycleManager lifecycleManager;
     private final BrowserMouseHandler mouseHandler;
@@ -13,7 +18,7 @@ public class BrowserManager {
 
     public BrowserManager() {
         String host = "127.0.0.1";
-        int port =  Config.CLIENT.customizeBrowserPort.get();
+        int port = Config.CLIENT.customizeBrowserPort.get();
 
         this.lifecycleManager = new BrowserLifecycleManager(host, port);
         Session session = this.lifecycleManager.getSession();
@@ -90,8 +95,18 @@ public class BrowserManager {
         keyHandler.keyChar(text, glfwModifiers);
     }
 
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledFuture<?> pendingResizeTask = null;
+
     public void loadUrl(String url) {
-        pageHandler.loadUrl(url);
+        if (pendingResizeTask != null && !pendingResizeTask.isDone()) {
+            pendingResizeTask.cancel(false);
+        }
+        int RESIZE_DELAY_MS = 200;
+        pendingResizeTask = scheduler.schedule(() -> {
+            pageHandler.loadUrl(url);
+        }, RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
+
     }
 
     public void customizeLoadingScreenUrl() {
