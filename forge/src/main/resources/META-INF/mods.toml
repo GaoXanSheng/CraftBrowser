@@ -31,3 +31,10 @@ mandatory = true
 versionRange = "[9.2.14,)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[dependencies.craftbrowser]]
+modId = "fancymenu"
+mandatory = false
+versionRange = "[3.7.0,)"
+ordering = "AFTER"
+side = "BOTH"
