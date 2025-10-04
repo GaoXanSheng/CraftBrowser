@@ -22,12 +22,18 @@
  */
 package io.webfolder.cdp.session;
 
-import static io.webfolder.cdp.logger.CdpLoggerType.Slf4j;
-import static java.lang.String.format;
-import static java.lang.String.valueOf;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Locale.ENGLISH;
-import static java.util.concurrent.Executors.newCachedThreadPool;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.neovisionaries.ws.client.WebSocket;
+import com.neovisionaries.ws.client.WebSocketException;
+import com.neovisionaries.ws.client.WebSocketFactory;
+import io.webfolder.cdp.command.Target;
+import io.webfolder.cdp.exception.CdpException;
+import io.webfolder.cdp.listener.EventListener;
+import io.webfolder.cdp.logger.CdpLogger;
+import io.webfolder.cdp.logger.CdpLoggerFactory;
+import io.webfolder.cdp.logger.CdpLoggerType;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,19 +48,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-import com.neovisionaries.ws.client.WebSocket;
-import com.neovisionaries.ws.client.WebSocketException;
-import com.neovisionaries.ws.client.WebSocketFactory;
-
-import io.webfolder.cdp.command.Target;
-import io.webfolder.cdp.exception.CdpException;
-import io.webfolder.cdp.listener.EventListener;
-import io.webfolder.cdp.logger.CdpLogger;
-import io.webfolder.cdp.logger.CdpLoggerFactory;
-import io.webfolder.cdp.logger.CdpLoggerType;
+import static io.webfolder.cdp.logger.CdpLoggerType.Slf4j;
+import static java.lang.String.format;
+import static java.lang.String.valueOf;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Locale.ENGLISH;
+import static java.util.concurrent.Executors.newCachedThreadPool;
 
 public class SessionFactory implements AutoCloseable {
 

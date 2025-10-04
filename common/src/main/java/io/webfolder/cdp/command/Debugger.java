@@ -22,23 +22,15 @@
  */
 package io.webfolder.cdp.command;
 
-import java.util.List;
-
 import io.webfolder.cdp.annotation.Domain;
 import io.webfolder.cdp.annotation.Experimental;
 import io.webfolder.cdp.annotation.Optional;
 import io.webfolder.cdp.annotation.Returns;
 import io.webfolder.cdp.type.constant.PauseOnExceptionState;
-import io.webfolder.cdp.type.debugger.BreakLocation;
-import io.webfolder.cdp.type.debugger.EvaluateOnCallFrameResult;
-import io.webfolder.cdp.type.debugger.Location;
-import io.webfolder.cdp.type.debugger.RestartFrameResult;
-import io.webfolder.cdp.type.debugger.ScriptPosition;
-import io.webfolder.cdp.type.debugger.SearchMatch;
-import io.webfolder.cdp.type.debugger.SetBreakpointByUrlResult;
-import io.webfolder.cdp.type.debugger.SetBreakpointResult;
-import io.webfolder.cdp.type.debugger.SetScriptSourceResult;
+import io.webfolder.cdp.type.debugger.*;
 import io.webfolder.cdp.type.runtime.CallArgument;
+
+import java.util.List;
 
 /**
  * Debugger domain exposes JavaScript debugging capabilities

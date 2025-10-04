@@ -22,26 +22,20 @@
  */
 package io.webfolder.cdp.session;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-import static java.lang.String.format;
-import static java.lang.String.valueOf;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import io.webfolder.cdp.command.DOM;
 import io.webfolder.cdp.command.Runtime;
 import io.webfolder.cdp.exception.CdpException;
 import io.webfolder.cdp.exception.ElementNotFoundException;
 import io.webfolder.cdp.type.dom.Node;
-import io.webfolder.cdp.type.runtime.CallArgument;
-import io.webfolder.cdp.type.runtime.CallFunctionOnResult;
-import io.webfolder.cdp.type.runtime.EvaluateResult;
-import io.webfolder.cdp.type.runtime.ExceptionDetails;
-import io.webfolder.cdp.type.runtime.GetPropertiesResult;
-import io.webfolder.cdp.type.runtime.PropertyDescriptor;
-import io.webfolder.cdp.type.runtime.RemoteObject;
+import io.webfolder.cdp.type.runtime.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
+import static java.lang.String.valueOf;
 
 public interface Selector {
 

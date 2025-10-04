@@ -22,24 +22,7 @@
  */
 package io.webfolder.cdp.session;
 
-import static io.webfolder.cdp.session.Option.TYPE_TOKEN;
-import static java.lang.Boolean.TRUE;
-import static java.lang.String.format;
-import static java.lang.String.valueOf;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.google.gson.Gson;
-
 import io.webfolder.cdp.command.DOM;
 import io.webfolder.cdp.exception.ElementNotFoundException;
 import io.webfolder.cdp.type.dom.BoxModel;
@@ -47,6 +30,17 @@ import io.webfolder.cdp.type.runtime.CallFunctionOnResult;
 import io.webfolder.cdp.type.runtime.ExceptionDetails;
 import io.webfolder.cdp.type.runtime.PropertyDescriptor;
 import io.webfolder.cdp.type.runtime.RemoteObject;
+
+import java.nio.file.Path;
+import java.util.*;
+
+import static io.webfolder.cdp.session.Option.TYPE_TOKEN;
+import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
+import static java.lang.String.valueOf;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 
 /**
  * Provides the interfaces for the Document Object Model (DOM).

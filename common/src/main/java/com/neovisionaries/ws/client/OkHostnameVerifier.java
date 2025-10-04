@@ -17,19 +17,15 @@
 
 package com.neovisionaries.ws.client;
 
-import java.security.cert.Certificate;
-import java.security.cert.CertificateParsingException;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.regex.Pattern;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 import javax.security.auth.x500.X500Principal;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.X509Certificate;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * A HostnameVerifier consistent with <a

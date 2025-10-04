@@ -3,14 +3,14 @@
   "id": "craftbrowser",
   "version": "${version}",
   "name": "craftbrowser",
-  "description": "ElectronCraft",
+  "description": "",
   "authors": [
     "GaoXuShenG"
   ],
   "contact": {
-    "homepage": "https://github.com/GaoXanSheng/ElectronCraft"
+    "homepage": "https://github.com/GaoXanSheng/CraftBrowser"
   },
-  "license": "LGPL-3.0",
+  "license": "MIT",
   "icon": "assets/craftbrowser/icon.png",
   "environment": "*",
   "entrypoints": {

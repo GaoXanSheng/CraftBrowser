@@ -1,7 +1,10 @@
 package top.yunmouren.craftbrowser.client.browser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -9,20 +12,25 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT;
 
 public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
     private int texWidth = mc.getWindow().getScreenWidth();
     private int texHeight = mc.getWindow().getScreenHeight();
-    public final BrowserManager browserManager = BrowserManager.Instance;
+    public final BrowserManager browserManager = new BrowserManager();
     private final Map<Integer, Long> heldKeys = new HashMap<>();
     private final BrowserRender browserRender = new BrowserRender();
 
@@ -39,20 +47,20 @@ public abstract class AbstractWebScreen extends Screen {
             int keyCode = entry.getKey();
             long lastTime = entry.getValue();
 
-            // 设定重复延迟，比如 200ms
-            if (now - lastTime >= 200) {
+            if (now - lastTime >= Config.CLIENT.keyPressDelay.get()) {
                 browserManager.keyPress(keyCode, 0, false, true); // repeat
                 entry.setValue(now);
             }
         }
+
     }
+
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         var render = browserRender.render(texWidth, texHeight);
         if (render == 0) {
             return;
         }
-        RenderSystem.disableDepthTest();
         RenderSystem.disableBlend();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -78,16 +86,15 @@ public abstract class AbstractWebScreen extends Screen {
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> pendingResizeTask = null;
-    private final int RESIZE_DELAY_MS = 200; // 延迟200毫秒执行
 
     @Override
     public void resize(Minecraft minecraft, int width, int height) {
         super.resize(minecraft, width, height);
-        // 取消上一次延迟任务（如果仍未执行）
+
         if (pendingResizeTask != null && !pendingResizeTask.isDone()) {
             pendingResizeTask.cancel(false);
         }
-        // 提交新的延迟任务
+        int RESIZE_DELAY_MS = 200;
         pendingResizeTask = scheduler.schedule(() -> {
             this.texWidth = mc.getWindow().getScreenWidth();
             this.texHeight = mc.getWindow().getScreenHeight();
@@ -143,7 +150,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mouseWheel(pos[0], pos[1], (int) (-delta * 100));
+        browserManager.mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
         return true;
     }
 

@@ -22,24 +22,22 @@
  */
 package io.webfolder.cdp.session;
 
-import static java.lang.Double.parseDouble;
-import static java.util.Collections.unmodifiableMap;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.neovisionaries.ws.client.WebSocket;
+import com.neovisionaries.ws.client.WebSocketAdapter;
+import io.webfolder.cdp.event.Events;
+import io.webfolder.cdp.listener.EventListener;
+import io.webfolder.cdp.logger.CdpLogger;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.neovisionaries.ws.client.WebSocket;
-import com.neovisionaries.ws.client.WebSocketAdapter;
-
-import io.webfolder.cdp.event.Events;
-import io.webfolder.cdp.exception.CommandException;
-import io.webfolder.cdp.listener.EventListener;
-import io.webfolder.cdp.logger.CdpLogger;
+import static java.lang.Double.parseDouble;
+import static java.util.Collections.unmodifiableMap;
 
 class WSAdapter extends WebSocketAdapter {
 

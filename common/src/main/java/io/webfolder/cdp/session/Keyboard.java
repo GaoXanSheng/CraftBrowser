@@ -22,12 +22,12 @@
  */
 package io.webfolder.cdp.session;
 
+import io.webfolder.cdp.command.Input;
+import io.webfolder.cdp.type.constant.KeyEventType;
+
 import static io.webfolder.cdp.type.constant.KeyEventType.KeyDown;
 import static io.webfolder.cdp.type.constant.KeyEventType.KeyUp;
 import static java.lang.String.valueOf;
-
-import io.webfolder.cdp.command.Input;
-import io.webfolder.cdp.type.constant.KeyEventType;
 
 /**
  * Interface representing basic keyboard operations.

@@ -16,13 +16,13 @@
 package com.neovisionaries.ws.client;
 
 
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocket;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSocket;
 
 
 class SNIHelper

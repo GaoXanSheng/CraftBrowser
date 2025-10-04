@@ -1,14 +1,11 @@
-package top.yunmouren.craftbrowser.config;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
+package top.yunmouren.craftbrowser.client.config;
 
 import net.minecraft.client.Minecraft;
 import top.yunmouren.craftbrowser.Craftbrowser;
 
-import java.nio.file.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class ConfigSpec {

@@ -16,15 +16,11 @@
 package com.neovisionaries.ws.client;
 
 
-import static com.neovisionaries.ws.client.WebSocketOpcode.BINARY;
-import static com.neovisionaries.ws.client.WebSocketOpcode.CLOSE;
-import static com.neovisionaries.ws.client.WebSocketOpcode.CONTINUATION;
-import static com.neovisionaries.ws.client.WebSocketOpcode.PING;
-import static com.neovisionaries.ws.client.WebSocketOpcode.PONG;
-import static com.neovisionaries.ws.client.WebSocketOpcode.TEXT;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.neovisionaries.ws.client.WebSocketOpcode.*;
 
 
 /**
