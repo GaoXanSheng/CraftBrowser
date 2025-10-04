@@ -1,4 +1,4 @@
-package top.yunmouren.craftbrowser.client.browser;
+package top.yunmouren.craftbrowser.client.browser.core;
 
 import io.webfolder.cdp.session.Session;
 import io.webfolder.cdp.session.SessionFactory;
@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class BrowserLifecycleManager {
     private SessionFactory factory;
+    private List<SessionInfo> pages;
     private Session session;
 
     public BrowserLifecycleManager(String host, int port) {
@@ -19,14 +20,11 @@ public class BrowserLifecycleManager {
     private void init(String host, int port) {
         try {
             this.factory = new SessionFactory(host, port);
-            List<SessionInfo> pages = factory.list();
+            pages = factory.list();
             if (!pages.isEmpty()) {
-                SessionInfo info = pages.get(0);
-                this.session = factory.connect(info.getId());
-                Craftbrowser.LOGGER.info("Connected to browser page: {}", info.getUrl());
-            } else {
-                Craftbrowser.LOGGER.warn("No pages found on debug port {}", port);
+                pages.add(new SessionInfo());
             }
+            this.session = factory.connect(pages.get(0).getId());
         } catch (Exception e) {
             Craftbrowser.LOGGER.error("Error connecting to Chrome DevTools: ", e);
         }

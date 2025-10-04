@@ -4,7 +4,7 @@ import com.mojang.logging.LogUtils;
 import dev.architectury.platform.Platform;
 import dev.architectury.utils.Env;
 import org.slf4j.Logger;
-import top.yunmouren.craftbrowser.client.browser.BrowserProcess;
+import top.yunmouren.craftbrowser.client.browser.core.BrowserInstance;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 
@@ -15,7 +15,7 @@ public final class Craftbrowser {
     public static void init() {
         if (Platform.getEnvironment() == Env.CLIENT) {
             Config.CLIENT.load();
-            new BrowserProcess();
+            new BrowserInstance();
 
         }
     }

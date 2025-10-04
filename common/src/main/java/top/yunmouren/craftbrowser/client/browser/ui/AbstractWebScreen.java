@@ -1,4 +1,4 @@
-package top.yunmouren.craftbrowser.client.browser;
+package top.yunmouren.craftbrowser.client.browser.ui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -12,6 +12,9 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
+import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
+import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.HashMap;
@@ -30,10 +33,10 @@ public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
     private int texWidth = mc.getWindow().getScreenWidth();
     private int texHeight = mc.getWindow().getScreenHeight();
-    public final BrowserManager browserManager = new BrowserManager();
     private final Map<Integer, Long> heldKeys = new HashMap<>();
-    private final BrowserRender browserRender = new BrowserRender();
-
+    public final BrowserAPI browser = BrowserAPI.getInstance();
+    public final BrowserManager browserManager = browser.getManager();
+    public final BrowserRender browserRender = browser.getRender();
     protected AbstractWebScreen(Component p_96550_) {
         super(p_96550_);
         browserManager.resizeViewport(texWidth, texHeight);

@@ -1,4 +1,4 @@
-package top.yunmouren.craftbrowser.client.browser;
+package top.yunmouren.craftbrowser.client.browser.core;
 
 import io.webfolder.cdp.session.Session;
 import net.minecraft.client.Minecraft;
@@ -10,7 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class BrowserManager {
+public class BrowserManager implements AutoCloseable {
     private final BrowserLifecycleManager lifecycleManager;
     private final BrowserMouseHandler mouseHandler;
     private final BrowserKeyHandler keyHandler;
@@ -119,5 +119,10 @@ public class BrowserManager {
 
     public void loadCustomizeURL(String url) {
         pageHandler.loadUrl(url);
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.lifecycleManager.onClose();
     }
 }
