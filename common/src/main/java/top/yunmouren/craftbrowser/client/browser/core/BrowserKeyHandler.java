@@ -1,6 +1,7 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
-import io.webfolder.cdp.session.Session;
+import com.hubspot.chrome.devtools.base.ChromeRequest;
+import com.hubspot.chrome.devtools.client.ChromeDevToolsSession;
 import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.client.browser.util.CdpUtil;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper;
@@ -9,7 +10,7 @@ import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper.KeyEventInf
 import java.util.HashMap;
 import java.util.Map;
 
-public record BrowserKeyHandler(Session session) {
+public record BrowserKeyHandler(ChromeDevToolsSession session) {
 
     public void keyPress(int glfwKeyCode, int glfwModifiers, boolean isRelease, boolean isRepeat) {
         if (session == null) return;
@@ -42,31 +43,43 @@ public record BrowserKeyHandler(Session session) {
         params.put("isKeypad", info.location() == 3);
         params.put("location", info.location());
 
+        ChromeRequest request = new ChromeRequest("Input.dispatchKeyEvent");
+
         if (!isRelease) {
-            params.put("type", "keyDown");
-            params.put("autoRepeat", isRepeat);
+            request.putParams("type", "keyDown")
+                    .putParams("autoRepeat", isRepeat);
             if (isPrintableKey(key)) {
-                params.put("text", key);
-                params.put("unmodifiedText", info.key());
+                request.putParams("text", key)
+                        .putParams("unmodifiedText", info.key());
             }
         } else {
-            params.put("type", "keyUp");
-            params.put("autoRepeat", false);
+            request.putParams("type", "keyUp")
+                    .putParams("autoRepeat", false);
         }
 
-        session.send("Input.dispatchKeyEvent", params);
+        request.putParams("modifiers", CdpUtil.mapGlfwModifiersToCdp(glfwModifiers))
+                .putParams("windowsVirtualKeyCode", info.windowsVirtualKeyCode())
+                .putParams("nativeVirtualKeyCode", info.windowsVirtualKeyCode())
+                .putParams("code", info.code())
+                .putParams("key", key)
+                .putParams("isKeypad", info.location() == 3)
+                .putParams("location", info.location());
+
+        session.send(request);
+
     }
 
     public void keyChar(String text, int glfwModifiers) {
         if (session == null || text == null || text.isEmpty()) return;
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("type", "char");
-        params.put("text", text);
-        params.put("unmodifiedText", text.toLowerCase());
-        params.put("modifiers", CdpUtil.mapGlfwModifiersToCdp(glfwModifiers));
+        ChromeRequest request = new ChromeRequest("Input.dispatchKeyEvent")
+                .putParams("type", "char")
+                .putParams("text", text)
+                .putParams("unmodifiedText", text.toLowerCase())
+                .putParams("modifiers", CdpUtil.mapGlfwModifiersToCdp(glfwModifiers));
 
-        session.send("Input.dispatchKeyEvent", params);
+        session.send(request);
+
     }
 
     private boolean isPrintableKey(String key) {

@@ -1,11 +1,9 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
-import io.webfolder.cdp.session.Session;
+import com.hubspot.chrome.devtools.client.ChromeDevToolsSession;
 import top.yunmouren.craftbrowser.client.config.Config;
 
-import java.util.Map;
-
-public record BrowserPageHandler(Session session) {
+public record BrowserPageHandler(ChromeDevToolsSession session) {
 
     public void loadUrl(String url) {
         if (session == null || url == null || url.isEmpty()) return;
@@ -13,7 +11,7 @@ public record BrowserPageHandler(Session session) {
         if (!finalUrl.startsWith("http://") && !finalUrl.startsWith("https://")) {
             finalUrl = "http://" + finalUrl;
         }
-        session.send("Page.navigate", Map.of("url", finalUrl));
+        session.navigate(finalUrl);
     }
 
     public void customizeLoadingScreenUrl() {
@@ -22,6 +20,6 @@ public record BrowserPageHandler(Session session) {
 
     public void loadCustomizeURL(String url) {
         if (session == null || url == null || url.isEmpty()) return;
-        session.send("Page.navigate", Map.of("url", url));
+        session.navigate(url);
     }
 }
