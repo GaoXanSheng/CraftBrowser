@@ -14,3 +14,6 @@ dependencies {
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
 }
+remapJar {
+    onlyIf { false }
+}
