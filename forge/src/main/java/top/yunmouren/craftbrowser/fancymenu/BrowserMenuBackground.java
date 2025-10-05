@@ -12,8 +12,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
-import top.yunmouren.craftbrowser.client.browser.BrowserManager;
-import top.yunmouren.craftbrowser.client.browser.BrowserRender;
+import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
+import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
+import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.HashMap;
@@ -29,8 +30,10 @@ public class BrowserMenuBackground extends MenuBackground {
     private final Minecraft mc = Minecraft.getInstance();
     private int texWidth = mc.getWindow().getScreenWidth();
     private int texHeight = mc.getWindow().getScreenHeight();
-    private final BrowserManager browserManager = new BrowserManager();
-    private final BrowserRender browserRender = new BrowserRender();
+    private final BrowserAPI browserAPI = BrowserAPI.getInstance();
+    private final BrowserRender browserRender = browserAPI.getRender();
+    private final BrowserManager browserManager = browserAPI.getManager();
+
     public String url;
 
     public BrowserMenuBackground(MenuBackgroundBuilder<?> builder) {
@@ -38,25 +41,30 @@ public class BrowserMenuBackground extends MenuBackground {
         browserManager.resizeViewport(texWidth, texHeight);
         browserManager.customizeLoadingScreenUrl();
     }
-    protected BrowserMenuBackground(MenuBackgroundBuilder<?> builder, @NotNull String url){
+
+    protected BrowserMenuBackground(MenuBackgroundBuilder<?> builder, @NotNull String url) {
         super(builder);
         browserManager.resizeViewport(texWidth, texHeight);
         loadUrl(url);
     }
+
     public void loadUrl(String url) {
-            this.url = url;
-            if (url.startsWith("[source:web]")) {
-                url = url.substring("[source:web]".length());
-            }
-            browserManager.loadUrl(url);
+        this.url = url;
+        if (url.startsWith("[source:web]")) {
+            url = url.substring("[source:web]".length());
+        }
+        browserManager.loadUrl(url);
     }
-    public void customizeLoadingScreenUrl(){
+
+    public void customizeLoadingScreenUrl() {
         browserManager.customizeLoadingScreenUrl();
     }
+
     @Override
     public boolean isFocusable() {
         return true;
     }
+
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         var render = browserRender.render(texWidth, texHeight);
@@ -80,7 +88,9 @@ public class BrowserMenuBackground extends MenuBackground {
         buffer.vertex(matrix, guiWidth, 0, 0).uv(1, 0).endVertex();
         buffer.vertex(matrix, 0, 0, 0).uv(0, 0).endVertex();
         tessellator.end();
+        RenderSystem.disableBlend();
     }
+
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> pendingResizeTask = null;
 
@@ -109,7 +119,9 @@ public class BrowserMenuBackground extends MenuBackground {
 
         return new int[]{pixelX, pixelY};
     }
+
     private final Set<Integer> heldMouseButtons = new HashSet<>();
+
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
         int[] pos = guiToPixel(mouseX, mouseY);
@@ -117,6 +129,7 @@ public class BrowserMenuBackground extends MenuBackground {
         browserManager.mouseMove(pos[0], pos[1], dragging);
         super.mouseMoved(mouseX, mouseY);
     }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
@@ -132,13 +145,16 @@ public class BrowserMenuBackground extends MenuBackground {
         heldMouseButtons.remove(button); // 移除按下记录
         return super.mouseReleased(mouseX, mouseY, button);
     }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int[] pos = guiToPixel(mouseX, mouseY);
         browserManager.mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
+
     private final Map<Integer, Long> heldKeys = new HashMap<>();
+
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         browserManager.keyPress(keyCode, modifiers, false, false);
@@ -152,6 +168,7 @@ public class BrowserMenuBackground extends MenuBackground {
         heldKeys.remove(keyCode);
         return super.keyReleased(keyCode, scanCode, modifiers);
     }
+
     @Override
     public NarrationPriority narrationPriority() {
         return NarrationPriority.NONE;

@@ -1,4 +1,4 @@
-package top.yunmouren.craftbrowser.client.browser;
+package top.yunmouren.craftbrowser.client.browser.core;
 
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
@@ -16,17 +16,23 @@ import java.util.concurrent.TimeUnit;
 /**
  * 管理 WebViewSpoutCapture 子进程
  */
-public class BrowserProcess {
+public class BrowserInstance {
 
-    private Process process;
+    private static Process process;
 
-    public BrowserProcess() {
+    public static Process getInstance() {
+        return process;
+    }
+
+    public BrowserInstance() {
         startBrowserProcess();
     }
 
     // ------------------- 公共方法 -------------------
 
-    /** 手动停止子进程 */
+    /**
+     * 手动停止子进程
+     */
     public void stop() {
         if (process != null && process.isAlive()) {
             process.destroyForcibly();
@@ -35,7 +41,9 @@ public class BrowserProcess {
         }
     }
 
-    /** 获取子进程对象 */
+    /**
+     * 获取子进程对象
+     */
     public Process getProcess() {
         return process;
     }
@@ -60,7 +68,8 @@ public class BrowserProcess {
                     process.destroyForcibly();
                     try {
                         process.waitFor(5, TimeUnit.SECONDS); // 等待最多 5 秒
-                    } catch (InterruptedException ignored) {}
+                    } catch (InterruptedException ignored) {
+                    }
                     Craftbrowser.LOGGER.info("WebViewSpoutCapture process stopped on JVM exit");
                 }
             }));
@@ -93,11 +102,9 @@ public class BrowserProcess {
         env.put("LANG", "en_US.UTF-8");
         env.put("BROWSER_PORT", String.valueOf(Config.CLIENT.customizeBrowserPort.get()));
         env.put("SPOUT_ID", Config.CLIENT.customizeSpoutID.get());
-        env.put("MAXFPS",Config.CLIENT.browserMaxfps.get().toString());
+        env.put("MAXFPS", Config.CLIENT.browserMaxfps.get().toString());
         env.put("CUSTOMIZE_LOADING_SCREEN_URL", Config.CLIENT.customizeLoadingScreenUrl.get());
         builder.inheritIO(); // 输出到父进程控制台
         return builder;
     }
-
-
 }

@@ -1,16 +1,11 @@
-package top.yunmouren.craftbrowser.client.browser;
+package top.yunmouren.craftbrowser.client.browser.core;
 
 import io.webfolder.cdp.session.Session;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.Map;
 
-public class BrowserPageHandler {
-    private final Session session;
-
-    public BrowserPageHandler(Session session) {
-        this.session = session;
-    }
+public record BrowserPageHandler(Session session) {
 
     public void loadUrl(String url) {
         if (session == null || url == null || url.isEmpty()) return;

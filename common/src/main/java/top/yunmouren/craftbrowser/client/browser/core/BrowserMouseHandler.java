@@ -1,4 +1,4 @@
-package top.yunmouren.craftbrowser.client.browser;
+package top.yunmouren.craftbrowser.client.browser.core;
 
 import io.webfolder.cdp.session.Session;
 import io.webfolder.cdp.type.constant.MouseButtonType;
@@ -6,12 +6,7 @@ import io.webfolder.cdp.type.constant.MouseEventType;
 
 import java.util.Map;
 
-public class BrowserMouseHandler {
-    private final Session session;
-
-    public BrowserMouseHandler(Session session) {
-        this.session = session;
-    }
+public record BrowserMouseHandler(Session session) {
 
     public void mouseMove(int x, int y, boolean dragging) {
         if (session == null) return;

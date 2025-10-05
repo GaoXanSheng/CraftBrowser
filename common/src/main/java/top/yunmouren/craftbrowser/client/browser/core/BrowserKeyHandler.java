@@ -1,4 +1,4 @@
-package top.yunmouren.craftbrowser.client.browser;
+package top.yunmouren.craftbrowser.client.browser.core;
 
 import io.webfolder.cdp.session.Session;
 import org.lwjgl.glfw.GLFW;
@@ -9,12 +9,7 @@ import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper.KeyEventInf
 import java.util.HashMap;
 import java.util.Map;
 
-public class BrowserKeyHandler {
-    private final Session session;
-
-    public BrowserKeyHandler(Session session) {
-        this.session = session;
-    }
+public record BrowserKeyHandler(Session session) {
 
     public void keyPress(int glfwKeyCode, int glfwModifiers, boolean isRelease, boolean isRepeat) {
         if (session == null) return;
