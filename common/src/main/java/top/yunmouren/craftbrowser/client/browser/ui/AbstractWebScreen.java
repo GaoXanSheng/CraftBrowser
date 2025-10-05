@@ -21,10 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT;
@@ -127,9 +124,11 @@ public abstract class AbstractWebScreen extends Screen {
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
-        int[] pos = guiToPixel(mouseX, mouseY);
-        boolean dragging = !heldMouseButtons.isEmpty();
-        browserManager.mouseMove(pos[0], pos[1], dragging);
+        CompletableFuture.runAsync(()->{
+            int[] pos = guiToPixel(mouseX, mouseY);
+            boolean dragging = !heldMouseButtons.isEmpty();
+            browserManager.mouseMove(pos[0], pos[1], dragging);
+        });
     }
 
     private final Set<Integer> heldMouseButtons = new HashSet<>();
