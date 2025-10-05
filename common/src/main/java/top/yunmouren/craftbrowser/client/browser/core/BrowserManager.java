@@ -1,6 +1,6 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
-import io.webfolder.cdp.session.Session;
+import com.hubspot.chrome.devtools.client.ChromeDevToolsSession;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.client.config.Config;
@@ -21,7 +21,7 @@ public class BrowserManager implements AutoCloseable {
         int port = Config.CLIENT.customizeBrowserPort.get();
 
         this.lifecycleManager = new BrowserLifecycleManager(host, port);
-        Session session = this.lifecycleManager.getSession();
+        ChromeDevToolsSession session = this.lifecycleManager.getSession();
 
         this.mouseHandler = new BrowserMouseHandler(session);
         this.keyHandler = new BrowserKeyHandler(session);
@@ -30,14 +30,14 @@ public class BrowserManager implements AutoCloseable {
 
     public BrowserManager(String host, int port) {
         this.lifecycleManager = new BrowserLifecycleManager(host, port);
-        Session session = this.lifecycleManager.getSession();
+        ChromeDevToolsSession session = this.lifecycleManager.getSession();
 
         this.mouseHandler = new BrowserMouseHandler(session);
         this.keyHandler = new BrowserKeyHandler(session);
         this.pageHandler = new BrowserPageHandler(session);
     }
 
-    public Session getSession() {
+    public ChromeDevToolsSession getSession() {
         return lifecycleManager.getSession();
     }
 

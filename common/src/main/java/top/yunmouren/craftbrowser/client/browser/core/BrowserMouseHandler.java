@@ -1,60 +1,80 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
-import io.webfolder.cdp.session.Session;
-import io.webfolder.cdp.type.constant.MouseButtonType;
-import io.webfolder.cdp.type.constant.MouseEventType;
+import com.hubspot.chrome.devtools.base.ChromeRequest;
+import com.hubspot.chrome.devtools.client.ChromeDevToolsSession;
 
-import java.util.Map;
-
-public record BrowserMouseHandler(Session session) {
+public record BrowserMouseHandler(ChromeDevToolsSession session) {
 
     public void mouseMove(int x, int y, boolean dragging) {
         if (session == null) return;
-        MouseButtonType buttonType = dragging ? MouseButtonType.Left : MouseButtonType.None;
-        Map<String, Object> params = Map.of(
-                "type", MouseEventType.MouseMoved,
-                "x", x,
-                "y", y,
-                "modifiers", 0,
-                "button", buttonType,
-                "clickCount", 0
-        );
-        session.send("Input.dispatchMouseEvent", params);
+        String button = dragging ? "left" : "none";
+
+        ChromeRequest request = new ChromeRequest("Input.dispatchMouseEvent")
+                .putParams("type", "mouseMoved")
+                .putParams("x", x)
+                .putParams("y", y)
+                .putParams("modifiers", 0)
+                .putParams("button", button)
+                .putParams("clickCount", 0);
+
+        session.send(request);
     }
 
     public void mousePress(int x, int y, int button) {
         if (session == null) return;
-        Map<String, Object> params = Map.of(
-                "type", MouseEventType.MousePressed, "x", x, "y", y,
-                "modifiers", 0, "button", mapButton(button), "clickCount", 1
-        );
-        session.send("Input.dispatchMouseEvent", params);
+
+        // 将整数按钮映射成 CDP 可识别的字符串
+        String buttonStr = mapButton(button);
+
+        ChromeRequest request = new ChromeRequest("Input.dispatchMouseEvent")
+                .putParams("type", "mousePressed")
+                .putParams("x", x)
+                .putParams("y", y)
+                .putParams("modifiers", 0)
+                .putParams("button", buttonStr)
+                .putParams("clickCount", 1);
+
+        session.send(request);
     }
 
     public void mouseRelease(int x, int y, int button) {
         if (session == null) return;
-        Map<String, Object> params = Map.of(
-                "type", MouseEventType.MouseReleased, "x", x, "y", y,
-                "modifiers", 0, "button", mapButton(button), "clickCount", 1
-        );
-        session.send("Input.dispatchMouseEvent", params);
+
+        String buttonStr = mapButton(button);
+
+        ChromeRequest request = new ChromeRequest("Input.dispatchMouseEvent")
+                .putParams("type", "mouseReleased")
+                .putParams("x", x)
+                .putParams("y", y)
+                .putParams("modifiers", 0)
+                .putParams("button", buttonStr)
+                .putParams("clickCount", 1);
+
+        session.send(request);
     }
 
     public void mouseWheel(int x, int y, int deltaY) {
         if (session == null) return;
-        Map<String, Object> params = Map.of(
-                "type", MouseEventType.MouseWheel, "x", x, "y", y,
-                "modifiers", 0, "button", "none", "clickCount", 0,
-                "deltaX", 0, "deltaY", deltaY
-        );
-        session.send("Input.dispatchMouseEvent", params);
+
+        ChromeRequest request = new ChromeRequest("Input.dispatchMouseEvent")
+                .putParams("type", "mouseWheel")
+                .putParams("x", x)
+                .putParams("y", y)
+                .putParams("modifiers", 0)
+                .putParams("button", "none")
+                .putParams("clickCount", 0)
+                .putParams("deltaX", 0)
+                .putParams("deltaY", deltaY);
+
+        session.send(request);
     }
 
-    private MouseButtonType mapButton(int button) {
+
+    private String mapButton(int button) {
         return switch (button) {
-            case 1 -> MouseButtonType.Right;
-            case 2 -> MouseButtonType.Middle;
-            default -> MouseButtonType.Left;
+            case 1 -> "right";
+            case 2 -> "middle";
+            default -> "left";
         };
     }
 }
