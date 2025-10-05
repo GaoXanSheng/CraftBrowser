@@ -22,7 +22,7 @@
 
 ## Features
 
-- Embedded **CEF 139.0.280.0** browser engine
+- Embedded **CEF 140.1.140.0** browser engine
 - Supports **Spout2** texture sharing
 - Enables in-game webpage rendering inside Minecraft
 
