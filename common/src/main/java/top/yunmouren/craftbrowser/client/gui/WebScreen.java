@@ -2,6 +2,8 @@ package top.yunmouren.craftbrowser.client.gui;
 
 import net.minecraft.network.chat.Component;
 import top.yunmouren.craftbrowser.client.browser.ui.AbstractWebScreen;
+import top.yunmouren.craftbrowser.client.config.Config;
+import top.yunmouren.craftbrowser.client.config.ConfigSpec;
 
 public class WebScreen extends AbstractWebScreen {
 
@@ -20,6 +22,6 @@ public class WebScreen extends AbstractWebScreen {
     }
     public WebScreen() {
         super(Component.literal("WebScreen"));
-        browserManager.loadUrl("https://example.com/");
+        browserManager.customizeLoadingScreenUrl();
     }
 }
