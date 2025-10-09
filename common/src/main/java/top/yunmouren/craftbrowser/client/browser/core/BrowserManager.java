@@ -118,7 +118,7 @@ public class BrowserManager implements AutoCloseable {
     }
 
     public void loadCustomizeURL(String url) {
-        pageHandler.loadUrl(url);
+        pageHandler.loadCustomizeURL(url);
     }
 
     @Override

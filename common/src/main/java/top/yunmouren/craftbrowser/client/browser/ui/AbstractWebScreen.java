@@ -183,7 +183,7 @@ public abstract class AbstractWebScreen extends Screen {
 
     @Override
     public void onClose() {
-        browserManager.customizeLoadingScreenUrl();
+        browserManager.loadCustomizeURL("about:blank");
         heldKeys.clear();
         Minecraft.getInstance().setScreen(null);
     }
