@@ -17,17 +17,20 @@ public final class Craftbrowser {
         if (Platform.getEnvironment() == Env.CLIENT) {
             Config.CLIENT.load();
             new BrowserInstance();
-            if (Platform.isModLoaded("minecrafthttpserver")) {
-                try {
-                    int port = top.yunmouren.minecrafthttpserver.ServerHttp.getBoundPort();
-                    MinecraftHttpserverPath = "http://127.0.0.1:" + port + "/";
-                    LOGGER.info("Minecrafthttpserver loaded, path: {}", MinecraftHttpserverPath);
-                } catch (Throwable t) {
-                    LOGGER.warn("Minecrafthttpserver detected but failed to get port", t);
-                }
-            } else {
-                LOGGER.info("Minecrafthttpserver not loaded, skipping registration.");
+
+        }
+    }
+    public static void onHttpserver(){
+        if (Platform.isModLoaded("minecrafthttpserver")) {
+            try {
+                int port = top.yunmouren.minecrafthttpserver.ServerHttp.getBoundPort();
+                MinecraftHttpserverPath = "http://127.0.0.1:" + port + "/";
+                LOGGER.info("Minecrafthttpserver loaded, path: {}", MinecraftHttpserverPath);
+            } catch (Throwable t) {
+                LOGGER.warn("Minecrafthttpserver detected but failed to get port", t);
             }
+        } else {
+            LOGGER.info("Minecrafthttpserver not loaded, skipping registration.");
         }
     }
 }
