@@ -1,6 +1,9 @@
 package top.yunmouren.craftbrowser.forge;
 
+import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import dev.architectury.platform.forge.EventBuses;
 import net.minecraftforge.fml.common.Mod;
@@ -21,14 +24,13 @@ public final class CraftbrowserForge {
         EventBuses.registerModEventBus(Craftbrowser.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
         Craftbrowser.init();
         proxy.init();
-        try {
-            Class.forName("de.keksuccino.fancymenu.FancyMenu");
-            // 类存在，执行注册
-            de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry.register(new BrowserMenuBackgroundBuilder("NCEF"));
-        } catch (ClassNotFoundException e) {
-            // 类不存在，不做处理
-            // 可以打印日志方便调试
-            System.out.println("FancyMenu NotLoadedSkippingRegistration。");
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
+    }
+    private void onClientSetup(FMLClientSetupEvent event) {
+        if (ModList.get().isLoaded("fancymenu")) {
+            MenuBackgroundRegistry.register(new BrowserMenuBackgroundBuilder("NCEF"));
+        } else {
+            Craftbrowser.LOGGER.info("FancyMenu not loaded, skipping BrowserMenuBackground registration.");
         }
     }
 }
