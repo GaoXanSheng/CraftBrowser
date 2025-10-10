@@ -37,4 +37,11 @@ modId = "fancymenu"
 mandatory = false
 versionRange = "[3.7.0,)"
 ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.craftbrowser]]
+modId = "minecrafthttpserver"
+mandatory = false
+versionRange = "[1.0.0.0,)"
+ordering = "AFTER"
 side = "BOTH"

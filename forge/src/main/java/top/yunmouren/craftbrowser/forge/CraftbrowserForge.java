@@ -1,6 +1,5 @@
 package top.yunmouren.craftbrowser.forge;
 
-import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
 import net.minecraftforge.fml.DistExecutor;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import dev.architectury.platform.forge.EventBuses;
@@ -25,7 +24,7 @@ public final class CraftbrowserForge {
         try {
             Class.forName("de.keksuccino.fancymenu.FancyMenu");
             // 类存在，执行注册
-            MenuBackgroundRegistry.register(new BrowserMenuBackgroundBuilder("NCEF"));
+            de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry.register(new BrowserMenuBackgroundBuilder("NCEF"));
         } catch (ClassNotFoundException e) {
             // 类不存在，不做处理
             // 可以打印日志方便调试
