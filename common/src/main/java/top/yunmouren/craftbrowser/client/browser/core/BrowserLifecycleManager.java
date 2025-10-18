@@ -23,7 +23,11 @@ public class BrowserLifecycleManager {
         CompletableFuture.runAsync(() -> {
             try {
                 ChromeDevToolsClient client = new ChromeDevToolsClient.Builder()
+                        .setExecutorService(ChromeDevToolsClientDefaults.DEFAULT_EXECUTOR_SERVICE)
                         .setObjectMapper(mapper)
+                        .setHttpClient(ChromeDevToolsClientDefaults.DEFAULT_HTTP_CLIENT)
+                        .setActionTimeoutMillis(ChromeDevToolsClientDefaults.DEFAULT_CHROME_ACTION_TIMEOUT_MILLIS)
+                        .setSessionConnectTimeoutMillis(ChromeDevToolsClientDefaults.DEFAULT_HTTP_CONNECTION_RETRY_TIMEOUT_MILLIS)
                         .build();
                 this.session = client.connect(host, port);
             } catch (Exception e) {

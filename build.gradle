@@ -25,6 +25,9 @@ subprojects {
     }
 
     repositories {
+        flatDir {
+            dirs '../common/libs'
+        }
         maven { url = 'https://maven.minecraftforge.net' }
         maven {
             url "https://api.modrinth.com/maven"
@@ -39,15 +42,15 @@ subprojects {
     }
     dependencies {
         //CDP
-        implementation (include 'org.java-websocket:Java-WebSocket:1.5.3')
-        implementation (include 'com.fasterxml.jackson.core:jackson-core:2.7.9')
-        implementation (include 'com.fasterxml.jackson.core:jackson-databind:2.7.9')
-        implementation (include 'com.fasterxml.jackson.core:jackson-annotations:2.7.9')
-        implementation (include 'com.github.rholder:guava-retrying:1.0.7')
-        implementation (include 'com.hubspot.chrome:ChromeDevToolsClient:1.0')
-        implementation (include 'com.hubspot.chrome:ChromeDevToolsBase:1.0')
-        implementation (include 'com.hubspot:HorizonCore:0.1.1')
-        implementation (include 'com.hubspot:HorizonNing:0.1.1')
+        include 'org.java-websocket:Java-WebSocket:1.6.0'
+        include 'com.fasterxml.jackson.core:jackson-core:2.19.2'
+        include 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
+        include 'com.fasterxml.jackson.core:jackson-annotations:2.19.2'
+        include 'com.github.rholder:guava-retrying:2.0.0'
+        include 'com.hubspot:HorizonCore:0.3.3'
+        include 'com.hubspot:HorizonNing:0.3.3'
+        include 'com.hubspot.chrome:ChromeDevToolsClient:131.0.6724.0-SNAPSHOT'
+        include 'com.hubspot.chrome:ChromeDevToolsBase:131.0.6724.0-SNAPSHOT'
         //
         compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
         implementation(include("io.github.llamalad7:mixinextras-forge:0.5.0"))

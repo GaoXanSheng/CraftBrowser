@@ -80,7 +80,7 @@ public class ServerHttp {
             String path = exchange.getRequestURI().getPath();
             if (path.equals("/")) path = "/index.html"; // 默认首页
 
-            InputStream resource = ServerHttp.class.getResourceAsStream("/dist" + path);
+            InputStream resource = ServerHttp.class.getResourceAsStream(WEB_ROOT + path);
             if (resource == null) {
                 // 如果找不到文件，统一返回 index.html（支持 Vue history 模式）
                 resource = ServerHttp.class.getResourceAsStream("/dist/index.html");
