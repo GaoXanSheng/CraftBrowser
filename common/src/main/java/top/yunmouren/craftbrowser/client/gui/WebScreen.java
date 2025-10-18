@@ -3,6 +3,7 @@ package top.yunmouren.craftbrowser.client.gui;
 import net.minecraft.network.chat.Component;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.browser.ui.AbstractWebScreen;
+import top.yunmouren.minecrafthttpserver.ServerHttp;
 
 public class WebScreen extends AbstractWebScreen {
 
@@ -22,10 +23,10 @@ public class WebScreen extends AbstractWebScreen {
 
     public WebScreen() {
         super(Component.literal("WebScreen"));
-        if (Craftbrowser.MinecraftHttpserverPath == null || Craftbrowser.MinecraftHttpserverPath.isEmpty()) {
+        if (ServerHttp.getBoundPort() == -1) {
             browserManager.customizeLoadingScreenUrl();
         } else {
-            browserManager.loadUrl(Craftbrowser.MinecraftHttpserverPath);
+            browserManager.loadUrl("http://localhost:" + ServerHttp.getBoundPort() + "/");
         }
     }
 }

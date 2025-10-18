@@ -156,7 +156,7 @@ public class ConfigSpec {
             return cv;
         }
 
-        public ConfigValue<Integer> defineInRange(String key, int defaultValue, int min, int max) {
+        public ConfigValue<Integer> define(String key, int defaultValue, int min, int max) {
             var cv = new ConfigValue<>(defaultValue, min, max);
             cv.comment = pendingComment;
             cv.translation = pendingTranslation;

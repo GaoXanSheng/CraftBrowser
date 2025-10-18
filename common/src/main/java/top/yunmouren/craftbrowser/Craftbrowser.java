@@ -6,34 +6,18 @@ import dev.architectury.utils.Env;
 import org.slf4j.Logger;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserInstance;
 import top.yunmouren.craftbrowser.client.config.Config;
+import top.yunmouren.minecrafthttpserver.ServerHttp;
 
 
 public final class Craftbrowser {
     public static final String MOD_ID = "craftbrowser";;
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static String MinecraftHttpserverPath;
 
     public static void init() {
         if (Platform.getEnvironment() == Env.CLIENT) {
-            Config.CLIENT.load();
+            ServerHttp.startServer();
             new BrowserInstance();
         }
+        Config.CLIENT.load();
     }
-    public static void onHttpserver() {
-        if (Platform.isModLoaded("minecrafthttpserver")) {
-            try {
-                Class<?> serverHttpClass = Class.forName("top.yunmouren.minecrafthttpserver.ServerHttp");
-                int port = (int) serverHttpClass.getMethod("getBoundPort").invoke(null);
-                MinecraftHttpserverPath = "http://127.0.0.1:" + port + "/";
-                LOGGER.info("Minecrafthttpserver loaded, path: {}", MinecraftHttpserverPath);
-            } catch (ClassNotFoundException e) {
-                LOGGER.warn("Minecrafthttpserver class not found", e);
-            } catch (NoSuchMethodException | IllegalAccessException | java.lang.reflect.InvocationTargetException t) {
-                LOGGER.warn("Minecrafthttpserver detected but failed to get port", t);
-            }
-        } else {
-            LOGGER.info("Minecrafthttpserver not loaded, skipping registration.");
-        }
-    }
-
 }
