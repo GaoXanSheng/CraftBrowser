@@ -39,17 +39,19 @@ subprojects {
     }
     dependencies {
         //CDP
-        implementation 'com.hubspot.chrome:ChromeDevToolsClient:1.0'
-        include 'org.java-websocket:Java-WebSocket:1.5.3'
-        include 'com.fasterxml.jackson.core:jackson-core:2.7.9'
-        include 'com.fasterxml.jackson.core:jackson-databind:2.7.9'
-        include 'com.fasterxml.jackson.core:jackson-annotations:2.7.9'
-        include 'com.github.rholder:guava-retrying:1.0.7'
-        include 'com.hubspot.chrome:ChromeDevToolsClient:1.0'
-        include 'com.hubspot.chrome:ChromeDevToolsBase:1.0'
-        include 'com.hubspot:HorizonCore:0.1.1'
-        include 'com.hubspot:HorizonNing:0.1.1'
+        implementation (include 'org.java-websocket:Java-WebSocket:1.5.3')
+        implementation (include 'com.fasterxml.jackson.core:jackson-core:2.7.9')
+        implementation (include 'com.fasterxml.jackson.core:jackson-databind:2.7.9')
+        implementation (include 'com.fasterxml.jackson.core:jackson-annotations:2.7.9')
+        implementation (include 'com.github.rholder:guava-retrying:1.0.7')
+        implementation (include 'com.hubspot.chrome:ChromeDevToolsClient:1.0')
+        implementation (include 'com.hubspot.chrome:ChromeDevToolsBase:1.0')
+        implementation (include 'com.hubspot:HorizonCore:0.1.1')
+        implementation (include 'com.hubspot:HorizonNing:0.1.1')
         //
+        compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
+        implementation(include("io.github.llamalad7:mixinextras-forge:0.5.0"))
+
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
         mappings loom.officialMojangMappings()
     }

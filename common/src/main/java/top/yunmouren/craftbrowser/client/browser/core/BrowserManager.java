@@ -20,7 +20,8 @@ public class BrowserManager implements AutoCloseable {
         String host = "127.0.0.1";
         int port = Config.CLIENT.customizeBrowserPort.get();
 
-        this.lifecycleManager = new BrowserLifecycleManager(host, port);
+        this.lifecycleManager = new BrowserLifecycleManager();
+        this.lifecycleManager.initAsync(host, port);
         ChromeDevToolsSession session = this.lifecycleManager.getSession();
 
         this.mouseHandler = new BrowserMouseHandler(session);
@@ -29,7 +30,8 @@ public class BrowserManager implements AutoCloseable {
     }
 
     public BrowserManager(String host, int port) {
-        this.lifecycleManager = new BrowserLifecycleManager(host, port);
+        this.lifecycleManager = new BrowserLifecycleManager();
+        this.lifecycleManager.initAsync(host, port);
         ChromeDevToolsSession session = this.lifecycleManager.getSession();
 
         this.mouseHandler = new BrowserMouseHandler(session);

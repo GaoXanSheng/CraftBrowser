@@ -1,30 +1,35 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.chrome.devtools.base.ChromeRequest;
 import com.hubspot.chrome.devtools.client.ChromeDevToolsClient;
+import com.hubspot.chrome.devtools.client.ChromeDevToolsClientDefaults;
 import com.hubspot.chrome.devtools.client.ChromeDevToolsSession;
-import com.hubspot.chrome.devtools.client.core.target.TargetID;
-import com.hubspot.chrome.devtools.client.core.target.TargetInfo;
 import top.yunmouren.craftbrowser.Craftbrowser;
 
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class BrowserLifecycleManager {
     private ChromeDevToolsSession session;
 
-    public BrowserLifecycleManager(String host, int port) {
-        init(host, port);
+    public BrowserLifecycleManager() {
+        // 构造函数只做轻量初始化
     }
 
-    private void init(String host, int port) {
-        ChromeDevToolsClient client = ChromeDevToolsClient.defaultClient();
-        try {
-            this.session = client.connect(host, port);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+    public void initAsync(String host, int port) {
+        ObjectMapper mapper = ChromeDevToolsClientDefaults.DEFAULT_OBJECT_MAPPER;
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        CompletableFuture.runAsync(() -> {
+            try {
+                ChromeDevToolsClient client = new ChromeDevToolsClient.Builder()
+                        .setObjectMapper(mapper)
+                        .build();
+                this.session = client.connect(host, port);
+            } catch (Exception e) {
+                Craftbrowser.LOGGER.error("Failed to connect to ChromeDevTools", e);
+            }
+        });
     }
 
     public ChromeDevToolsSession getSession() {
@@ -43,9 +48,7 @@ public class BrowserLifecycleManager {
 
     public void onClose() {
         try {
-            if (session != null) {
-                session.close();
-            }
+            if (session != null) session.close();
         } catch (Exception e) {
             Craftbrowser.LOGGER.warn("Error closing session", e);
         }

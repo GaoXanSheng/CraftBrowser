@@ -17,20 +17,23 @@ public final class Craftbrowser {
         if (Platform.getEnvironment() == Env.CLIENT) {
             Config.CLIENT.load();
             new BrowserInstance();
-
         }
     }
-    public static void onHttpserver(){
+    public static void onHttpserver() {
         if (Platform.isModLoaded("minecrafthttpserver")) {
             try {
-                int port = top.yunmouren.minecrafthttpserver.ServerHttp.getBoundPort();
+                Class<?> serverHttpClass = Class.forName("top.yunmouren.minecrafthttpserver.ServerHttp");
+                int port = (int) serverHttpClass.getMethod("getBoundPort").invoke(null);
                 MinecraftHttpserverPath = "http://127.0.0.1:" + port + "/";
                 LOGGER.info("Minecrafthttpserver loaded, path: {}", MinecraftHttpserverPath);
-            } catch (Throwable t) {
+            } catch (ClassNotFoundException e) {
+                LOGGER.warn("Minecrafthttpserver class not found", e);
+            } catch (NoSuchMethodException | IllegalAccessException | java.lang.reflect.InvocationTargetException t) {
                 LOGGER.warn("Minecrafthttpserver detected but failed to get port", t);
             }
         } else {
             LOGGER.info("Minecrafthttpserver not loaded, skipping registration.");
         }
     }
+
 }
