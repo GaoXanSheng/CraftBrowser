@@ -83,6 +83,7 @@ public class Config {
             builder.push("ExternalHttp"); // 配置文件的分组
             externalHttpServer = builder.comment("Enable external HTTP server")
                     .comment("Conflicts with customizeLoadingScreenUrl. When enabled, the URL will always be loaded from this HTTP server.")
+                    .comment("Replace the dist folder in the JAR file")
                     .define("Enabled", false);
             externalHttpServerPort = builder.comment("External HTTP server port [0-65535]. Use 0 for a random port.")
                     .define("Port", 0, 0, 65535);
@@ -92,7 +93,6 @@ public class Config {
                     .comment("Example: Client POST http://localhost:8000/api")
                     .comment("The POST request will ultimately be sent to the server at http://localhost:9000/api")
                     .define("externalApiUrl", "http://localhost:9000/api");
-
             builder.pop();
             this.spec = builder.build("craftbrowser_settings.toml");
         }

@@ -41,7 +41,11 @@ public class ConfigSpec {
 
             for (Map.Entry<String, ConfigValue<?>> kv : entry.getValue()) {
                 ConfigValue<?> cv = kv.getValue();
-                if (cv.comment != null) lines.add("# " + cv.comment);
+                if (cv.comment != null && !cv.comment.isEmpty()) {
+                    for (String commentLine : cv.comment) {
+                        lines.add("# " + commentLine);
+                    }
+                }
                 String simpleKey = kv.getKey().contains(".") ? kv.getKey().substring(kv.getKey().lastIndexOf('.') + 1) : kv.getKey();
                 lines.add(simpleKey + " = " + formatTomlValue(cv.get()));
             }
@@ -50,6 +54,7 @@ public class ConfigSpec {
 
         Files.write(filePath, lines);
     }
+
     /** 从 TOML 文件加载 */
     public void load() throws IOException {
         // 确保目录存在
@@ -108,7 +113,7 @@ public class ConfigSpec {
     public static class Builder {
         private final Map<String, ConfigValue<?>> values = new LinkedHashMap<>();
         private final Deque<String> sectionStack = new ArrayDeque<>();
-        private String pendingComment;
+        private List<String> pendingComment = new ArrayList<>();
         private String pendingTranslation;
 
         private String fullKey(String key) {
@@ -129,7 +134,7 @@ public class ConfigSpec {
         }
 
         public Builder comment(String comment) {
-            this.pendingComment = comment;
+            this.pendingComment.add(comment);
             return this;
         }
 
@@ -140,7 +145,7 @@ public class ConfigSpec {
 
         public ConfigValue<Boolean> define(String key, boolean defaultValue) {
             var cv = new ConfigValue<>(defaultValue);
-            cv.comment = pendingComment;
+            cv.comment = new ArrayList<>(pendingComment);
             cv.translation = pendingTranslation;
             values.put(fullKey(key), cv);
             resetPending();
@@ -149,7 +154,7 @@ public class ConfigSpec {
 
         public ConfigValue<String> define(String key, String defaultValue) {
             var cv = new ConfigValue<>(defaultValue);
-            cv.comment = pendingComment;
+            cv.comment = new ArrayList<>(pendingComment);
             cv.translation = pendingTranslation;
             values.put(fullKey(key), cv);
             resetPending();
@@ -158,7 +163,7 @@ public class ConfigSpec {
 
         public ConfigValue<Integer> define(String key, int defaultValue, int min, int max) {
             var cv = new ConfigValue<>(defaultValue, min, max);
-            cv.comment = pendingComment;
+            cv.comment = new ArrayList<>(pendingComment);
             cv.translation = pendingTranslation;
             values.put(fullKey(key), cv);
             resetPending();
@@ -166,7 +171,7 @@ public class ConfigSpec {
         }
 
         private void resetPending() {
-            this.pendingComment = null;
+            this.pendingComment.clear();
             this.pendingTranslation = null;
         }
 
@@ -188,7 +193,7 @@ public class ConfigSpec {
         private final Integer min, max;
         private T value;
 
-        private String comment;
+        private List<String> comment;
         private String translation;
 
         public ConfigValue(T defaultValue) {
