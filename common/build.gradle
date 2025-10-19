@@ -10,15 +10,6 @@ dependencies {
     // We depend on Fabric Loader here to use the Fabric @Environment annotations,
     // which get remapped to the correct annotations on each platform.
     // Do NOT use other classes from Fabric Loader.
-    modImplementation 'org.java-websocket:Java-WebSocket:1.6.0'
-    modImplementation 'com.fasterxml.jackson.core:jackson-core:2.19.2'
-    modImplementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
-    modImplementation 'com.fasterxml.jackson.core:jackson-annotations:2.19.2'
-    modImplementation 'com.github.rholder:guava-retrying:2.0.0'
-    modImplementation 'com.hubspot:HorizonCore:0.3.3'
-    modImplementation 'com.hubspot:HorizonNing:0.3.3'
-    modImplementation fileTree(dir: 'libs', include: ['*.jar'])
-
     modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
     modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
 }

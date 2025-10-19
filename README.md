@@ -16,8 +16,6 @@
 
 - **[NCEF](https://github.com/GaoXanSheng/NCEF)** – Minecraft browser implementation based on **CefSharp**
 - **Texture Swapping** – Using **[SpoutDXWrapper](https://github.com/GaoXanSheng/NCEF/tree/master/SpoutDXWrapper)** and **[JNISpout](https://github.com/leadedge/SpoutProcessing)** (Spout2) for texture sharing
-- **Browser Control** – Using **[ChromeDevToolsClient](https://github.com/HubSpot/ChromeDevToolsClient)** for browser control
-
 ---
 
 ## Features
