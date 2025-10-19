@@ -13,7 +13,6 @@ allprojects {
     version = rootProject.mod_version
 }
 
-
 subprojects {
     apply plugin: 'dev.architectury.loom'
     apply plugin: 'architectury-plugin'
@@ -25,9 +24,6 @@ subprojects {
     }
 
     repositories {
-        flatDir {
-            dirs '../common/libs'
-        }
         maven { url = 'https://maven.minecraftforge.net' }
         maven {
             url "https://api.modrinth.com/maven"
@@ -40,10 +36,9 @@ subprojects {
             url = "https://www.cursemaven.com"
         }
     }
+
     dependencies {
-        //CDP
         compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
-        implementation(include("io.github.llamalad7:mixinextras-forge:0.5.0"))
 
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
         mappings loom.officialMojangMappings()
