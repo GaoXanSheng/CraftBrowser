@@ -1,15 +1,11 @@
 package top.yunmouren.craftbrowser.proxy;
 
-import dev.architectury.platform.Platform;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import top.yunmouren.craftbrowser.server.Server;
-
-import static top.yunmouren.craftbrowser.Craftbrowser.onHttpserver;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientProxy implements IProxy {
@@ -17,13 +13,6 @@ public class ClientProxy implements IProxy {
     public void init() {
         new Server();
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoadComplete);
-
-    }
-    public void onLoadComplete(FMLLoadCompleteEvent event) {
-        if (Platform.isModLoaded("minecrafthttpserver")) {
-            onHttpserver();
-        }
     }
     private void onClientSetup(FMLClientSetupEvent event) {
         if (ModList.get().isLoaded("fancymenu")) {

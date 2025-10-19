@@ -26,6 +26,9 @@ public class Config {
         public final ConfigSpec.ConfigValue<Integer> scrollWheelPixels;
         public final ConfigSpec.ConfigValue<Boolean> customizeSpoutIDEnabled;
         public final ConfigSpec.ConfigValue<String> customizeSpoutID;
+        public final ConfigSpec.ConfigValue<Boolean> externalHttpServer;
+        public final ConfigSpec.ConfigValue<String> externalApiUrl;
+        public final ConfigSpec.ConfigValue<Integer> externalHttpServerPort;
 
         public Client() {
             ConfigSpec.Builder builder = new ConfigSpec.Builder();
@@ -53,19 +56,19 @@ public class Config {
             builder.push("Browser");
             browserMaxfps = builder
                     .comment("Maximum browser frame rate [15-240]")
-                    .defineInRange("MaxFps", 120, 15, 240);
+                    .define("MaxFps", 120, 15, 240);
             customizeBrowserPortEnabled = builder
                     .comment("Enable custom browser port")
                     .define("CustomPortEnabled", false);
             customizeBrowserPort = builder
                     .comment("Custom browser port [0-65535]")
-                    .defineInRange("CustomPort", 9222, 0, 65535);
+                    .define("CustomPort", 9222, 0, 65535);
             keyPressDelay = builder
                     .comment("Key press delay in ms [0-1000]")
-                    .defineInRange("KeyPressDelay", 200, 0, 1000);
+                    .define("KeyPressDelay", 200, 0, 1000);
             scrollWheelPixels = builder
                     .comment("Scroll wheel step in pixels [1-1000]")
-                    .defineInRange("ScrollWheelPixels", 150, 1, 1000);
+                    .define("ScrollWheelPixels", 150, 1, 1000);
             builder.pop();
 
             // ------------------ Spout ------------------
@@ -77,12 +80,27 @@ public class Config {
                     .comment("Custom spout ID")
                     .define("CustomId", "NCEF");
             builder.pop();
-
+            builder.push("ExternalHttp"); // 配置文件的分组
+            externalHttpServer = builder.comment("Enable external HTTP server")
+                    .comment("Conflicts with customizeLoadingScreenUrl. When enabled, the URL will always be loaded from this HTTP server.")
+                    .comment("Replace the dist folder in the JAR file")
+                    .define("Enabled", false);
+            externalHttpServerPort = builder.comment("External HTTP server port [0-65535]. Use 0 for a random port.")
+                    .define("Port", 0, 0, 65535);
+            externalApiUrl = builder
+                    .comment("The URL of the external HTTP API to send Minecraft data to.")
+                    .comment("POST requests to the /api path on the HTTP SERVER URL will be converted into Minecraft packets and forwarded to the backend server.")
+                    .comment("Example: Client POST http://localhost:8000/api")
+                    .comment("The POST request will ultimately be sent to the server at http://localhost:9000/api")
+                    .define("externalApiUrl", "http://localhost:9000/api");
+            builder.pop();
             this.spec = builder.build("craftbrowser_settings.toml");
         }
 
 
-        /** 加载配置 */
+        /**
+         * 加载配置
+         */
         public void load() {
             try {
                 spec.load();
@@ -90,16 +108,17 @@ public class Config {
                 if (!Config.CLIENT.customizeBrowserPortEnabled.get()) {
                     Config.CLIENT.customizeBrowserPort.set(generateRandomPort());
                 }
-                if (!Config.CLIENT.customizeSpoutIDEnabled.get()){
+                if (!Config.CLIENT.customizeSpoutIDEnabled.get()) {
                     Config.CLIENT.customizeSpoutID.set("WebViewSpoutCapture_" + generateRandomString(10));
                 }
-                if (!Config.CLIENT.customizeLoadingScreenEnabled.get()){
+                if (!Config.CLIENT.customizeLoadingScreenEnabled.get()) {
                     Config.CLIENT.customizeLoadingScreenUrl.set("https://example.com/");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+
         private static String generateRandomString(int length) {
             final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             ThreadLocalRandom random = ThreadLocalRandom.current();
@@ -114,12 +133,16 @@ public class Config {
             for (int i = 0; i < 10; i++) { // 最多重试 10 次
                 try (ServerSocket socket = new ServerSocket(0)) {
                     return socket.getLocalPort();
-                } catch (IOException ignored) { }
+                } catch (IOException ignored) {
+                }
             }
             Craftbrowser.LOGGER.error("Failed to get random port after multiple attempts, using fallback port 9222");
             return 9222; // 失败时使用默认端口
         }
-        /** 保存配置 */
+
+        /**
+         * 保存配置
+         */
         public void save() {
             try {
                 spec.save();

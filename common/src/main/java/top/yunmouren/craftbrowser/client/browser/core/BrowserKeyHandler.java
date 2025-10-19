@@ -1,16 +1,12 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
-import com.hubspot.chrome.devtools.base.ChromeRequest;
-import com.hubspot.chrome.devtools.client.ChromeDevToolsSession;
 import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.client.browser.util.CdpUtil;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper.KeyEventInfo;
+import top.yunmouren.craftcdp.Browser;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public record BrowserKeyHandler(ChromeDevToolsSession session) {
+public record BrowserKeyHandler(Browser session) {
 
     public void keyPress(int glfwKeyCode, int glfwModifiers, boolean isRelease, boolean isRepeat) {
         if (session == null) return;
@@ -20,7 +16,6 @@ public record BrowserKeyHandler(ChromeDevToolsSession session) {
             System.err.println("Unhandled GLFW key code: " + glfwKeyCode);
             return;
         }
-
         boolean shiftDown = (glfwModifiers & GLFW.GLFW_MOD_SHIFT) != 0;
         boolean capsLockOn = (glfwModifiers & GLFW.GLFW_MOD_CAPS_LOCK) != 0;
 
@@ -33,52 +28,49 @@ public record BrowserKeyHandler(ChromeDevToolsSession session) {
                 key = info.key();
             }
         }
+        String type = isRelease ? "keyUp" : "keyDown";
+        int cdpModifiers = CdpUtil.mapGlfwModifiersToCdp(glfwModifiers);
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("modifiers", CdpUtil.mapGlfwModifiersToCdp(glfwModifiers));
-        params.put("windowsVirtualKeyCode", info.windowsVirtualKeyCode());
-        params.put("nativeVirtualKeyCode", info.windowsVirtualKeyCode());
-        params.put("code", info.code());
-        params.put("key", key);
-        params.put("isKeypad", info.location() == 3);
-        params.put("location", info.location());
+        String text = null;
+        String unmodifiedText = null;
 
-        ChromeRequest request = new ChromeRequest("Input.dispatchKeyEvent");
-
-        if (!isRelease) {
-            request.putParams("type", "keyDown")
-                    .putParams("autoRepeat", isRepeat);
-            if (isPrintableKey(key)) {
-                request.putParams("text", key)
-                        .putParams("unmodifiedText", info.key());
-            }
-        } else {
-            request.putParams("type", "keyUp")
-                    .putParams("autoRepeat", false);
+        if (!isRelease && isPrintableKey(key)) {
+            text = key;
+            unmodifiedText = info.key();
         }
 
-        request.putParams("modifiers", CdpUtil.mapGlfwModifiersToCdp(glfwModifiers))
-                .putParams("windowsVirtualKeyCode", info.windowsVirtualKeyCode())
-                .putParams("nativeVirtualKeyCode", info.windowsVirtualKeyCode())
-                .putParams("code", info.code())
-                .putParams("key", key)
-                .putParams("isKeypad", info.location() == 3)
-                .putParams("location", info.location());
-
-        session.send(request);
-
+        // 调用我们手搓的库中 Input 模块的 dispatchKeyEvent 方法
+        // 参数一一对应，代码更清晰
+        session.input().dispatchKeyEvent(
+                type,
+                cdpModifiers,
+                info.windowsVirtualKeyCode(),
+                info.code(),
+                key,
+                info.location() == 3, // isKeypad
+                info.location(),
+                // 对于 keyUp，CDP 会忽略 autoRepeat，所以直接传递 isRepeat 是安全的
+                isRepeat,
+                text,
+                unmodifiedText
+        );
     }
 
     public void keyChar(String text, int glfwModifiers) {
         if (session == null || text == null || text.isEmpty()) return;
-
-        ChromeRequest request = new ChromeRequest("Input.dispatchKeyEvent")
-                .putParams("type", "char")
-                .putParams("text", text)
-                .putParams("unmodifiedText", text.toLowerCase())
-                .putParams("modifiers", CdpUtil.mapGlfwModifiersToCdp(glfwModifiers));
-
-        session.send(request);
+        int cdpModifiers = CdpUtil.mapGlfwModifiersToCdp(glfwModifiers);
+        session.input().dispatchKeyEvent(
+                "char",
+                cdpModifiers,
+                0,                      // windowsVirtualKeyCode not applicable
+                null,                   // code not applicable
+                null,                   // key not applicable
+                false,                  // isKeypad not applicable
+                0,                      // location not applicable
+                false,                  // autoRepeat not applicable
+                text,
+                text.toLowerCase()      // unmodifiedText
+        );
 
     }
 

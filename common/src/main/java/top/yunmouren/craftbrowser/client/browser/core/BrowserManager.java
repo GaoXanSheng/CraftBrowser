@@ -1,9 +1,9 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
-import com.hubspot.chrome.devtools.client.ChromeDevToolsSession;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.client.config.Config;
+import top.yunmouren.craftcdp.Browser;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,24 +21,24 @@ public class BrowserManager implements AutoCloseable {
         int port = Config.CLIENT.customizeBrowserPort.get();
 
         this.lifecycleManager = new BrowserLifecycleManager(host, port);
-        ChromeDevToolsSession session = this.lifecycleManager.getSession();
+        var browser = this.lifecycleManager.getBrowser();
 
-        this.mouseHandler = new BrowserMouseHandler(session);
-        this.keyHandler = new BrowserKeyHandler(session);
-        this.pageHandler = new BrowserPageHandler(session);
+        this.mouseHandler = new BrowserMouseHandler(browser);
+        this.keyHandler = new BrowserKeyHandler(browser);
+        this.pageHandler = new BrowserPageHandler(browser);
     }
 
     public BrowserManager(String host, int port) {
         this.lifecycleManager = new BrowserLifecycleManager(host, port);
-        ChromeDevToolsSession session = this.lifecycleManager.getSession();
+        var browser = this.lifecycleManager.getBrowser();
 
-        this.mouseHandler = new BrowserMouseHandler(session);
-        this.keyHandler = new BrowserKeyHandler(session);
-        this.pageHandler = new BrowserPageHandler(session);
+        this.mouseHandler = new BrowserMouseHandler(browser);
+        this.keyHandler = new BrowserKeyHandler(browser);
+        this.pageHandler = new BrowserPageHandler(browser);
     }
 
-    public ChromeDevToolsSession getSession() {
-        return lifecycleManager.getSession();
+    public Browser getBrowser() {
+        return lifecycleManager.getBrowser();
     }
 
     public void resizeViewport(int width, int height) {

@@ -9,6 +9,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.NetworkDirection;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.server.command.ForgeCommand;
+import top.yunmouren.minecrafthttpserver.HttpNetworkHandler;
 
 import java.util.Optional;
 
@@ -36,6 +37,7 @@ public class Server {
     private void onCommonSetup(final FMLCommonSetupEvent event) {
         Craftbrowser.LOGGER.info("Server setup: register packets");
         registerPackets();
+        HttpNetworkHandler.register();
     }
 
     // -----------------------
