@@ -9,7 +9,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.NetworkDirection;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.server.command.ForgeCommand;
-import top.yunmouren.minecrafthttpserver.HttpNetworkHandler;
+import top.yunmouren.httpserver.HttpNetworkHandler;
 
 import java.util.Optional;
 

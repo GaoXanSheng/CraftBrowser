@@ -1,4 +1,4 @@
-package top.yunmouren.minecrafthttpserver;
+package top.yunmouren.httpserver;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;

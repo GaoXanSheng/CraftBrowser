@@ -3,7 +3,7 @@ package top.yunmouren.craftbrowser.client.browser.core;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.client.config.Config;
-import top.yunmouren.craftcdp.Browser;
+import top.yunmouren.cdp.Browser;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
