@@ -1,9 +1,7 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
 import top.yunmouren.craftbrowser.Craftbrowser;
-import top.yunmouren.craftcdp.Browser;
-
-import java.util.concurrent.CompletableFuture;
+import top.yunmouren.cdp.Browser;
 
 public class BrowserLifecycleManager {
     private Browser browser;

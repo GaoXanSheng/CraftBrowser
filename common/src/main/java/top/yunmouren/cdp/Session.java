@@ -1,4 +1,4 @@
-package top.yunmouren.craftcdp;
+package top.yunmouren.cdp;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

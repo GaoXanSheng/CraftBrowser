@@ -1,4 +1,4 @@
-package top.yunmouren.minecrafthttpserver;
+package top.yunmouren.httpserver;
 
 import dev.architectury.networking.NetworkManager;
 import io.netty.buffer.Unpooled;

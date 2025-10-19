@@ -6,7 +6,7 @@ import dev.architectury.utils.Env;
 import org.slf4j.Logger;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserInstance;
 import top.yunmouren.craftbrowser.client.config.Config;
-import top.yunmouren.minecrafthttpserver.ServerHttp;
+import top.yunmouren.httpserver.ServerHttp;
 
 
 public final class Craftbrowser {

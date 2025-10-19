@@ -2,7 +2,7 @@ package top.yunmouren.craftbrowser.client.gui;
 
 import net.minecraft.network.chat.Component;
 import top.yunmouren.craftbrowser.client.browser.ui.AbstractWebScreen;
-import top.yunmouren.minecrafthttpserver.ServerHttp;
+import top.yunmouren.httpserver.ServerHttp;
 
 public class WebScreen extends AbstractWebScreen {
 
