@@ -1,5 +1,7 @@
 package top.yunmouren.craftbrowser.client.config;
 
+import dev.architectury.platform.Platform;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import top.yunmouren.craftbrowser.Craftbrowser;
 
@@ -179,7 +181,7 @@ public class ConfigSpec {
          * 自动定位到 .minecraft/config/
          */
         public ConfigSpec build(String fileName) {
-            Path configDir = Minecraft.getInstance().gameDirectory.toPath().resolve("config");
+            Path configDir = Platform.getConfigFolder(); // 负责寻找路径
             Path filePath = configDir.resolve(fileName);
             return new ConfigSpec(filePath, values);
         }

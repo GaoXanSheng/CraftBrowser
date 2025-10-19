@@ -88,6 +88,7 @@ public class Config {
             externalHttpServerPort = builder.comment("External HTTP server port [0-65535]. Use 0 for a random port.")
                     .define("Port", 0, 0, 65535);
             externalApiUrl = builder
+                    .comment("Server only")
                     .comment("The URL of the external HTTP API to send Minecraft data to.")
                     .comment("POST requests to the /api path on the HTTP SERVER URL will be converted into Minecraft packets and forwarded to the backend server.")
                     .comment("Example: Client POST http://localhost:8000/api")

@@ -24,17 +24,18 @@ public class HttpNetworkHandler {
 
     private static final ConcurrentHashMap<UUID, CompletableFuture<String>> PENDING_REQUESTS = new ConcurrentHashMap<>();
 
-    public static void register() {
-        // 2. 注册从客户端到服务器的数据包接收器
-        NetworkManager.registerReceiver(NetworkManager.Side.S2C, HTTP_RESPONSE_PACKET_ID, (buf, context) -> {
-            HttpResponsePacket pkt = new HttpResponsePacket(buf);
-            context.queue(() -> HttpResponsePacket.handle(pkt, context));
-        });
-
-        // 3. 注册从服务器到客户端的数据包接收器
+    public static void registerC2SReceivers() {
+        // 只注册 C2S (Client to Server) 的数据包接收器
+        // 因为服务器需要监听来自客户端的请求
         NetworkManager.registerReceiver(NetworkManager.Side.C2S, HTTP_REQUEST_PACKET_ID, (buf, context) -> {
             HttpRequestPacket pkt = new HttpRequestPacket(buf);
             context.queue(() -> HttpRequestPacket.handle(pkt, context));
+        });
+    }
+    public static void registerS2CReceivers() {
+        NetworkManager.registerReceiver(NetworkManager.Side.S2C, HTTP_RESPONSE_PACKET_ID, (buf, context) -> {
+            HttpResponsePacket pkt = new HttpResponsePacket(buf);
+            context.queue(() -> HttpResponsePacket.handle(pkt, context));
         });
     }
 
