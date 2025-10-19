@@ -37,7 +37,7 @@ public class Server {
     private void onCommonSetup(final FMLCommonSetupEvent event) {
         Craftbrowser.LOGGER.info("Server setup: register packets");
         registerPackets();
-        HttpNetworkHandler.register();
+        HttpNetworkHandler.registerC2SReceivers();
     }
 
     // -----------------------
