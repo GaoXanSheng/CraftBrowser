@@ -7,13 +7,13 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import top.yunmouren.craftbrowser.proxy.ClientProxy;
 import top.yunmouren.craftbrowser.proxy.IProxy;
-import top.yunmouren.craftbrowser.proxy.ServerProxy;
+import top.yunmouren.craftbrowser.proxy.CommonProxy;
 
 @Mod(Craftbrowser.MOD_ID)
 public final class CraftbrowserForge {
     private static final IProxy proxy = DistExecutor.unsafeRunForDist(
             () -> ClientProxy::new,
-            () -> ServerProxy::new
+            () -> CommonProxy::new
     );
 
     public CraftbrowserForge() {
