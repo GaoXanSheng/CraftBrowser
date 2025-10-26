@@ -13,16 +13,17 @@ import java.net.http.HttpResponse;
 public class Browser {
     private final Session session;
 
-    // 1. 添加私有 final 成员变量来缓存实例
     private final Page defaultPage;
     private final Input defaultInput;
     private final Emulation defaultEmulation;
+    private final Runtime defaultRuntime;
 
     private Browser(Session session) {
         this.session = session;
         this.defaultPage = new Page(this.session);
         this.defaultInput = new Input(this.session);
         this.defaultEmulation = new Emulation(this.session);
+        this.defaultRuntime = new Runtime(this.session);
     }
 
     public static Browser launch(String host, int port) {
@@ -61,18 +62,20 @@ public class Browser {
         return session;
     }
 
-    // 3. 修改 getter 方法，直接返回缓存的实例
     public Page page() {
         return this.defaultPage;
     }
 
-    // (同样适用于其他域)
     public Input input() {
         return this.defaultInput;
     }
 
     public Emulation emulation() {
         return this.defaultEmulation;
+    }
+
+    public Runtime runtime() {
+        return this.defaultRuntime;
     }
 
     public void close() {

@@ -8,99 +8,78 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import top.yunmouren.craftbrowser.server.network.BrowserNetworkHandler;
+
+import java.util.Objects;
 
 /**
  * 通用命令注册类
  * 提供跨平台的命令构建逻辑
  */
 public record CommonCommand(BrowserNetworkHandler networkHandler) {
-
     /**
      * 构建命令树
      */
     public LiteralArgumentBuilder<CommandSourceStack> buildCommandTree() {
         return Commands.literal("ncef")
+                .requires(src -> src.hasPermission(2))
                 .then(playerCommand(CommandType.OPEN_GUI))
                 .then(playerCommandWithArg(CommandType.LOAD_URL, "url"));
     }
 
     /**
-     * 带权限检查的命令树（Fabric使用）
+     * 构建无参数的玩家命令
      */
-    public LiteralArgumentBuilder<CommandSourceStack> buildCommandTreeWithPermission() {
-        return Commands.literal("ncef")
-                .requires(src -> src.hasPermission(2)) // 权限等级
-                .then(playerCommand(CommandType.OPEN_GUI))
-                .then(playerCommandWithArg(CommandType.LOAD_URL, "url"));
-    }
-
     private ArgumentBuilder<CommandSourceStack, ?> playerCommand(CommandType commandType) {
         return Commands.argument("PlayerName", EntityArgument.player())
                 .then(Commands.literal(commandType.getCommandName())
-                        .executes(ctx -> executeOpenDev(ctx))
+                        .executes(ctx -> executePlayerCommand(ctx, commandType))
                 );
     }
 
+    /**
+     * 构建带参数的玩家命令
+     */
     private ArgumentBuilder<CommandSourceStack, ?> playerCommandWithArg(CommandType commandType, String argName) {
         return Commands.argument("PlayerName", EntityArgument.player())
                 .then(Commands.literal(commandType.getCommandName())
                         .then(Commands.argument(argName, StringArgumentType.string())
                                 .executes(ctx -> {
                                     String value = StringArgumentType.getString(ctx, argName);
-                                    return executeLoadUrl(ctx, value);
+                                    return executePlayerCommandWithArg(ctx, commandType, value);
                                 })
                         )
                 );
     }
 
     /**
-     * 检查执行者是否为 OP
-     * @return true 如果有权限，false 如果没有权限
+     * 执行无参数命令
      */
-    private boolean checkOpPermission(CommandSourceStack src) {
-        if (src.getEntity() instanceof ServerPlayer executor) {
-            if (!executor.getServer().getPlayerList().isOp(executor.getGameProfile())) {
-                src.sendFailure(Component.literal("§c You Do Not Have Permission To Execute This Command！"));
-                return false;
-            }
-        }
-        return true;
-    }
+    private int executePlayerCommand(CommandContext<CommandSourceStack> ctx, CommandType commandType) throws CommandSyntaxException {
+        ServerPlayer targetPlayer = EntityArgument.getPlayer(ctx, "PlayerName");
 
-    /**
-     * 执行打开开发者工具命令
-     */
-    private int executeOpenDev(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        CommandSourceStack src = ctx.getSource();
-
-        // 判断执行者是否为 OP
-        if (!checkOpPermission(src)) {
+        if (Objects.requireNonNull(commandType) == CommandType.OPEN_GUI) {
+            networkHandler.sendOpenGui(targetPlayer);
+        } else {
             return 0;
         }
 
-        // 获取目标玩家并发送网络消息
-        ServerPlayer targetPlayer = EntityArgument.getPlayer(ctx, "PlayerName");
-        networkHandler.sendOpenDev(targetPlayer);
         return 1;
     }
 
     /**
-     * 执行加载URL命令
+     * 执行带参数的命令
      */
-    private int executeLoadUrl(CommandContext<CommandSourceStack> ctx, String url) throws CommandSyntaxException {
-        CommandSourceStack src = ctx.getSource();
+    private int executePlayerCommandWithArg(CommandContext<CommandSourceStack> ctx, CommandType commandType, String arg) throws CommandSyntaxException {
+        ServerPlayer targetPlayer = EntityArgument.getPlayer(ctx, "PlayerName");
 
-        // 判断执行者是否为 OP
-        if (!checkOpPermission(src)) {
+        if (Objects.requireNonNull(commandType) == CommandType.LOAD_URL) {
+            networkHandler.sendLoadUrl(targetPlayer, arg);
+        } else {
             return 0;
         }
 
-        // 获取目标玩家并发送网络消息
-        ServerPlayer targetPlayer = EntityArgument.getPlayer(ctx, "PlayerName");
-        networkHandler.sendLoadUrl(targetPlayer, url);
         return 1;
     }
 }
