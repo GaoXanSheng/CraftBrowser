@@ -56,24 +56,6 @@ public record BrowserKeyHandler(Browser session) {
         );
     }
 
-    public void keyChar(String text, int glfwModifiers) {
-        if (session == null || text == null || text.isEmpty()) return;
-        int cdpModifiers = CdpUtil.mapGlfwModifiersToCdp(glfwModifiers);
-        session.input().dispatchKeyEvent(
-                "char",
-                cdpModifiers,
-                0,                      // windowsVirtualKeyCode not applicable
-                null,                   // code not applicable
-                null,                   // key not applicable
-                false,                  // isKeypad not applicable
-                0,                      // location not applicable
-                false,                  // autoRepeat not applicable
-                text,
-                text.toLowerCase()      // unmodifiedText
-        );
-
-    }
-
     private boolean isPrintableKey(String key) {
         return key != null && key.length() == 1;
     }

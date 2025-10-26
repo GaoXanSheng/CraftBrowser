@@ -6,6 +6,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import top.yunmouren.craftbrowser.client.network.ClientEnumeration;
+import top.yunmouren.craftbrowser.server.command.CommandType;
 
 import static top.yunmouren.craftbrowser.Craftbrowser.MOD_ID;
 
@@ -21,7 +22,7 @@ public class BrowserNetworkHandler {
         return INSTANCE;
     }
 
-    // 定义数据包的标识符 (ResourceLocation)
+    // 定义数据包的标识符
     public static final ResourceLocation BROWSER_PACKET_ID = new ResourceLocation(MOD_ID, "browser");
 
     /**
@@ -36,11 +37,11 @@ public class BrowserNetworkHandler {
     }
 
     /**
-     * 向指定玩家发送打开开发者工具的消息
+     * 向指定玩家发送打开GUI的消息（简单浏览器，无工具栏）
      * @param player 目标玩家
      */
-    public void sendOpenDev(ServerPlayer player) {
-        sendToPlayer(player, "OPEN_DEV", "");
+    public void sendOpenGui(ServerPlayer player) {
+        sendToPlayer(player, CommandType.OPEN_GUI, "");
     }
 
     /**
@@ -49,13 +50,13 @@ public class BrowserNetworkHandler {
      * @param url 要加载的URL
      */
     public void sendLoadUrl(ServerPlayer player, String url) {
-        sendToPlayer(player, "LOAD_URL", url);
+        sendToPlayer(player, CommandType.LOAD_URL, url);
     }
 
     /**
      * 向指定玩家发送消息
      */
-    private void sendToPlayer(ServerPlayer player, String type, String body) {
+    private void sendToPlayer(ServerPlayer player, CommandType type, String body) {
         BrowserPacket packet = new BrowserPacket(type, body);
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         packet.encode(buf);
@@ -66,17 +67,18 @@ public class BrowserNetworkHandler {
     /**
      * 浏览器网络消息包
      */
-    public record BrowserPacket(String type, String body) {
+    public record BrowserPacket(CommandType type, String body) {
 
         public void encode(FriendlyByteBuf buf) {
-            buf.writeUtf(type);
+            buf.writeUtf(type.name());
             buf.writeUtf(body != null ? body : "");
         }
 
         public BrowserPacket(FriendlyByteBuf buf) {
-            this(buf.readUtf(), buf.readUtf());
+            this(CommandType.valueOf(buf.readUtf()), buf.readUtf());
         }
 
+        @SuppressWarnings("unused")
         public static void handle(BrowserPacket pkt, NetworkManager.PacketContext context) {
             // 客户端执行
             new ClientEnumeration(pkt.type, pkt.body);

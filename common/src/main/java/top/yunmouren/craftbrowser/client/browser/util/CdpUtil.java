@@ -3,11 +3,6 @@ package top.yunmouren.craftbrowser.client.browser.util;
 import org.lwjgl.glfw.GLFW;
 
 public final class CdpUtil {
-
-    private CdpUtil() {
-        // Private constructor to prevent instantiation
-    }
-
     /**
      * Converts the GLFW modifier bitmask to the CDP modifier bitmask.
      */

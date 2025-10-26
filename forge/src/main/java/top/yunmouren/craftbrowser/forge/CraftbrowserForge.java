@@ -6,12 +6,11 @@ import dev.architectury.platform.forge.EventBuses;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import top.yunmouren.craftbrowser.proxy.ClientProxy;
-import top.yunmouren.craftbrowser.proxy.IProxy;
 import top.yunmouren.craftbrowser.proxy.CommonProxy;
 
 @Mod(Craftbrowser.MOD_ID)
 public final class CraftbrowserForge {
-    private static final IProxy proxy = DistExecutor.unsafeRunForDist(
+    private static final CommonProxy proxy = DistExecutor.unsafeRunForDist(
             () -> ClientProxy::new,
             () -> CommonProxy::new
     );
@@ -21,5 +20,4 @@ public final class CraftbrowserForge {
         Craftbrowser.init();
         proxy.init();
     }
-
 }

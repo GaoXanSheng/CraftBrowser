@@ -14,7 +14,7 @@ public class FabricCommand {
     public static void register() {
         // 注册命令
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            dispatcher.register(COMMON_COMMAND.buildCommandTreeWithPermission());
+            dispatcher.register(COMMON_COMMAND.buildCommandTree());
         });
     }
 }

@@ -15,6 +15,7 @@ import org.joml.Matrix4f;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
+import top.yunmouren.craftbrowser.client.browser.util.CursorType;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.HashMap;
@@ -23,8 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
-import static org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT;
+import static org.lwjgl.glfw.GLFW.*;
 
 public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
@@ -34,6 +34,8 @@ public abstract class AbstractWebScreen extends Screen {
     public final BrowserAPI browser = BrowserAPI.getInstance();
     public final BrowserManager browserManager = browser.getManager();
     public final BrowserRender browserRender = browser.getRender();
+    private CursorType lastCursorType = CursorType.DEFAULT;
+
     protected AbstractWebScreen(Component p_96550_) {
         super(p_96550_);
         browserManager.resizeViewport(texWidth, texHeight);
@@ -46,7 +48,6 @@ public abstract class AbstractWebScreen extends Screen {
         for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
             int keyCode = entry.getKey();
             long lastTime = entry.getValue();
-
             if (now - lastTime >= Config.CLIENT.keyPressDelay.get()) {
                 browserManager.keyPress(keyCode, 0, false, true); // repeat
                 entry.setValue(now);
@@ -61,6 +62,10 @@ public abstract class AbstractWebScreen extends Screen {
         if (render == 0) {
             return;
         }
+
+        // 更新光标
+        updateCursor();
+
         RenderSystem.disableBlend();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -81,6 +86,20 @@ public abstract class AbstractWebScreen extends Screen {
 
         RenderSystem.enableDepthTest();
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
+    }
+
+    /**
+     * 根据浏览器光标类型更新 GLFW 光标
+     */
+    private void updateCursor() {
+        CursorType currentCursor = browserManager.getCurrentCursor();
+
+        // 只有在光标类型改变时才更新
+        if (currentCursor != lastCursorType) {
+            long window = mc.getWindow().getWindow();
+            glfwSetCursor(window, glfwCreateStandardCursor(currentCursor.getGlfwCursor()));
+            lastCursorType = currentCursor;
+        }
     }
 
 
@@ -128,6 +147,8 @@ public abstract class AbstractWebScreen extends Screen {
             int[] pos = guiToPixel(mouseX, mouseY);
             boolean dragging = !heldMouseButtons.isEmpty();
             browserManager.mouseMove(pos[0], pos[1], dragging);
+            // 更新光标样式
+            browserManager.updateCursorAtPosition(pos[0], pos[1]);
         });
     }
 
@@ -175,7 +196,6 @@ public abstract class AbstractWebScreen extends Screen {
             this.onClose();
             return true;
         }
-
         browserManager.keyPress(keyCode, modifiers, true, false);
         heldKeys.remove(keyCode);
         return true;
@@ -185,6 +205,12 @@ public abstract class AbstractWebScreen extends Screen {
     public void onClose() {
         browserManager.loadCustomizeURL("about:blank");
         heldKeys.clear();
+
+        // 恢复默认光标
+        long window = mc.getWindow().getWindow();
+        glfwSetCursor(window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
+        lastCursorType = CursorType.DEFAULT;
+
         Minecraft.getInstance().setScreen(null);
     }
 }
