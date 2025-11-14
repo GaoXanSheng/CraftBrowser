@@ -24,12 +24,10 @@ public class BrowserMenuBackgroundBuilder extends MenuBackgroundBuilder<BrowserM
             if (url != null) {
                 back.loadUrl(url.url);
             }
-            // 延迟 1 tick 再通知 FancyMenu 保存
             consumer.accept(back);
             Minecraft.getInstance().setScreen(screen);
         });
 
-        // 打开配置界面
         net.minecraft.client.Minecraft.getInstance().setScreen(configScreen);
     }
 
@@ -61,6 +59,6 @@ public class BrowserMenuBackgroundBuilder extends MenuBackgroundBuilder<BrowserM
 
     @Override
     public @Nullable Component[] getDescription() {
-        return LocalizationUtils.splitLocalizedLines("NCEF URL", new String[0]);
+        return LocalizationUtils.splitLocalizedLines("NCEF URL");
     }
 }
