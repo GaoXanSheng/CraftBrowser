@@ -28,7 +28,6 @@ public class BrowserManager implements AutoCloseable {
         this.keyHandler = new BrowserKeyHandler(browser);
         this.pageHandler = new BrowserPageHandler(browser);
 
-        // 初始化光标监听
         initializeCursorListener(browser);
     }
 
@@ -44,9 +43,6 @@ public class BrowserManager implements AutoCloseable {
         initializeCursorListener(browser);
     }
 
-    /**
-     * 初始化光标变化监听
-     */
     private void initializeCursorListener(Browser browser) {
         if (browser == null) return;
 
@@ -54,18 +50,10 @@ public class BrowserManager implements AutoCloseable {
         browser.runtime().enable();
     }
 
-    /**
-     * 获取当前光标类型
-     */
     public CursorType getCurrentCursor() {
         return currentCursor.get();
     }
 
-    /**
-     * 更新指定位置的光标样式
-     * @param x 鼠标 X 坐标
-     * @param y 鼠标 Y 坐标
-     */
     public void updateCursorAtPosition(int x, int y) {
         Browser browser = lifecycleManager.getBrowser();
         if (browser == null) return;
@@ -92,9 +80,14 @@ public class BrowserManager implements AutoCloseable {
     }
 
     public void mouseRelease(int x, int y, int button) {
+    // 将鼠标释放事件委托给mouseHandler处理
         mouseHandler.mouseRelease(x, y, button);
     }
-
+    public void leftClick(int x, int y) {
+        // 左键 = button 0
+        mouseHandler.mousePress(x, y, 0);
+        mouseHandler.mouseRelease(x, y, 0);
+    }
     public void mouseWheel(int x, int y, int deltaY) {
         mouseHandler.mouseWheel(x, y, deltaY);
     }
