@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
-import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
+import top.yunmouren.craftbrowser.client.browser.api.BrowserSubprocess;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import static top.yunmouren.browserblock.registry.ModBlocks.BROWSER_BLOCK_ENTITY;
@@ -22,18 +22,77 @@ public class BrowserBlockEntity extends BlockEntity {
     private int relY = 0;
     private int width = 1;
     private int height = 1;
-
-    // 1. 新增：存储当前 URL，默认值为 Google 或你的主页
     private String currentUrl = Config.CLIENT.customURL.get();
-    // 标记是否已经加载过初始页面
-    private boolean isInitialized = false;
 
-    private int lastPixelWidth = -1;
-    private int lastPixelHeight = -1;
+    // Client-side only: Manages the dedicated browser process for this block.
+    @Nullable
+    private transient BrowserSubprocess browserSubprocess;
 
     public BrowserBlockEntity(BlockPos pos, BlockState state) {
         super(BROWSER_BLOCK_ENTITY.get(), pos, state);
     }
+
+    // --- Browser Process Management (Client-Side) ---
+
+    /**
+     * Lazily initializes and returns the browser subprocess for this master block.
+     * This ensures the process is only created when needed on the client side.
+     */
+    @Nullable
+    private BrowserSubprocess getBrowserSubprocess() {
+        if (this.level == null || !this.level.isClientSide || !isMaster()) {
+            return null;
+        }
+        if (this.browserSubprocess == null) {
+            int pixelWidth = this.width * 64;
+            int pixelHeight = this.height * 64;
+            // Generate a unique ID for the spout stream based on the block's position
+            String spoutId = "browserblock_" + this.worldPosition.toShortString().replaceAll("[^\\w-]", "_");
+            this.browserSubprocess = new BrowserSubprocess(this.currentUrl, pixelWidth, pixelHeight, spoutId, 60);
+        }
+        return this.browserSubprocess;
+    }
+    public void onLoad() {
+        if (level != null && level.isClientSide && isMaster()) {
+            getBrowserSubprocess();
+        }
+    }
+    /**
+     * Called by the renderer to get the current texture ID.
+     * This method is now very lightweight and just retrieves the latest texture from the subprocess.
+     */
+    public int getBrowserTextureId() {
+        int pixelWidth = this.width * 64;
+        int pixelHeight = this.height * 64;
+        if (!isMaster()) {
+
+            BrowserBlockEntity master = getMaster();
+            return master != null ? master.getBrowserTextureId() : -1;
+        }
+
+        BrowserSubprocess subprocess = getBrowserSubprocess();
+        if (subprocess != null && subprocess.getRender() != null) {
+            // Assumes getRender() returns an object that can provide the texture ID
+            // without triggering a new, blocking render operation.
+            return subprocess.getRender().render(pixelWidth, pixelHeight);
+        }
+
+        return -1;
+    }
+
+    // --- Block Entity Lifecycle ---
+
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        // Clean up the browser process when the block is removed on the client.
+        if (level != null && level.isClientSide && browserSubprocess != null) {
+            browserSubprocess.lifecycleManager.onClose();
+            browserSubprocess = null;
+        }
+    }
+
+    // --- Structure and URL Management ---
 
     public void setStructureData(BlockPos masterPos, int x, int y, int w, int h) {
         this.masterPos = masterPos;
@@ -42,53 +101,16 @@ public class BrowserBlockEntity extends BlockEntity {
         this.width = w;
         this.height = h;
         setChanged();
-    }
 
-    public boolean isMaster() {
-        return this.worldPosition.equals(masterPos);
-    }
-
-    @Nullable
-    public BrowserBlockEntity getMaster() {
-        if (level == null || masterPos == null) return null;
-        if (isMaster()) return this;
-        BlockEntity be = level.getBlockEntity(masterPos);
-        return be instanceof BrowserBlockEntity ? (BrowserBlockEntity) be : null;
-    }
-
-    public int getBrowserTextureId() {
-        if (isMaster()) {
-            if (this.width <= 0 || this.height <= 0) {
-                return -1;
+        // If the size changes, update the browser subprocess viewport.
+        if (isMaster() && level != null && level.isClientSide) {
+            BrowserSubprocess subprocess = getBrowserSubprocess();
+            if (subprocess != null) {
+                subprocess.lifecycleManager.resizeViewport(w * 64, h * 64);
             }
-
-            int pixelWidth = this.width * 64;
-            int pixelHeight = this.height * 64;
-
-            // 调整视口大小
-            if (pixelWidth != lastPixelWidth || pixelHeight != lastPixelHeight) {
-                BrowserAPI.getInstance().getManager().resizeViewport(pixelWidth, pixelHeight);
-                this.lastPixelWidth = pixelWidth;
-                this.lastPixelHeight = pixelHeight;
-            }
-
-            // 2. 新增：如果是第一次渲染且 URL 未加载，则加载 URL
-            if (!isInitialized && level != null && level.isClientSide) {
-                BrowserAPI.getInstance().getManager().loadUrl(this.currentUrl);
-                isInitialized = true;
-            }
-
-            return BrowserAPI.getInstance().getRender().render(pixelWidth, pixelHeight);
-
-        } else {
-            BrowserBlockEntity master = getMaster();
-            return master != null ? master.getBrowserTextureId() : -1;
         }
     }
 
-    /**
-     * 设置新的 URL 并同步
-     */
     public void setUrl(String newUrl) {
         if (!isMaster()) {
             BrowserBlockEntity master = getMaster();
@@ -103,15 +125,15 @@ public class BrowserBlockEntity extends BlockEntity {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
 
-        // 如果是在客户端，立即加载
+        // On the client, tell the dedicated browser process to navigate to the new URL.
         if (level != null && level.isClientSide) {
-            BrowserAPI.getInstance().getManager().loadUrl(newUrl);
+            BrowserSubprocess subprocess = getBrowserSubprocess();
+            if (subprocess != null) {
+                subprocess.pageHandler.loadUrl(newUrl);
+            }
         }
     }
 
-    /**
-     * 获取当前 URL
-     */
     public String getUrl() {
         if (!isMaster()) {
             BrowserBlockEntity master = getMaster();
@@ -120,27 +142,57 @@ public class BrowserBlockEntity extends BlockEntity {
         return this.currentUrl;
     }
 
+    // --- Input Handling ---
+
     public void sendClickInput(int x, int y) {
-        if (isMaster()) {
-            BrowserAPI.getInstance().getManager().mousePress(x, y, 0);
-            BrowserAPI.getInstance().getManager().mouseRelease(x, y, 0);
-        } else {
+        if (!isMaster()) {
             BrowserBlockEntity master = getMaster();
             if (master != null) master.sendClickInput(x, y);
+            return;
+        }
+        BrowserSubprocess subprocess = getBrowserSubprocess();
+        if (subprocess != null) {
+            subprocess.mouseHandler.mousePress(x,y,0);
+            subprocess.mouseHandler.mouseRelease(x,y,0);
         }
     }
+
+    // --- Boilerplate Getters and Data Handling ---
+
+    public boolean isMaster() {
+        return this.worldPosition.equals(masterPos);
+    }
+
+    @Nullable
+    public BrowserBlockEntity getMaster() {
+        if (level == null || masterPos == null) return null;
+        if (isMaster()) return this;
+        BlockEntity be = level.getBlockEntity(masterPos);
+        return be instanceof BrowserBlockEntity ? (BrowserBlockEntity) be : null;
+    }
+
     public AABB getRenderBoundingBox() {
         return new net.minecraft.world.phys.AABB(
                 Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY,
                 Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY
         );
     }
-    public int getRelX() { return relX; }
-    public int getRelY() { return relY; }
-    public int getWidth() { return width; }
-    public int getHeight() { return height; }
 
-    // === NBT / Data Handling ===
+    public int getRelX() {
+        return relX;
+    }
+
+    public int getRelY() {
+        return relY;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
@@ -154,7 +206,6 @@ public class BrowserBlockEntity extends BlockEntity {
         tag.putInt("RelY", relY);
         tag.putInt("Width", width);
         tag.putInt("Height", height);
-        // 3. 保存 URL
         tag.putString("BrowserUrl", currentUrl);
     }
 
@@ -168,12 +219,8 @@ public class BrowserBlockEntity extends BlockEntity {
         relY = tag.getInt("RelY");
         width = tag.getInt("Width");
         height = tag.getInt("Height");
-        // 4. 读取 URL
         if (tag.contains("BrowserUrl")) {
             this.currentUrl = tag.getString("BrowserUrl");
-            // 读取 NBT 后，如果是在客户端，可能需要重新加载页面
-            // 但通常 load() 是在数据包同步时调用的，所以我们可以标记需要刷新
-            this.isInitialized = false;
         }
     }
 
@@ -185,7 +232,6 @@ public class BrowserBlockEntity extends BlockEntity {
 
     @Override
     public CompoundTag getUpdateTag() {
-        // 确保同步数据包含 URL
         CompoundTag tag = saveWithoutMetadata();
         tag.putString("BrowserUrl", currentUrl);
         return tag;

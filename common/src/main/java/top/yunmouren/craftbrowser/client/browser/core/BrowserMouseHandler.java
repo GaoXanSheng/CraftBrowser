@@ -1,6 +1,6 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
-import top.yunmouren.cdp.Browser;
+import top.yunmouren.craftbrowser.client.browser.cdp.Browser;
 
 public record BrowserMouseHandler(Browser session) {
 

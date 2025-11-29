@@ -2,7 +2,7 @@ package top.yunmouren.craftbrowser.client.browser.core;
 
 import top.yunmouren.craftbrowser.client.browser.util.CursorType;
 import top.yunmouren.craftbrowser.client.config.Config;
-import top.yunmouren.cdp.Browser;
+import top.yunmouren.craftbrowser.client.browser.cdp.Browser;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

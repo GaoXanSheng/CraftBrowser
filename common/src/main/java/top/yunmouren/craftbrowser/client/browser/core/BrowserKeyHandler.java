@@ -4,7 +4,7 @@ import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.client.browser.util.CdpUtil;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper.KeyEventInfo;
-import top.yunmouren.cdp.Browser;
+import top.yunmouren.craftbrowser.client.browser.cdp.Browser;
 
 public record BrowserKeyHandler(Browser session) {
 

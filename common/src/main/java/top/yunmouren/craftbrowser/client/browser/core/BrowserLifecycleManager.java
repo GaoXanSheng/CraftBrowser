@@ -1,7 +1,7 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
 import top.yunmouren.craftbrowser.Craftbrowser;
-import top.yunmouren.cdp.Browser;
+import top.yunmouren.craftbrowser.client.browser.cdp.Browser;
 
 public class BrowserLifecycleManager {
     private Browser browser;
@@ -13,7 +13,9 @@ public class BrowserLifecycleManager {
             Craftbrowser.LOGGER.error("Failed to connect to ChromeDevTools", e);
         }
     }
-
+    public BrowserLifecycleManager(Browser browser) {
+        this.browser = browser;
+    }
     public Browser getBrowser() {
         return browser;
     }

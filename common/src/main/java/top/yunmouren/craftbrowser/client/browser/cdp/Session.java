@@ -1,4 +1,4 @@
-package top.yunmouren.cdp;
+package top.yunmouren.craftbrowser.client.browser.cdp;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

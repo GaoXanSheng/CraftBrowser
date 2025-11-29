@@ -25,6 +25,14 @@ public class BrowserRender extends JNISpout {
             dynTex = new DynamicTexture(dim[0], dim[1], true);
         }
     }
+    public BrowserRender(String spoutID,int width, int height){
+        super();
+        this.spoutPtr = this.init();
+        receiverConnected = this.createReceiver(spoutID, dim, spoutPtr);
+        if (dynTex == null) {
+            dynTex = new DynamicTexture(width, height, true);
+        }
+    }
     public void receiveTexture(DynamicTexture dynamicTexture){
         var received = this.receiveTexture(dim, dynamicTexture.getId(), GL11.GL_TEXTURE_2D, false, spoutPtr);
         if (!received) {
@@ -44,7 +52,7 @@ public class BrowserRender extends JNISpout {
 
         return dynTex.getId();
     }
-    private void releaseSpout() {
+    public void releaseSpout() {
         if (receiverConnected) {
             this.releaseReceiver(spoutPtr);
             receiverConnected = false;
