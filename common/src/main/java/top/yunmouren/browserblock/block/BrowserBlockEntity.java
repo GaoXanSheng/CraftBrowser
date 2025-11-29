@@ -129,7 +129,12 @@ public class BrowserBlockEntity extends BlockEntity {
             if (master != null) master.sendClickInput(x, y);
         }
     }
-
+    public AABB getRenderBoundingBox() {
+        return new net.minecraft.world.phys.AABB(
+                Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY,
+                Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY
+        );
+    }
     public int getRelX() { return relX; }
     public int getRelY() { return relY; }
     public int getWidth() { return width; }
