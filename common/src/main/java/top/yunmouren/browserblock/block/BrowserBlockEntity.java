@@ -12,7 +12,8 @@ import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
 import top.yunmouren.craftbrowser.client.config.Config;
-import top.yunmouren.craftbrowser.proxy.CommonProxy;
+
+import static top.yunmouren.browserblock.registry.ModBlocks.BROWSER_BLOCK_ENTITY;
 
 public class BrowserBlockEntity extends BlockEntity {
 
@@ -31,7 +32,7 @@ public class BrowserBlockEntity extends BlockEntity {
     private int lastPixelHeight = -1;
 
     public BrowserBlockEntity(BlockPos pos, BlockState state) {
-        super(CommonProxy.BROWSER_BLOCK_ENTITY.get(), pos, state);
+        super(BROWSER_BLOCK_ENTITY.get(), pos, state);
     }
 
     public void setStructureData(BlockPos masterPos, int x, int y, int w, int h) {
@@ -169,16 +170,6 @@ public class BrowserBlockEntity extends BlockEntity {
             // 但通常 load() 是在数据包同步时调用的，所以我们可以标记需要刷新
             this.isInitialized = false;
         }
-    }
-
-    @Override
-    public AABB getRenderBoundingBox() {
-        // 建议使用无限包围盒防止视锥剔除导致黑屏
-        if (this.isMaster()) {
-            return new AABB(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY,
-                    Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
-        }
-        return super.getRenderBoundingBox();
     }
 
     @Nullable

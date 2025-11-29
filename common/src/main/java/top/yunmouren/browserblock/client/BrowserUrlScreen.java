@@ -7,8 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import top.yunmouren.browserblock.block.BrowserBlockEntity;
-import top.yunmouren.browserblock.network.NetworkHandler;
-import top.yunmouren.browserblock.network.PacketSetBrowserUrl;
+import top.yunmouren.browserblock.network.BrowserBlockNetworkHandler;
 
 public class BrowserUrlScreen extends Screen {
     private final BrowserBlockEntity blockEntity;
@@ -57,7 +56,7 @@ public class BrowserUrlScreen extends Screen {
             if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
                 newUrl = "https://" + newUrl;
             }
-            NetworkHandler.CHANNEL.sendToServer(new PacketSetBrowserUrl(blockEntity.getBlockPos(), newUrl));
+            BrowserBlockNetworkHandler.sendToServer(blockEntity.getBlockPos(), newUrl);
         }
         this.onClose();
     }
