@@ -23,7 +23,6 @@ public class BrowserSubprocess {
         this.mouseHandler = new BrowserMouseHandler(this.browserFactory);
         this.keyHandler = new BrowserKeyHandler(this.browserFactory);
         this.pageHandler = new BrowserPageHandler(this.browserFactory);
-        System.out.println("BrowserSubprocess initialized successfully.");
     }
 
     public int getRender(int width, int height) {
@@ -33,7 +32,9 @@ public class BrowserSubprocess {
         return render.render(width, height);
     }
     public void releaseSpout(){
-        this.render.releaseSpout();
+        if (this.render!=null){
+            this.render.releaseSpout();
+        }
     }
 
     public BrowserMouseHandler getMouseHandler() {

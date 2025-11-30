@@ -1,5 +1,6 @@
 package top.yunmouren.craftbrowser.client.browser.api;
 
+import net.minecraft.client.Minecraft;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 
@@ -14,18 +15,18 @@ public class BrowserAPI {
 
     private static BrowserAPI INSTANCE;
     private final BrowserManager manager = new BrowserManager();
-    private final BrowserRender render = new BrowserRender();
+
+    private BrowserRender globalRender;
+
     private static final HashMap<String, BrowserSubprocess> Subprocess = new HashMap<>();
 
-    /**
-     * Main
-     */
     public static BrowserAPI getInstance() {
         if (INSTANCE == null) {
             BrowserAPI.INSTANCE = new BrowserAPI();
         }
         return INSTANCE;
     }
+
     public static void createBrowserAsync(String OnlyKey, String Url, int width, int height, int MaxFps, Consumer<BrowserSubprocess> callback) {
         if (Subprocess.containsKey(OnlyKey)) {
             callback.accept(Subprocess.get(OnlyKey));
@@ -43,8 +44,10 @@ public class BrowserAPI {
             }
         }).thenAcceptAsync(subprocess -> {
             if (subprocess != null) {
-                Subprocess.put(OnlyKey, subprocess);
-                callback.accept(subprocess);
+                Minecraft.getInstance().execute(() -> {
+                    Subprocess.put(OnlyKey, subprocess);
+                    callback.accept(subprocess);
+                });
             }
         });
     }
@@ -54,7 +57,10 @@ public class BrowserAPI {
     }
 
     public BrowserRender getRender() {
-        return render;
+        if (globalRender == null) {
+            globalRender = new BrowserRender();
+        }
+        return globalRender;
     }
 
     public BrowserManager getManager() {
@@ -65,19 +71,22 @@ public class BrowserAPI {
         if (Subprocess.containsKey(OnlyKey)) {
             BrowserSubprocess proc = Subprocess.remove(OnlyKey);
             if (proc != null) {
-                CompletableFuture.supplyAsync(() -> {
+                Minecraft.getInstance().execute(() -> {
                     try {
                         proc.releaseSpout();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    return null;
-                }).thenAcceptAsync(subprocess -> {
-                    proc.getBrowserFactory().close();
-                    BrowserAPI.getInstance().getManager().getBrowserFactory().runtime().evaluate(getRemoveScript(OnlyKey));
                 });
 
-
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        BrowserAPI.getInstance().getManager().getBrowserFactory().runtime().evaluate(getRemoveScript(OnlyKey));
+                        proc.getBrowserFactory().close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             }
         }
     }

@@ -5,28 +5,24 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import org.joml.Matrix4f;
-import top.yunmouren.browserblock.block.BrowserBlock;
-import top.yunmouren.browserblock.block.BrowserBlockEntity;
+import top.yunmouren.browserblock.block.BrowserMasterBlock;
+import top.yunmouren.browserblock.block.BrowserMasterBlockEntity;
 
-public class BrowserBlockRenderer implements BlockEntityRenderer<BrowserBlockEntity> {
+public class BrowserMasterBlockRenderer implements BlockEntityRenderer<BrowserMasterBlockEntity> {
 
-    public BrowserBlockRenderer(BlockEntityRendererProvider.Context ctx) {
+    public BrowserMasterBlockRenderer(BlockEntityRendererProvider.Context ctx) {
     }
 
     @Override
-    public void render(BrowserBlockEntity entity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
-        BrowserBlockEntity master = entity.getMaster();
-
-        if (master == null || !entity.getBlockPos().equals(master.getBlockPos())) {
-            return;
-        }
-
-        int textureId = master.getBrowserTextureId();
+    public void render(BrowserMasterBlockEntity entity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+        int textureId = entity.getBrowserTextureId();
         if (textureId <= 0) {
             return;
         }
@@ -35,15 +31,15 @@ public class BrowserBlockRenderer implements BlockEntityRenderer<BrowserBlockEnt
         poseStack.translate(0.5, 0.5, 0.5);
 
         BlockState state = entity.getBlockState();
-        Direction facing = state.getOptionalValue(BrowserBlock.FACING).orElse(Direction.NORTH);
+        Direction facing = state.getOptionalValue(BrowserMasterBlock.FACING).orElse(Direction.NORTH);
         poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
 
         poseStack.translate(0, 0, 0.501);
 
-        int totalW = master.getWidth();
-        int totalH = master.getHeight();
-        double centerOffsetX = (totalW / 2.0) - (master.getRelX() + 0.5);
-        double centerOffsetY = (totalH / 2.0) - (master.getRelY() + 0.5);
+        int totalW = entity.getWidth();
+        int totalH = entity.getHeight();
+        double centerOffsetX = (totalW / 2.0) - 0.5;
+        double centerOffsetY = (totalH / 2.0) - 0.5;
         poseStack.translate(centerOffsetX, centerOffsetY, 0);
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
@@ -72,7 +68,7 @@ public class BrowserBlockRenderer implements BlockEntityRenderer<BrowserBlockEnt
     }
 
     @Override
-    public boolean shouldRenderOffScreen(BrowserBlockEntity blockEntity) {
+    public boolean shouldRenderOffScreen(BrowserMasterBlockEntity blockEntity) {
         return true;
     }
 }

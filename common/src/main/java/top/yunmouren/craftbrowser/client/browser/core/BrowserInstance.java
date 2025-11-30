@@ -13,9 +13,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-/**
- * 管理 WebViewSpoutCapture 子进程
- */
 public class BrowserInstance {
 
     private static Process process;
@@ -28,11 +25,6 @@ public class BrowserInstance {
         startBrowserProcess();
     }
 
-    // ------------------- 公共方法 -------------------
-
-    /**
-     * 手动停止子进程
-     */
     public void stop() {
         if (process != null && process.isAlive()) {
             process.destroyForcibly();
@@ -41,28 +33,22 @@ public class BrowserInstance {
         }
     }
 
-    /**
-     * 获取子进程对象
-     */
     public Process getProcess() {
         return process;
     }
 
-    // ------------------- 内部方法 -------------------
 
     private void startBrowserProcess() {
         try {
             ProcessBuilder builder = getProcessBuilder();
             process = builder.start();
 
-            // 启动线程读取子进程输出
             Thread outputThread = new Thread(() -> readStream(process.getInputStream()));
             outputThread.setDaemon(true);
             outputThread.start();
 
             Craftbrowser.LOGGER.info("WebViewSpoutCapture started on port {}", Config.CLIENT.customizeBrowserPort.get());
 
-            // JVM 退出时强制销毁
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (process != null && process.isAlive()) {
                     process.destroyForcibly();
@@ -104,7 +90,7 @@ public class BrowserInstance {
         env.put("SPOUT_ID", Config.CLIENT.customizeSpoutID.get());
         env.put("MAXFPS", Config.CLIENT.browserMaxfps.get().toString());
         env.put("CUSTOMIZE_LOADING_SCREEN_URL", Config.CLIENT.customizeLoadingScreenUrl.get());
-        builder.inheritIO(); // 输出到父进程控制台
+        builder.inheritIO();
         return builder;
     }
 }

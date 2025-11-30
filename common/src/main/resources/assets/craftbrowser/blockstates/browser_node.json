@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "craftbrowser:block/browser_node" },
+    "facing=south": { "model": "craftbrowser:block/browser_node", "y": 180 },
+    "facing=west":  { "model": "craftbrowser:block/browser_node", "y": 270 },
+    "facing=east":  { "model": "craftbrowser:block/browser_node", "y": 90 }
+  }
+}

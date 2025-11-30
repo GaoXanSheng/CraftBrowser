@@ -3,6 +3,7 @@ package top.yunmouren.browserblock.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.HashSet;
@@ -11,22 +12,37 @@ import java.util.Stack;
 
 public class StructureHelper {
 
-    public static void reformStructure(Level level, BlockPos startPos, Direction facing) {
-        // 1. 广度优先搜索 (Flood Fill)
-        Set<BlockPos> connected = new HashSet<>();
+    public static boolean reformStructure(Level level, BlockPos startPos, Direction facing) {
+        Set<BlockPos> connectedNodes = new HashSet<>();
+        BlockPos masterPos = null;
+
         Stack<BlockPos> toVisit = new Stack<>();
         toVisit.push(startPos);
+        Set<BlockPos> visited = new HashSet<>();
 
         while (!toVisit.isEmpty()) {
             BlockPos current = toVisit.pop();
-            if (connected.contains(current)) continue;
+            if (visited.contains(current)) continue;
+            visited.add(current);
 
             BlockState state = level.getBlockState(current);
-            if (!(state.getBlock() instanceof BrowserBlock) || state.getValue(BrowserBlock.FACING) != facing) {
-                continue;
+            Block block = state.getBlock();
+
+            boolean isMaster = block instanceof BrowserMasterBlock;
+            boolean isNode = block instanceof BrowserNodeBlock;
+
+            if (!isMaster && !isNode) continue;
+            if (state.getValue(BrowserNodeBlock.FACING) != facing) continue;
+
+            if (isMaster) {
+                if (masterPos != null && !masterPos.equals(current)) {
+                    return false; // Found more than one master
+                }
+                masterPos = current;
+            } else {
+                connectedNodes.add(current);
             }
 
-            connected.add(current);
             toVisit.push(current.above());
             toVisit.push(current.below());
             if (facing == Direction.NORTH || facing == Direction.SOUTH) {
@@ -38,14 +54,16 @@ public class StructureHelper {
             }
         }
 
-        if (connected.isEmpty()) return;
+        if (masterPos == null) return false;
 
-        // 2. 计算边界
+        Set<BlockPos> allBlocks = new HashSet<>(connectedNodes);
+        allBlocks.add(masterPos);
+
         int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
         int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
         int minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
 
-        for (BlockPos p : connected) {
+        for (BlockPos p : allBlocks) {
             minX = Math.min(minX, p.getX());
             maxX = Math.max(maxX, p.getX());
             minY = Math.min(minY, p.getY());
@@ -53,9 +71,6 @@ public class StructureHelper {
             minZ = Math.min(minZ, p.getZ());
             maxZ = Math.max(maxZ, p.getZ());
         }
-
-        // 3. 选举 Master (坐标最小点)
-        BlockPos newMasterPos = new BlockPos(minX, minY, minZ);
 
         int height = maxY - minY + 1;
         int width;
@@ -65,9 +80,12 @@ public class StructureHelper {
             width = maxZ - minZ + 1;
         }
 
-        // 4. 更新所有方块
-        for (BlockPos p : connected) {
-            if (level.getBlockEntity(p) instanceof BrowserBlockEntity be) {
+        if (level.getBlockEntity(masterPos) instanceof BrowserMasterBlockEntity master) {
+            master.setStructureInfo(width, height, connectedNodes);
+        }
+
+        for (BlockPos p : connectedNodes) {
+            if (level.getBlockEntity(p) instanceof BrowserNodeBlockEntity be) {
                 int relY = p.getY() - minY;
                 int relX = switch (facing) {
                     case SOUTH -> p.getX() - minX;
@@ -76,22 +94,9 @@ public class StructureHelper {
                     case EAST -> maxZ - p.getZ();
                     default -> 0;
                 };
-
-                // 更新数据 -> 触发 NBT Sync -> 客户端 load -> 客户端 Resize
-                be.setStructureInfo(newMasterPos, width, height, relX, relY);
-
-                // 如果该方块之前是独立的 Master，现在变成 Slave，销毁其浏览器
-                if (!p.equals(newMasterPos)) {
-                    be.destroyBrowser();
-                } else {
-                    // 如果它是 Master，确保它的状态是“应该拥有浏览器”
-                    // 如果之前就是 Master 且浏览器开着，NBT load 会处理 Resize
-                    // 如果之前不是 Master，NBT load 会发现 ID/状态变化，触发 clientTick 初始化
-                    if (be.getBrowserTextureId() == -1) {
-                        be.markForInitialization();
-                    }
-                }
+                be.setMasterInfo(masterPos, relX, relY);
             }
         }
+        return true;
     }
 }

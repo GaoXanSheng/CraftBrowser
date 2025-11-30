@@ -16,17 +16,11 @@ public record Page(Session session) {
         session.send("Page.navigate", params);
     }
 
-    /**
-     * 启用页面域事件
-     */
     public void enable() {
         if (session == null) return;
         session.send("Page.enable", null);
     }
 
-    /**
-     * 后退到上一页
-     */
     public void goBack() {
         if (session == null) return;
 
@@ -48,9 +42,6 @@ public record Page(Session session) {
         });
     }
 
-    /**
-     * 前进到下一页
-     */
     public void goForward() {
         if (session == null) return;
 
@@ -71,17 +62,11 @@ public record Page(Session session) {
         });
     }
 
-    /**
-     * 刷新当前页面
-     */
     public void reload() {
         if (session == null) return;
         session.send("Page.reload", null);
     }
 
-    /**
-     * 强制刷新（忽略缓存）
-     */
     public void hardReload() {
         if (session == null) return;
 
@@ -90,17 +75,11 @@ public record Page(Session session) {
         session.send("Page.reload", params);
     }
 
-    /**
-     * 停止加载
-     */
     public void stopLoading() {
         if (session == null) return;
         session.send("Page.stopLoading", null);
     }
 
-    /**
-     * 获取导航历史
-     */
     public CompletableFuture<JsonObject> getNavigationHistory() {
         if (session == null) {
             return CompletableFuture.completedFuture(new JsonObject());
@@ -108,25 +87,16 @@ public record Page(Session session) {
         return session.send("Page.getNavigationHistory", null);
     }
 
-    /**
-     * 监听页面加载事件
-     */
     public void onLoadEventFired(Runnable handler) {
         if (session == null) return;
         session.on("Page.loadEventFired", params -> handler.run());
     }
 
-    /**
-     * 监听 DOM 内容加载完成事件
-     */
     public void onDomContentEventFired(Runnable handler) {
         if (session == null) return;
         session.on("Page.domContentEventFired", params -> handler.run());
     }
 
-    /**
-     * 监听帧导航事件
-     */
     public void onFrameNavigated(Consumer<String> urlHandler) {
         if (session == null) return;
         session.on("Page.frameNavigated", params -> {

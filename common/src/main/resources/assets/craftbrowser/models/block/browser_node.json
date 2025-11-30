@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "craftbrowser:block/machine_top",
+    "front": "craftbrowser:block/browser_node_front",
+    "side": "craftbrowser:block/machine_side"
+  }
+}

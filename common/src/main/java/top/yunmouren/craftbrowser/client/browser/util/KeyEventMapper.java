@@ -4,7 +4,6 @@ import org.lwjgl.glfw.GLFW;
 
 public final class KeyEventMapper {
 
-    // Helper record to store all necessary key event information
     public record KeyEventInfo(
             String key,                 // e.g., "a"
             String shiftKey,            // e.g., "A"

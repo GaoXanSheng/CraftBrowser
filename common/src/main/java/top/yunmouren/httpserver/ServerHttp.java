@@ -14,7 +14,7 @@ public class ServerHttp {
     public static int getBoundPort() {
         return boundPort;
     }
-    // 静态资源根目录
+
     private static final String WEB_ROOT = "/dist";
 
     public static void startServer() {
@@ -46,10 +46,9 @@ public class ServerHttp {
 
             java.util.concurrent.CompletableFuture<String> future = new java.util.concurrent.CompletableFuture<>();
 
-            // 发送到 Minecraft 数据包
+
             HttpNetworkHandler.sendToServer(requestBody, future);
 
-            // 等待结果，10 秒超时
             String result;
             try {
                 result = future.get(10, java.util.concurrent.TimeUnit.SECONDS);
@@ -57,7 +56,6 @@ public class ServerHttp {
                 result = "{\"error\":\"timeout\"}";
             }
 
-            // 返回给客户端
             exchange.getResponseHeaders().add("Content-Type", "application/json; charset=UTF-8");
             byte[] bytes = result.getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, bytes.length);
@@ -82,7 +80,6 @@ public class ServerHttp {
 
             InputStream resource = ServerHttp.class.getResourceAsStream(WEB_ROOT + path);
             if (resource == null) {
-                // 如果找不到文件，统一返回 index.html（支持 Vue history 模式）
                 resource = ServerHttp.class.getResourceAsStream("/dist/index.html");
                 if (resource == null) {
                     exchange.sendResponseHeaders(404, -1);
@@ -142,7 +139,6 @@ public class ServerHttp {
         if (path.endsWith(".rar")) return "application/vnd.rar";
         if (path.endsWith(".7z")) return "application/x-7z-compressed";
 
-        // 默认二进制流
         return "application/octet-stream";
     }
 

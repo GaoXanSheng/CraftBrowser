@@ -88,9 +88,6 @@ public abstract class AbstractWebScreen extends Screen {
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
-    /**
-     * 根据浏览器光标类型更新 GLFW 光标
-     */
     private void updateCursor() {
         CursorType currentCursor = browserManager.getCurrentCursor();
 
@@ -121,13 +118,6 @@ public abstract class AbstractWebScreen extends Screen {
         }, RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
-    /**
-     * 将 Minecraft GUI 坐标转换为窗口像素坐标
-     *
-     * @param guiX GUI 坐标 X
-     * @param guiY GUI 坐标 Y
-     * @return 长度为 2 的数组 [pixelX, pixelY]
-     */
     public static int[] guiToPixel(double guiX, double guiY) {
         Minecraft mc = Minecraft.getInstance();
         int windowWidth = mc.getWindow().getScreenWidth();   // 实际像素宽
