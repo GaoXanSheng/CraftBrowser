@@ -61,14 +61,23 @@ public class BrowserAPI {
         return manager;
     }
 
-    // 新增：移除浏览器的辅助方法
     public static void removeBrowser(String OnlyKey) {
         if (Subprocess.containsKey(OnlyKey)) {
             BrowserSubprocess proc = Subprocess.remove(OnlyKey);
             if (proc != null) {
-                proc.releaseSpout();
-                proc.getBrowserFactory().close();
-                BrowserAPI.getInstance().getManager().getBrowserFactory().runtime().evaluate(getRemoveScript(OnlyKey));
+                CompletableFuture.supplyAsync(() -> {
+                    try {
+                        proc.releaseSpout();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }).thenAcceptAsync(subprocess -> {
+                    proc.getBrowserFactory().close();
+                    BrowserAPI.getInstance().getManager().getBrowserFactory().runtime().evaluate(getRemoveScript(OnlyKey));
+                });
+
+
             }
         }
     }

@@ -13,12 +13,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
+import top.yunmouren.browserblock.ModBlocks;
 import top.yunmouren.browserblock.client.BrowserUrlScreen;
 
 public class BrowserBlock extends Block implements EntityBlock {
@@ -37,6 +40,20 @@ public class BrowserBlock extends Block implements EntityBlock {
 
     @Nullable
     @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (!level.isClientSide) return null;
+        if (type == ModBlocks.BROWSER_BLOCK_ENTITY.get()) {
+            return (level1, pos, state1, blockEntity) -> {
+                if (blockEntity instanceof BrowserBlockEntity browserEntity) {
+                    BrowserBlockEntity.clientTick(level1, pos, state1, browserEntity);
+                }
+            };
+        }
+        return null;
+    }
+
+    @Nullable
+    @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
@@ -44,20 +61,15 @@ public class BrowserBlock extends Block implements EntityBlock {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        if (!level.isClientSide) {
-            StructureHelper.updateStructure(level, pos);
-        }
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
-            if (!level.isClientSide) {
-                for (Direction dir : Direction.values()) {
-                    BlockPos neighbor = pos.relative(dir);
-                    if (level.getBlockState(neighbor).is(this)) {
-                        StructureHelper.updateStructure(level, neighbor);
-                    }
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof BrowserBlockEntity browserEntity) {
+                if (browserEntity.isMaster()) {
+                    browserEntity.destroyBrowser();
                 }
             }
             super.onRemove(state, level, pos, newState, isMoving);
@@ -67,32 +79,43 @@ public class BrowserBlock extends Block implements EntityBlock {
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
-        BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof BrowserBlockEntity browserEntity)) {
-            return InteractionResult.PASS;
-        }
-
-        BrowserBlockEntity master = browserEntity.getMaster();
-        if (master == null) return InteractionResult.FAIL;
-
         if (hit.getDirection() != state.getValue(FACING)) {
             return InteractionResult.PASS;
         }
 
-        if (player.isShiftKeyDown()) {
+        if (level.getBlockEntity(pos) instanceof BrowserBlockEntity be) {
+            BrowserBlockEntity master = be.getMaster();
+            boolean isOrphan = (master == null);
+
+            if (player.isShiftKeyDown()) {
+                if (isOrphan) {
+                    if (!level.isClientSide) {
+                        StructureHelper.reformStructure(level, pos, state.getValue(FACING));
+                        player.displayClientMessage(net.minecraft.network.chat.Component.literal("§a屏幕结构已更新 (Screen Resized)"), true);
+                    }
+                } else {
+                    if (level.isClientSide) {
+                        Minecraft.getInstance().setScreen(new BrowserUrlScreen(master));
+                    }
+                }
+                return InteractionResult.sidedSuccess(level.isClientSide);
+            }
+
+            if (isOrphan) {
+                if (!level.isClientSide) {
+                    StructureHelper.reformStructure(level, pos, state.getValue(FACING));
+                    player.displayClientMessage(net.minecraft.network.chat.Component.literal("§a屏幕结构已初始化"), true);
+                }
+                return InteractionResult.sidedSuccess(level.isClientSide);
+            }
+
             if (level.isClientSide) {
-                Minecraft.getInstance().setScreen(new BrowserUrlScreen(master)); // 打开 Master 的配置
+                handleClick(be, hit, state.getValue(FACING));
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-
-        if (level.isClientSide) {
-            Direction facing = state.getValue(FACING);
-            handleClick(browserEntity, hit, facing);
-        }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.PASS;
     }
-
     private void handleClick(BrowserBlockEntity be, BlockHitResult hit, Direction facing) {
         BrowserBlockEntity master = be.getMaster();
         if (master == null) return;
@@ -102,7 +125,6 @@ public class BrowserBlock extends Block implements EntityBlock {
         double dz = hit.getLocation().z - be.getBlockPos().getZ();
 
         double localHitX;
-
         switch (facing) {
             case SOUTH: localHitX = dx; break;
             case NORTH: localHitX = 1.0 - dx; break;

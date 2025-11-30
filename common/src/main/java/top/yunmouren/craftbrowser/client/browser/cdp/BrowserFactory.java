@@ -33,7 +33,6 @@ public class BrowserFactory {
 
     public static BrowserFactory launch(String host, int port,String id) {
         return launch(host, port, target -> {
-            System.out.println("Target JSON: " + target.toString());
             JsonElement idElement = target.get("title");
             return idElement != null && idElement.getAsString().equals(id);
         });

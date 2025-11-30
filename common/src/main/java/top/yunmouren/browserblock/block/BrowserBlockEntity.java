@@ -5,208 +5,176 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
+import top.yunmouren.browserblock.ModBlocks;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserSubprocess;
 import top.yunmouren.craftbrowser.client.config.Config;
-
-import static top.yunmouren.browserblock.ModBlocks.BROWSER_BLOCK_ENTITY;
+import java.util.UUID;
 
 public class BrowserBlockEntity extends BlockEntity {
 
-    private BlockPos masterPos;
-    private int relX = 0;
-    private int relY = 0;
-    private int width = 1;
-    private int height = 1;
+    // 【修改点 1】: 默认 Master 位置为 null，表示它是未绑定的节点
+    @Nullable
+    private BlockPos masterPos = null;
+
+    private int relX = 0, relY = 0;
+    private int width = 1, height = 1;
+
     private String currentUrl = Config.CLIENT.customURL.get();
+    private String browserId;
 
-    // 唯一标识符，基于坐标生成
-    private String spoutId;
-
-    // 防止重复请求的加载锁
-    private boolean isLoading = false;
+    private boolean isInitialized = false;
+    private int initTimer = 0;
+    private static final int INIT_DELAY_TICKS = 60;
 
     @Nullable
     private volatile BrowserSubprocess browserSubprocess;
 
     public BrowserBlockEntity(BlockPos pos, BlockState state) {
-        super(BROWSER_BLOCK_ENTITY.get(), pos, state);
+        super(ModBlocks.BROWSER_BLOCK_ENTITY.get(), pos, state);
+        this.browserId = "B" + ((pos.getX() & 0xFF) << 16 | (pos.getY() & 0xFF) << 8 | (pos.getZ() & 0xFF));
     }
 
-    /**
-     * 获取 SpoutID，如果未初始化则初始化
-     */
-    private String getSpoutId() {
-        if (this.spoutId == null) {
-            this.spoutId = "browserblock-" + this.worldPosition.getX() + "-" + this.worldPosition.getY() + "-" + this.worldPosition.getZ();
+    public static void clientTick(Level level, BlockPos pos, BlockState state, BrowserBlockEntity be) {
+        // 只有确认为 Master 的节点才执行 Tick 逻辑
+        if (!be.isMaster()) return;
+
+        if (!be.isInitialized) {
+            be.initTimer++;
+            if (be.initTimer >= INIT_DELAY_TICKS) {
+                be.loadBrowserAsync();
+                be.isInitialized = true;
+            }
         }
-        return this.spoutId;
     }
 
-    /**
-     * 获取浏览器实例（异步懒加载）
-     */
-    @Nullable
-    private BrowserSubprocess getBrowserSubprocess() {
-        // 仅在客户端且为 Master 时运行
-        if (this.level == null || !this.level.isClientSide || !isMaster()) {
-            return null;
-        }
+    public void markForInitialization() {
+        this.isInitialized = false;
+        this.initTimer = 0;
+    }
 
-        // 1. 如果已有实例，直接返回
-        if (this.browserSubprocess != null) {
-            return this.browserSubprocess;
-        }
+    private void loadBrowserAsync() {
+        if (level == null || !level.isClientSide) return;
+        if (this.browserSubprocess != null) return;
 
-        // 2. 如果正在加载中，返回 null (渲染器应处理这种情况)
-        if (this.isLoading) {
-            return null;
-        }
+        destroyBrowser();
 
-        // 3. 开始异步加载
-        this.isLoading = true;
-        int pixelWidth = this.width * 64;
-        int pixelHeight = this.height * 64;
-        String id = getSpoutId();
+        int pixelW = this.width * 64;
+        int pixelH = this.height * 64;
+        String id = this.browserId;
 
-        // 调用异步创建 API
-        BrowserAPI.createBrowserAsync(id, this.currentUrl, pixelWidth, pixelHeight, 60, (subprocess) -> {
-            // 检查方块是否已被移除
+        BrowserAPI.createBrowserAsync(id, this.currentUrl, pixelW, pixelH, 60, (subprocess) -> {
             if (this.isRemoved()) {
                 BrowserAPI.removeBrowser(id);
-                this.isLoading = false;
                 return;
             }
-            // 赋值实例
             this.browserSubprocess = subprocess;
-
-            // 初始化视口大小
-            if (this.browserSubprocess != null) {
-                this.browserSubprocess.getPageHandler().resizeViewport(pixelWidth, pixelHeight);
-            }
-
-            // 解除锁
-            this.isLoading = false;
         });
-
-        // 在回调完成前返回 null
-        return null;
     }
 
-    public void onLoad() {
-        if (level != null && level.isClientSide && isMaster()) {
-            getBrowserSubprocess(); // 触发预加载
+    public void destroyBrowser() {
+        if (level != null && level.isClientSide) {
+            BrowserAPI.removeBrowser(this.browserId);
+            this.browserSubprocess = null;
         }
     }
-
-    public int getBrowserTextureId() {
-        int pixelWidth = this.width * 64;
-        int pixelHeight = this.height * 64;
-
-        if (!isMaster()) {
-            BrowserBlockEntity master = getMaster();
-            return master != null ? master.getBrowserTextureId() : -1;
-        }
-
-        // 尝试获取实例
-        BrowserSubprocess subprocess = getBrowserSubprocess();
-
-        // 如果实例存在且渲染器就绪，返回纹理ID
-        if (subprocess != null) {
-            return subprocess.getRender(pixelWidth, pixelHeight);
-        }
-
-        // 正在加载或失败返回 -1
-        return -1;
+    public AABB getRenderBoundingBox() {
+        return new AABB(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY,
+                Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
     }
-
-    // --- Block Entity Lifecycle ---
 
     @Override
     public void setRemoved() {
         super.setRemoved();
-        // 方块移除时清理浏览器资源
-        if (level != null && level.isClientSide) {
-            if (browserSubprocess != null) {
-                BrowserAPI.removeBrowser(getSpoutId());
-                browserSubprocess = null;
-            }
+        if (level != null && level.isClientSide && isMaster()) {
+            destroyBrowser();
         }
     }
 
-    // --- Structure and URL Management ---
+    // --- 数据同步与结构管理 ---
 
-    public void setStructureData(BlockPos masterPos, int x, int y, int w, int h) {
+    public void setMasterPos(BlockPos pos) {
+        this.masterPos = pos;
+        this.setChanged();
+    }
+
+    public void setStructureInfo(BlockPos masterPos, int w, int h, int rx, int ry) {
         this.masterPos = masterPos;
-        this.relX = x;
-        this.relY = y;
         this.width = w;
         this.height = h;
-        setChanged();
-
-        // 如果结构大小改变，调整浏览器视口
-        if (isMaster() && level != null && level.isClientSide) {
-            BrowserSubprocess subprocess = getBrowserSubprocess(); // 不会触发新加载，只获取现有
-            if (subprocess != null) {
-                subprocess.getPageHandler().resizeViewport(w * 64, h * 64);
-            }
-        }
-    }
-
-    public void setUrl(String newUrl) {
-        if (!isMaster()) {
-            BrowserBlockEntity master = getMaster();
-            if (master != null) master.setUrl(newUrl);
-            return;
-        }
-
-        this.currentUrl = newUrl;
+        this.relX = rx;
+        this.relY = ry;
         this.setChanged();
-
         if (level != null) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
+    }
 
-        // 客户端直接导航
+    @Override
+    public void load(CompoundTag tag) {
+        super.load(tag);
+
+        int oldWidth = this.width;
+        int oldHeight = this.height;
+        String oldId = this.browserId;
+
+        // 【修改点 3】: 读取 Master 坐标，如果没有相关 Key，保持 masterPos 为 null
+        if (tag.contains("MX")) {
+            masterPos = new BlockPos(tag.getInt("MX"), tag.getInt("MY"), tag.getInt("MZ"));
+        } else {
+            masterPos = null;
+        }
+
+        width = tag.getInt("W");
+        height = tag.getInt("H");
+        relX = tag.getInt("RX");
+        relY = tag.getInt("RY");
+
+        if (tag.contains("BID")) browserId = tag.getString("BID");
+        if (tag.contains("Url")) currentUrl = tag.getString("Url");
+
         if (level != null && level.isClientSide) {
-            BrowserSubprocess subprocess = getBrowserSubprocess();
-            if (subprocess != null) {
-                subprocess.getPageHandler().loadUrl(newUrl);
+            // 如果 ID 变了 (换了 Master)，强制重新初始化
+            if (oldId != null && !oldId.equals(browserId)) {
+                this.isInitialized = false;
+                this.initTimer = 0;
+                this.browserSubprocess = null;
+            }
+            // 如果 ID 没变，但尺寸变了，且浏览器正在运行 -> Resize
+            else if (browserSubprocess != null && (oldWidth != width || oldHeight != height)) {
+                browserSubprocess.getPageHandler().resizeViewport(width * 64, height * 64);
+            }
+            // 如果还没初始化，重置计时器
+            else if (browserSubprocess == null && !this.isInitialized) {
+                this.initTimer = 0;
             }
         }
     }
 
-    public String getUrl() {
-        if (!isMaster()) {
-            BrowserBlockEntity master = getMaster();
-            return master != null ? master.getUrl() : "";
+    @Override
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        // 【修改点 4】: 仅当 masterPos 存在时写入坐标
+        if (masterPos != null) {
+            tag.putInt("MX", masterPos.getX());
+            tag.putInt("MY", masterPos.getY());
+            tag.putInt("MZ", masterPos.getZ());
         }
-        return this.currentUrl;
+        tag.putInt("W", width);
+        tag.putInt("H", height);
+        tag.putInt("RX", relX);
+        tag.putInt("RY", relY);
+        tag.putString("BID", browserId);
+        tag.putString("Url", currentUrl);
     }
 
-    // --- Input Handling ---
-
-    public void sendClickInput(int x, int y) {
-        if (!isMaster()) {
-            BrowserBlockEntity master = getMaster();
-            if (master != null) master.sendClickInput(x, y);
-            return;
-        }
-
-        BrowserSubprocess subprocess = getBrowserSubprocess();
-        if (subprocess != null) {
-            subprocess.getMouseHandler().mousePress(x,y,0);
-            subprocess.getMouseHandler().mouseRelease(x,y,0);
-        }
-    }
-
-    // --- Boilerplate Getters and Data Handling ---
-
+    // 【修改点 5】: 判断 Master 的逻辑变更
     public boolean isMaster() {
         return this.worldPosition.equals(masterPos);
     }
@@ -219,45 +187,21 @@ public class BrowserBlockEntity extends BlockEntity {
         return be instanceof BrowserBlockEntity ? (BrowserBlockEntity) be : null;
     }
 
-    public AABB getRenderBoundingBox() {
-        return new net.minecraft.world.phys.AABB(
-                Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY,
-                Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY
-        );
+    public int getBrowserTextureId() {
+        if (!isMaster()) {
+            BrowserBlockEntity master = getMaster();
+            return master != null ? master.getBrowserTextureId() : -1;
+        }
+        if (browserSubprocess != null) {
+            return browserSubprocess.getRender(width * 64, height * 64);
+        }
+        return -1;
     }
 
-    public int getRelX() { return relX; }
-    public int getRelY() { return relY; }
-    public int getWidth() { return width; }
-    public int getHeight() { return height; }
-
-    @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        if (masterPos != null) {
-            tag.putInt("MasterX", masterPos.getX());
-            tag.putInt("MasterY", masterPos.getY());
-            tag.putInt("MasterZ", masterPos.getZ());
-        }
-        tag.putInt("RelX", relX);
-        tag.putInt("RelY", relY);
-        tag.putInt("Width", width);
-        tag.putInt("Height", height);
-        tag.putString("BrowserUrl", currentUrl);
-    }
-
-    @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        if (tag.contains("MasterX")) {
-            masterPos = new BlockPos(tag.getInt("MasterX"), tag.getInt("MasterY"), tag.getInt("MasterZ"));
-        }
-        relX = tag.getInt("RelX");
-        relY = tag.getInt("RelY");
-        width = tag.getInt("Width");
-        height = tag.getInt("Height");
-        if (tag.contains("BrowserUrl")) {
-            this.currentUrl = tag.getString("BrowserUrl");
+    public void sendClickInput(int x, int y) {
+        if (browserSubprocess != null) {
+            browserSubprocess.getMouseHandler().mousePress(x, y, 0);
+            browserSubprocess.getMouseHandler().mouseRelease(x, y, 0);
         }
     }
 
@@ -269,9 +213,18 @@ public class BrowserBlockEntity extends BlockEntity {
 
     @Override
     public CompoundTag getUpdateTag() {
-        CompoundTag tag = saveWithoutMetadata();
-        tag.putString("BrowserUrl", currentUrl);
-        return tag;
+        return saveWithoutMetadata();
     }
 
+    public int getWidth() { return width; }
+    public int getHeight() { return height; }
+    public int getRelX() { return relX; }
+    public int getRelY() { return relY; }
+    public String getUrl() { return currentUrl; }
+    public void setUrl(String url) {
+        if(browserSubprocess != null) browserSubprocess.getPageHandler().loadUrl(url);
+        this.currentUrl = url;
+        this.setChanged();
+
+    }
 }
