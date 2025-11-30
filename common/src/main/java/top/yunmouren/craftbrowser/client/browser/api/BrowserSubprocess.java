@@ -1,46 +1,54 @@
 package top.yunmouren.craftbrowser.client.browser.api;
 
-import top.yunmouren.craftbrowser.client.browser.cdp.Browser;
-import top.yunmouren.craftbrowser.client.browser.core.*;
+import top.yunmouren.craftbrowser.client.browser.cdp.BrowserFactory;
+import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
+import top.yunmouren.craftbrowser.client.browser.handler.BrowserKeyHandler;
+import top.yunmouren.craftbrowser.client.browser.handler.BrowserMouseHandler;
+import top.yunmouren.craftbrowser.client.browser.handler.BrowserPageHandler;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 public class BrowserSubprocess {
-    private final BrowserRender render;
-    public final BrowserLifecycleManager lifecycleManager;
-    public final BrowserMouseHandler mouseHandler;
-    public final BrowserKeyHandler keyHandler;
-    public final BrowserPageHandler pageHandler;
+    private BrowserRender render;
+    private final BrowserMouseHandler mouseHandler;
+    private final BrowserKeyHandler keyHandler;
+    private final BrowserPageHandler pageHandler;
+    private final BrowserFactory browserFactory;
+    private final String spoutID;
 
-    public BrowserSubprocess(String url, int width, int height, String spoutID, int maxFps) {
-        BrowserAPI.getInstance().getManager().getBrowser().runtime().evaluate(getScript(
-                url, width, height, spoutID, maxFps
-        ));
+    BrowserSubprocess(String spoutID) {
         String host = "127.0.0.1";
         int port = Config.CLIENT.customizeBrowserPort.get();
-        var browser = Browser.launch(host, port, url);
-        lifecycleManager = new BrowserLifecycleManager(browser);
-        mouseHandler = new BrowserMouseHandler(browser);
-        keyHandler = new BrowserKeyHandler(browser);
-        pageHandler = new BrowserPageHandler(browser);
-        render = new BrowserRender(spoutID, width, height);
+        this.spoutID = spoutID;
+        this.browserFactory = BrowserFactory.launch(host, port, spoutID);
+        this.mouseHandler = new BrowserMouseHandler(this.browserFactory);
+        this.keyHandler = new BrowserKeyHandler(this.browserFactory);
+        this.pageHandler = new BrowserPageHandler(this.browserFactory);
+        System.out.println("BrowserSubprocess initialized successfully.");
     }
 
-    private String getScript(String url, int width, int height, String spoutID, int maxFps) {
-        return """
-                CefSharp.BindObjectAsync("appController").then(() => {
-                    appController.createBrowser(
-                        "%s",
-                        %d,
-                        %d,
-                        "%s",
-                        %d
-                    );
-                });
-                """.formatted(url, width, height, spoutID, maxFps);
+    public int getRender(int width, int height) {
+        if (render == null) {
+            this.render = new BrowserRender(spoutID, width, height);
+        }
+        return render.render(width, height);
+    }
+    public void releaseSpout(){
+        this.render.releaseSpout();
     }
 
-    public BrowserRender getRender() {
-        return render;
+    public BrowserMouseHandler getMouseHandler() {
+        return mouseHandler;
     }
 
+    public BrowserKeyHandler getKeyHandler() {
+        return keyHandler;
+    }
+
+    public BrowserPageHandler getPageHandler() {
+        return pageHandler;
+    }
+
+    public BrowserFactory getBrowserFactory() {
+        return browserFactory;
+    }
 }

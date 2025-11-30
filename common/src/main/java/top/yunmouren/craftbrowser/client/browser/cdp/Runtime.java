@@ -27,6 +27,7 @@ public record Runtime(Session session) {
         JsonObject params = new JsonObject();
         params.addProperty("expression", expression);
         params.addProperty("returnByValue", true);
+        params.addProperty("awaitPromise", true);
 
         return session.send("Runtime.evaluate", params);
     }
@@ -53,8 +54,7 @@ public record Runtime(Session session) {
                 if (result.has("result") && result.getAsJsonObject("result").has("value")) {
                     return result.getAsJsonObject("result").get("value").getAsString();
                 }
-            } catch (Exception e) {
-                // 忽略错误，返回默认值
+            } catch (Exception ignored) {
             }
             return "default";
         });

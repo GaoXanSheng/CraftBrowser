@@ -10,10 +10,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
+import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserSubprocess;
 import top.yunmouren.craftbrowser.client.config.Config;
 
-import static top.yunmouren.browserblock.registry.ModBlocks.BROWSER_BLOCK_ENTITY;
+import static top.yunmouren.browserblock.ModBlocks.BROWSER_BLOCK_ENTITY;
 
 public class BrowserBlockEntity extends BlockEntity {
 
@@ -24,59 +25,103 @@ public class BrowserBlockEntity extends BlockEntity {
     private int height = 1;
     private String currentUrl = Config.CLIENT.customURL.get();
 
-    // Client-side only: Manages the dedicated browser process for this block.
+    // 唯一标识符，基于坐标生成
+    private String spoutId;
+
+    // 防止重复请求的加载锁
+    private boolean isLoading = false;
+
     @Nullable
-    private transient BrowserSubprocess browserSubprocess;
+    private volatile BrowserSubprocess browserSubprocess;
 
     public BrowserBlockEntity(BlockPos pos, BlockState state) {
         super(BROWSER_BLOCK_ENTITY.get(), pos, state);
     }
 
-    // --- Browser Process Management (Client-Side) ---
+    /**
+     * 获取 SpoutID，如果未初始化则初始化
+     */
+    private String getSpoutId() {
+        if (this.spoutId == null) {
+            this.spoutId = "browserblock-" + this.worldPosition.getX() + "-" + this.worldPosition.getY() + "-" + this.worldPosition.getZ();
+        }
+        return this.spoutId;
+    }
 
     /**
-     * Lazily initializes and returns the browser subprocess for this master block.
-     * This ensures the process is only created when needed on the client side.
+     * 获取浏览器实例（异步懒加载）
      */
     @Nullable
     private BrowserSubprocess getBrowserSubprocess() {
+        // 仅在客户端且为 Master 时运行
         if (this.level == null || !this.level.isClientSide || !isMaster()) {
             return null;
         }
-        if (this.browserSubprocess == null) {
-            int pixelWidth = this.width * 64;
-            int pixelHeight = this.height * 64;
-            // Generate a unique ID for the spout stream based on the block's position
-            String spoutId = "browserblock_" + this.worldPosition.toShortString().replaceAll("[^\\w-]", "_");
-            this.browserSubprocess = new BrowserSubprocess(this.currentUrl, pixelWidth, pixelHeight, spoutId, 60);
+
+        // 1. 如果已有实例，直接返回
+        if (this.browserSubprocess != null) {
+            return this.browserSubprocess;
         }
-        return this.browserSubprocess;
+
+        // 2. 如果正在加载中，返回 null (渲染器应处理这种情况)
+        if (this.isLoading) {
+            return null;
+        }
+
+        // 3. 开始异步加载
+        this.isLoading = true;
+        int pixelWidth = this.width * 64;
+        int pixelHeight = this.height * 64;
+        String id = getSpoutId();
+
+        // 调用异步创建 API
+        BrowserAPI.createBrowserAsync(id, this.currentUrl, pixelWidth, pixelHeight, 60, (subprocess) -> {
+            // 检查方块是否已被移除
+            if (this.isRemoved()) {
+                BrowserAPI.removeBrowser(id);
+                this.isLoading = false;
+                return;
+            }
+            // 赋值实例
+            this.browserSubprocess = subprocess;
+
+            // 初始化视口大小
+            if (this.browserSubprocess != null) {
+                this.browserSubprocess.getPageHandler().resizeViewport(pixelWidth, pixelHeight);
+            }
+
+            // 解除锁
+            this.isLoading = false;
+        });
+
+        // 在回调完成前返回 null
+        return null;
     }
+
     public void onLoad() {
         if (level != null && level.isClientSide && isMaster()) {
-            getBrowserSubprocess();
+            getBrowserSubprocess(); // 触发预加载
         }
     }
-    /**
-     * Called by the renderer to get the current texture ID.
-     * This method is now very lightweight and just retrieves the latest texture from the subprocess.
-     */
+
     public int getBrowserTextureId() {
         int pixelWidth = this.width * 64;
         int pixelHeight = this.height * 64;
-        if (!isMaster()) {
 
+        if (!isMaster()) {
             BrowserBlockEntity master = getMaster();
             return master != null ? master.getBrowserTextureId() : -1;
         }
 
+        // 尝试获取实例
         BrowserSubprocess subprocess = getBrowserSubprocess();
-        if (subprocess != null && subprocess.getRender() != null) {
-            // Assumes getRender() returns an object that can provide the texture ID
-            // without triggering a new, blocking render operation.
-            return subprocess.getRender().render(pixelWidth, pixelHeight);
+
+        // 如果实例存在且渲染器就绪，返回纹理ID
+        if (subprocess != null) {
+            return subprocess.getRender(pixelWidth, pixelHeight);
         }
 
+        // 正在加载或失败返回 -1
         return -1;
     }
 
@@ -85,10 +130,12 @@ public class BrowserBlockEntity extends BlockEntity {
     @Override
     public void setRemoved() {
         super.setRemoved();
-        // Clean up the browser process when the block is removed on the client.
-        if (level != null && level.isClientSide && browserSubprocess != null) {
-            browserSubprocess.lifecycleManager.onClose();
-            browserSubprocess = null;
+        // 方块移除时清理浏览器资源
+        if (level != null && level.isClientSide) {
+            if (browserSubprocess != null) {
+                BrowserAPI.removeBrowser(getSpoutId());
+                browserSubprocess = null;
+            }
         }
     }
 
@@ -102,11 +149,11 @@ public class BrowserBlockEntity extends BlockEntity {
         this.height = h;
         setChanged();
 
-        // If the size changes, update the browser subprocess viewport.
+        // 如果结构大小改变，调整浏览器视口
         if (isMaster() && level != null && level.isClientSide) {
-            BrowserSubprocess subprocess = getBrowserSubprocess();
+            BrowserSubprocess subprocess = getBrowserSubprocess(); // 不会触发新加载，只获取现有
             if (subprocess != null) {
-                subprocess.lifecycleManager.resizeViewport(w * 64, h * 64);
+                subprocess.getPageHandler().resizeViewport(w * 64, h * 64);
             }
         }
     }
@@ -125,11 +172,11 @@ public class BrowserBlockEntity extends BlockEntity {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
 
-        // On the client, tell the dedicated browser process to navigate to the new URL.
+        // 客户端直接导航
         if (level != null && level.isClientSide) {
             BrowserSubprocess subprocess = getBrowserSubprocess();
             if (subprocess != null) {
-                subprocess.pageHandler.loadUrl(newUrl);
+                subprocess.getPageHandler().loadUrl(newUrl);
             }
         }
     }
@@ -150,10 +197,11 @@ public class BrowserBlockEntity extends BlockEntity {
             if (master != null) master.sendClickInput(x, y);
             return;
         }
+
         BrowserSubprocess subprocess = getBrowserSubprocess();
         if (subprocess != null) {
-            subprocess.mouseHandler.mousePress(x,y,0);
-            subprocess.mouseHandler.mouseRelease(x,y,0);
+            subprocess.getMouseHandler().mousePress(x,y,0);
+            subprocess.getMouseHandler().mouseRelease(x,y,0);
         }
     }
 
@@ -178,21 +226,10 @@ public class BrowserBlockEntity extends BlockEntity {
         );
     }
 
-    public int getRelX() {
-        return relX;
-    }
-
-    public int getRelY() {
-        return relY;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
+    public int getRelX() { return relX; }
+    public int getRelY() { return relY; }
+    public int getWidth() { return width; }
+    public int getHeight() { return height; }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
@@ -236,4 +273,5 @@ public class BrowserBlockEntity extends BlockEntity {
         tag.putString("BrowserUrl", currentUrl);
         return tag;
     }
+
 }

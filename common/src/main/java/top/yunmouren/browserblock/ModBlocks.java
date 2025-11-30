@@ -1,4 +1,4 @@
-package top.yunmouren.browserblock.registry;
+package top.yunmouren.browserblock;
 
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrySupplier;

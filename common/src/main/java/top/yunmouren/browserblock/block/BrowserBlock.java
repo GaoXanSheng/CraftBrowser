@@ -38,7 +38,6 @@ public class BrowserBlock extends Block implements EntityBlock {
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // 让屏幕正对着玩家
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
@@ -53,7 +52,6 @@ public class BrowserBlock extends Block implements EntityBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
-            // 修复：破坏方块后，通知上下左右的邻居更新结构
             if (!level.isClientSide) {
                 for (Direction dir : Direction.values()) {
                     BlockPos neighbor = pos.relative(dir);
@@ -74,15 +72,20 @@ public class BrowserBlock extends Block implements EntityBlock {
             return InteractionResult.PASS;
         }
 
-        // Shift+右键：打开设置
+        BrowserBlockEntity master = browserEntity.getMaster();
+        if (master == null) return InteractionResult.FAIL;
+
+        if (hit.getDirection() != state.getValue(FACING)) {
+            return InteractionResult.PASS;
+        }
+
         if (player.isShiftKeyDown()) {
             if (level.isClientSide) {
-                Minecraft.getInstance().setScreen(new BrowserUrlScreen(browserEntity));
+                Minecraft.getInstance().setScreen(new BrowserUrlScreen(master)); // 打开 Master 的配置
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
-        // 正常右键：点击屏幕
         if (level.isClientSide) {
             Direction facing = state.getValue(FACING);
             handleClick(browserEntity, hit, facing);
@@ -94,36 +97,27 @@ public class BrowserBlock extends Block implements EntityBlock {
         BrowserBlockEntity master = be.getMaster();
         if (master == null) return;
 
-        // 1. 获取方块内的点击坐标 (0.0 ~ 1.0)
         double dx = hit.getLocation().x - be.getBlockPos().getX();
         double dy = hit.getLocation().y - be.getBlockPos().getY();
         double dz = hit.getLocation().z - be.getBlockPos().getZ();
 
         double localHitX;
 
-        // 2. 根据朝向计算 localHitX (从屏幕内容的左边到右边)
-        // 必须与 StructureHelper 的逻辑严格对应
         switch (facing) {
-            case SOUTH: localHitX = dx; break;         // West -> East
-            case NORTH: localHitX = 1.0 - dx; break;   // East -> West
-            case WEST:  localHitX = dz; break;         // North -> South
-            case EAST:  localHitX = 1.0 - dz; break;   // South -> North
+            case SOUTH: localHitX = dx; break;
+            case NORTH: localHitX = 1.0 - dx; break;
+            case WEST:  localHitX = dz; break;
+            case EAST:  localHitX = 1.0 - dz; break;
             default: return;
         }
 
-        // 3. 计算全局坐标
         double totalWidth = master.getWidth();
         double totalHeight = master.getHeight();
 
-        // X轴：Block相对位置 + 块内偏移
         double globalX = be.getRelX() + localHitX;
-
-        // Y轴：Minecraft是从下往上(dy=0是底部)，浏览器是从上往下
-        // GlobalY(从底往上) = relY + dy
         double globalYFromBottom = be.getRelY() + dy;
         double globalYFromTop = totalHeight - globalYFromBottom;
 
-        // 4. 转换为像素坐标 (假设 1格=64像素)
         int pixelW = (int) (totalWidth * 64);
         int pixelH = (int) (totalHeight * 64);
 

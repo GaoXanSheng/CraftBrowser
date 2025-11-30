@@ -7,7 +7,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent; // 导入这�
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import top.yunmouren.browserblock.client.BrowserBlockRenderer;
 
-import static top.yunmouren.browserblock.registry.ModBlocks.BROWSER_BLOCK_ENTITY;
+import static top.yunmouren.browserblock.ModBlocks.BROWSER_BLOCK_ENTITY;
+
 
 @OnlyIn(Dist.CLIENT)
 public class ClientProxy extends CommonProxy {

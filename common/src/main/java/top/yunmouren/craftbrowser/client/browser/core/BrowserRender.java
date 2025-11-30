@@ -14,7 +14,8 @@ public class BrowserRender extends JNISpout {
     private final Minecraft mc = Minecraft.getInstance();
     public int[] dim = new int[]{mc.getWindow().getScreenWidth(), mc.getWindow().getScreenHeight()};
     private DynamicTexture dynTex;
-    public BrowserRender(){
+
+    public BrowserRender() {
         super();
         this.spoutPtr = this.init();
         receiverConnected = this.createReceiver(Config.CLIENT.customizeSpoutID.get(), dim, spoutPtr);
@@ -25,7 +26,8 @@ public class BrowserRender extends JNISpout {
             dynTex = new DynamicTexture(dim[0], dim[1], true);
         }
     }
-    public BrowserRender(String spoutID,int width, int height){
+
+    public BrowserRender(String spoutID, int width, int height) {
         super();
         this.spoutPtr = this.init();
         receiverConnected = this.createReceiver(spoutID, dim, spoutPtr);
@@ -33,26 +35,31 @@ public class BrowserRender extends JNISpout {
             dynTex = new DynamicTexture(width, height, true);
         }
     }
-    public void receiveTexture(DynamicTexture dynamicTexture){
+
+    public void receiveTexture(DynamicTexture dynamicTexture) {
         var received = this.receiveTexture(dim, dynamicTexture.getId(), GL11.GL_TEXTURE_2D, false, spoutPtr);
         if (!received) {
             Craftbrowser.LOGGER.error("Spout receiveTexture failed. Releasing receiver.");
             releaseSpout();
         }
     }
-    public int render(int width, int height){
+
+    public int render(int width, int height) {
         if (this.dynTex == null) {
             return 0;
         }
         if (dynTex.getPixels() != null && (dynTex.getPixels().getWidth() != width || dynTex.getPixels().getHeight() != height)) {
             dynTex.close();
-            dynTex = new DynamicTexture(width,height, true);
+            dynTex = new DynamicTexture(width, height, true);
         }
         this.receiveTexture(dynTex);
 
         return dynTex.getId();
     }
+
     public void releaseSpout() {
+        dynTex.close();
+        dynTex = null;
         if (receiverConnected) {
             this.releaseReceiver(spoutPtr);
             receiverConnected = false;

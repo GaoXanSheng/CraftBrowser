@@ -38,7 +38,7 @@ public abstract class AbstractWebScreen extends Screen {
 
     protected AbstractWebScreen(Component p_96550_) {
         super(p_96550_);
-        browserManager.resizeViewport(texWidth, texHeight);
+        browserManager.getPageHandler().resizeViewport(texWidth, texHeight);
     }
 
     @Override
@@ -49,7 +49,7 @@ public abstract class AbstractWebScreen extends Screen {
             int keyCode = entry.getKey();
             long lastTime = entry.getValue();
             if (now - lastTime >= Config.CLIENT.keyPressDelay.get()) {
-                browserManager.keyPress(keyCode, 0, false, true); // repeat
+                browserManager.getKeyHandler().keyPress(keyCode, 0, false, true); // repeat
                 entry.setValue(now);
             }
         }
@@ -117,7 +117,7 @@ public abstract class AbstractWebScreen extends Screen {
         pendingResizeTask = scheduler.schedule(() -> {
             this.texWidth = mc.getWindow().getScreenWidth();
             this.texHeight = mc.getWindow().getScreenHeight();
-            browserManager.resizeViewport(texWidth, texHeight);
+            browserManager.getPageHandler().resizeViewport(texWidth, texHeight);
         }, RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
@@ -146,7 +146,7 @@ public abstract class AbstractWebScreen extends Screen {
         CompletableFuture.runAsync(()->{
             int[] pos = guiToPixel(mouseX, mouseY);
             boolean dragging = !heldMouseButtons.isEmpty();
-            browserManager.mouseMove(pos[0], pos[1], dragging);
+            browserManager.getMouseHandler().mouseMove(pos[0], pos[1], dragging);
             // 更新光标样式
             browserManager.updateCursorAtPosition(pos[0], pos[1]);
         });
@@ -157,7 +157,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mousePress(pos[0], pos[1], button);
+        browserManager.getMouseHandler().mousePress(pos[0], pos[1], button);
         heldMouseButtons.add(button); // 记录按下
         return true;
     }
@@ -165,7 +165,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mouseRelease(pos[0], pos[1], button);
+        browserManager.getMouseHandler().mouseRelease(pos[0], pos[1], button);
         heldMouseButtons.remove(button); // 移除按下记录
         return true;
     }
@@ -173,7 +173,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
+        browserManager.getMouseHandler().mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
         return true;
     }
 
@@ -184,7 +184,7 @@ public abstract class AbstractWebScreen extends Screen {
             return true;
         }
 
-        browserManager.keyPress(keyCode, modifiers, false, false);
+        browserManager.getKeyHandler().keyPress(keyCode, modifiers, false, false);
         heldKeys.put(keyCode, System.currentTimeMillis());
 
         return true;
@@ -196,14 +196,14 @@ public abstract class AbstractWebScreen extends Screen {
             this.onClose();
             return true;
         }
-        browserManager.keyPress(keyCode, modifiers, true, false);
+        browserManager.getKeyHandler().keyPress(keyCode, modifiers, true, false);
         heldKeys.remove(keyCode);
         return true;
     }
 
     @Override
     public void onClose() {
-        browserManager.loadCustomizeURL("about:blank");
+        browserManager.getPageHandler().loadCustomizeURL("about:blank");
         heldKeys.clear();
 
         // 恢复默认光标

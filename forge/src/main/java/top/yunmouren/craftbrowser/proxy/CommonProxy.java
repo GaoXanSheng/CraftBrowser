@@ -2,12 +2,8 @@ package top.yunmouren.craftbrowser.proxy;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
-// 必须导入
-// 必须导入
-// 必须导入
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-// 必须导入
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
@@ -21,7 +17,7 @@ import top.yunmouren.httpserver.HttpNetworkHandler;
 
 public class CommonProxy {
     public void init() {
-        top.yunmouren.browserblock.registry.ModBlocks.register();
+        top.yunmouren.browserblock.ModBlocks.register();
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::onCommonSetup);
         MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);

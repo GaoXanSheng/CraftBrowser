@@ -19,7 +19,6 @@ public class Session implements WebSocket.Listener {
     private final ConcurrentHashMap<Long, CompletableFuture<JsonObject>> pendingCommands = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Consumer<JsonObject>> eventHandlers = new ConcurrentHashMap<>();
 
-    // 通过静态工厂方法创建实例
     public static CompletableFuture<Session> connect(String webSocketUrl) {
         CompletableFuture<Session> sessionFuture = new CompletableFuture<>();
         HttpClient client = HttpClient.newHttpClient();
@@ -28,7 +27,6 @@ public class Session implements WebSocket.Listener {
         return sessionFuture;
     }
 
-    // 私有构造函数，防止直接实例化
     private Session(WebSocket webSocket) {
         this.webSocket = webSocket;
     }
@@ -57,7 +55,6 @@ public class Session implements WebSocket.Listener {
         webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Client closing").join();
     }
 
-    // --- WebSocket.Listener 接口实现 ---
     private static class WebSocketListener implements WebSocket.Listener {
         private final CompletableFuture<Session> sessionFuture;
         private Session session;
@@ -72,7 +69,7 @@ public class Session implements WebSocket.Listener {
             // 连接成功，创建 CraftSession 实例并完成 Future
             this.session = new Session(webSocket);
             sessionFuture.complete(this.session);
-            // 将 WebSocket 的监听器设置为 session 自身，以便处理后续消息
+            // 将 WebSocket 的监听器设置为 browserFactory 自身，以便处理后续消息
             webSocket.request(1);
         }
 

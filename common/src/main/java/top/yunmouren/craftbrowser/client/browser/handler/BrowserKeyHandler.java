@@ -1,15 +1,15 @@
-package top.yunmouren.craftbrowser.client.browser.core;
+package top.yunmouren.craftbrowser.client.browser.handler;
 
 import org.lwjgl.glfw.GLFW;
 import top.yunmouren.craftbrowser.client.browser.util.CdpUtil;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper.KeyEventInfo;
-import top.yunmouren.craftbrowser.client.browser.cdp.Browser;
+import top.yunmouren.craftbrowser.client.browser.cdp.BrowserFactory;
 
-public record BrowserKeyHandler(Browser session) {
+public record BrowserKeyHandler(BrowserFactory browserFactory) {
 
     public void keyPress(int glfwKeyCode, int glfwModifiers, boolean isRelease, boolean isRepeat) {
-        if (session == null) return;
+        if (browserFactory == null) return;
 
         KeyEventInfo info = KeyEventMapper.mapGlfwToKeyEventInfo(glfwKeyCode);
         if (info == null) {
@@ -41,15 +41,14 @@ public record BrowserKeyHandler(Browser session) {
 
         // 调用我们手搓的库中 Input 模块的 dispatchKeyEvent 方法
         // 参数一一对应，代码更清晰
-        session.input().dispatchKeyEvent(
+        browserFactory.input().dispatchKeyEvent(
                 type,
                 cdpModifiers,
                 info.windowsVirtualKeyCode(),
                 info.code(),
                 key,
-                info.location() == 3, // isKeypad
+                info.location() == 3,
                 info.location(),
-                // 对于 keyUp，CDP 会忽略 autoRepeat，所以直接传递 isRepeat 是安全的
                 isRepeat,
                 text,
                 unmodifiedText
