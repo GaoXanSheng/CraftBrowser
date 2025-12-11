@@ -32,6 +32,7 @@ public class BrowserAPI {
         }
         return INSTANCE;
     }
+
     public static void createBrowserAsync(String OnlyKey, String Url, int width, int height, int MaxFps, Consumer<BrowserSubprocess> callback) {
         if (Subprocess.containsKey(OnlyKey)) {
             callback.accept(Subprocess.get(OnlyKey));

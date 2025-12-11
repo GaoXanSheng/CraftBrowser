@@ -8,7 +8,8 @@ import top.yunmouren.craftbrowser.client.browser.handler.BrowserPageHandler;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 public class BrowserSubprocess {
-    private BrowserRender render;
+    private volatile BrowserRender render;
+
     private final BrowserMouseHandler mouseHandler;
     private final BrowserKeyHandler keyHandler;
     private final BrowserPageHandler pageHandler;
@@ -25,6 +26,7 @@ public class BrowserSubprocess {
         this.pageHandler = new BrowserPageHandler(this.browserFactory);
         initializeCursorListener(browserFactory);
     }
+
     private void initializeCursorListener(BrowserFactory browserFactory) {
         if (browserFactory == null) return;
         browserFactory.runtime().enable();
@@ -54,6 +56,9 @@ public class BrowserSubprocess {
     }
 
     public void releaseSpout() {
-        render.close();
+        if (render != null) {
+            render.close();
+            render = null; // 防止重复释放
+        }
     }
 }
