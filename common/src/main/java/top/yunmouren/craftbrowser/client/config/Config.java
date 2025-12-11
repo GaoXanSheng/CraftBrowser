@@ -10,10 +10,8 @@ public class Config {
     public static final Client CLIENT = new Client();
 
     public static class Client {
-        // 配置规范对象
         public final ConfigSpec spec;
 
-        // 所有配置值
         public final ConfigSpec.ConfigValue<Boolean> customizeLoadingScreenEnabled;
         public final ConfigSpec.ConfigValue<String> customizeLoadingScreenUrl;
         public final ConfigSpec.ConfigValue<Boolean> openCustomWebOnStart;
@@ -99,9 +97,6 @@ public class Config {
         }
 
 
-        /**
-         * 加载配置
-         */
         public void load() {
             try {
                 spec.load();
@@ -138,12 +133,9 @@ public class Config {
                 }
             }
             Craftbrowser.LOGGER.error("Failed to get random port after multiple attempts, using fallback port 9222");
-            return 9222; // 失败时使用默认端口
+            return 9222;
         }
 
-        /**
-         * 保存配置
-         */
         public void save() {
             try {
                 spec.save();

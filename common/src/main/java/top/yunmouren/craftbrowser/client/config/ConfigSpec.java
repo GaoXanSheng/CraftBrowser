@@ -24,12 +24,10 @@ public class ConfigSpec {
         return (ConfigValue<T>) values.get(key);
     }
 
-    /** 保存到 TOML */
     public void save() throws IOException {
         Files.createDirectories(filePath.getParent());
         Map<String, List<Map.Entry<String, ConfigValue<?>>>> sections = new LinkedHashMap<>();
 
-        // 按点号分组
         for (Map.Entry<String, ConfigValue<?>> e : values.entrySet()) {
             String key = e.getKey();
             String section = key.contains(".") ? key.substring(0, key.lastIndexOf('.')) : "";
@@ -57,7 +55,6 @@ public class ConfigSpec {
         Files.write(filePath, lines);
     }
 
-    /** 从 TOML 文件加载 */
     public void load() throws IOException {
         // 确保目录存在
         Files.createDirectories(filePath.getParent());
@@ -178,7 +175,7 @@ public class ConfigSpec {
         }
 
         /**
-         * 自动定位到 .minecraft/config/
+         *  .minecraft/config/
          */
         public ConfigSpec build(String fileName) {
             Path configDir = Platform.getConfigFolder(); // 负责寻找路径

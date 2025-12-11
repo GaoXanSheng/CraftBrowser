@@ -1,5 +1,6 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.lwjgl.opengl.GL11;
@@ -7,52 +8,54 @@ import spout.JNISpout;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.config.Config;
 
+public class BrowserRender extends JNISpout implements AutoCloseable {
+    private final long spoutPtr = this.init();
+    private final String currentSpoutID;
 
-public class BrowserRender extends JNISpout {
-    private long spoutPtr = 0;
-    private boolean receiverConnected = false;
-    private final Minecraft mc = Minecraft.getInstance();
-    public int[] dim = new int[]{mc.getWindow().getScreenWidth(), mc.getWindow().getScreenHeight()};
+    public final int[] dim = new int[2];
+
     private DynamicTexture dynTex;
-    public BrowserRender(){
+
+    public BrowserRender(String spoutID, int width, int height) {
         super();
-        this.spoutPtr = this.init();
-        receiverConnected = this.createReceiver(Config.CLIENT.customizeSpoutID.get(), dim, spoutPtr);
-        if (!receiverConnected) {
-            Craftbrowser.LOGGER.error("Failed to create Spout receiver! Is the sender running?");
-        }
-        if (dynTex == null) {
-            dynTex = new DynamicTexture(dim[0], dim[1], true);
-        }
-    }
-    public void receiveTexture(DynamicTexture dynamicTexture){
-        var received = this.receiveTexture(dim, dynamicTexture.getId(), GL11.GL_TEXTURE_2D, false, spoutPtr);
-        if (!received) {
-            Craftbrowser.LOGGER.error("Spout receiveTexture failed. Releasing receiver.");
-            releaseSpout();
-        }
-    }
-    public int render(int width, int height){
-        if (this.dynTex == null) {
-            return 0;
-        }
-        if (dynTex.getPixels() != null && (dynTex.getPixels().getWidth() != width || dynTex.getPixels().getHeight() != height)) {
-            dynTex.close();
-            dynTex = new DynamicTexture(width,height, true);
-        }
-        this.receiveTexture(dynTex);
-
-        return dynTex.getId();
-    }
-    private void releaseSpout() {
-        if (receiverConnected) {
-            this.releaseReceiver(spoutPtr);
-            receiverConnected = false;
-        }
-        if (spoutPtr != 0) {
-            this.deInit(spoutPtr);
-            spoutPtr = 0;
+        this.currentSpoutID = "WebViewSpoutCapture_" + spoutID;
+        this.dim[0] = Math.max(1, width);
+        this.dim[1] = Math.max(1, height);
+        dynTex = new DynamicTexture(this.dim[0], this.dim[1], true);
+        boolean connected = this.createReceiver(currentSpoutID, dim, spoutPtr);
+        if (connected) {
+            if (this.getSenderName(spoutPtr).equals(this.currentSpoutID)) {
+                Craftbrowser.LOGGER.info("Spout Connected successfully to '{}'", currentSpoutID);
+            }else {
+                this.setReceiverName(this.currentSpoutID, spoutPtr);
+            }
         }
     }
 
+    public BrowserRender() {
+        this(Config.CLIENT.customizeSpoutID.get(),
+                Minecraft.getInstance().getWindow().getScreenWidth(),
+                Minecraft.getInstance().getWindow().getScreenHeight());
+    }
+
+    public void receiveTexture(DynamicTexture dynamicTexture) {
+        this.receiveTexture(dim, dynamicTexture.getId(), GL11.GL_TEXTURE_2D, false, spoutPtr);
+    }
+
+    public int render(int width, int height) {
+        if (width <= 0 || height <= 0) return 0;
+        if (this.dynTex != null) {
+            this.receiveTexture(dynTex);
+            return dynTex.getId();
+        }
+        return 0;
+    }
+
+    @Override
+    public void close() {
+        RenderSystem.bindTexture(0);
+        this.releaseReceiver(spoutPtr);
+        this.deInit(spoutPtr);
+        dynTex.close();
+    }
 }

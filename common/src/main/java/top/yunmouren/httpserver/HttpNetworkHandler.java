@@ -18,7 +18,6 @@ import static top.yunmouren.craftbrowser.Craftbrowser.MOD_ID;
 
 public class HttpNetworkHandler {
 
-    // 1. 定义数据包的标识符 (ResourceLocation)
     public static final ResourceLocation HTTP_REQUEST_PACKET_ID = new ResourceLocation(MOD_ID, "http_request");
     public static final ResourceLocation HTTP_RESPONSE_PACKET_ID = new ResourceLocation(MOD_ID, "http_response");
 

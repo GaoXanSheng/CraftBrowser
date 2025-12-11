@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>点击显示红点（5秒后消失）</title>
+  <style>
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background:#000; /* 黑色背景 */
+      cursor:crosshair;
+      overflow:hidden;
+      position:relative;
+      -webkit-user-select:none;user-select:none;
+    }
+
+    /* 红点样式 */
+    .click-dot{
+      position:absolute;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:#ff3b30; /* 红色 */
+      pointer-events:none; /* 点不会阻挡后续点击 */
+      transform:translate(-50%, -50%) scale(0.6);
+      opacity:1;
+      transition:transform 200ms ease, opacity 500ms ease;
+      box-shadow:0 0 6px rgba(255,59,48,0.9);
+    }
+
+    /* 消失动画 */
+    .click-dot.fade-out{
+      transform:translate(-50%, -50%) scale(1.6);
+      opacity:0;
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  // 在页面任意位置左键单击时，显示一个红色点，并在5秒后移除
+  document.addEventListener('mousedown', function (e) {
+    // 只处理鼠标左键（button === 0）
+    if (e.button !== 0) return;
+
+    // 创建点元素
+    const dot = document.createElement('div');
+    dot.className = 'click-dot';
+
+    // 计算页面坐标（考虑滚动）
+    const x = e.pageX;
+    const y = e.pageY;
+
+    dot.style.left = x + 'px';
+    dot.style.top = y + 'px';
+
+    // 添加到 body
+    document.body.appendChild(dot);
+
+    // 触发入场动画（短延时确保 transition 生效）
+    requestAnimationFrame(() => {
+      dot.style.transform = 'translate(-50%, -50%) scale(1)';
+    });
+
+    // 5 秒后开始淡出并在动画结束时移除元素
+    const visibleMs = 5000;
+    setTimeout(() => {
+      dot.classList.add('fade-out');
+      // 等待 fade 动画结束（与 CSS transition 保持一致）
+      const removeAfter = 600; // ms
+      setTimeout(() => dot.remove(), removeAfter);
+    }, visibleMs);
+  });
+
+  // 为触控设备也支持：触摸时用类似行为（touchstart 的首个触点）
+  document.addEventListener('touchstart', function (e) {
+    const t = e.touches[0];
+    if (!t) return;
+    const simulated = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      button: 0,
+      clientX: t.clientX,
+      clientY: t.clientY,
+      screenX: t.screenX,
+      screenY: t.screenY,
+      pageX: t.pageX,
+      pageY: t.pageY
+    });
+    e.target.dispatchEvent(simulated);
+  }, {passive:true});
+</script>
+
+</body>
+</html>

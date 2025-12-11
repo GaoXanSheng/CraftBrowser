@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
+import top.yunmouren.craftbrowser.client.browser.api.BrowserSubprocess;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.util.CursorType;
@@ -32,13 +33,18 @@ public abstract class AbstractWebScreen extends Screen {
     private int texHeight = mc.getWindow().getScreenHeight();
     private final Map<Integer, Long> heldKeys = new HashMap<>();
     public final BrowserAPI browser = BrowserAPI.getInstance();
-    public final BrowserManager browserManager = browser.getManager();
-    public final BrowserRender browserRender = browser.getRender();
     private CursorType lastCursorType = CursorType.DEFAULT;
+    public BrowserRender browserRender = BrowserAPI.getGlobalRender();
+    public BrowserManager browserManager = BrowserAPI.getGlobalManager();
+
 
     protected AbstractWebScreen(Component p_96550_) {
         super(p_96550_);
-        browserManager.resizeViewport(texWidth, texHeight);
+    }
+
+    @Override
+    protected void init() {
+        super.init();
     }
 
     @Override
@@ -49,7 +55,7 @@ public abstract class AbstractWebScreen extends Screen {
             int keyCode = entry.getKey();
             long lastTime = entry.getValue();
             if (now - lastTime >= Config.CLIENT.keyPressDelay.get()) {
-                browserManager.keyPress(keyCode, 0, false, true); // repeat
+                browserManager.getKeyHandler().keyPress(keyCode, 0, false, true); // repeat
                 entry.setValue(now);
             }
         }
@@ -88,9 +94,6 @@ public abstract class AbstractWebScreen extends Screen {
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
-    /**
-     * 根据浏览器光标类型更新 GLFW 光标
-     */
     private void updateCursor() {
         CursorType currentCursor = browserManager.getCurrentCursor();
 
@@ -117,17 +120,10 @@ public abstract class AbstractWebScreen extends Screen {
         pendingResizeTask = scheduler.schedule(() -> {
             this.texWidth = mc.getWindow().getScreenWidth();
             this.texHeight = mc.getWindow().getScreenHeight();
-            browserManager.resizeViewport(texWidth, texHeight);
+            browserManager.getPageHandler().resizeViewport(texWidth, texHeight);
         }, RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
-    /**
-     * 将 Minecraft GUI 坐标转换为窗口像素坐标
-     *
-     * @param guiX GUI 坐标 X
-     * @param guiY GUI 坐标 Y
-     * @return 长度为 2 的数组 [pixelX, pixelY]
-     */
     public static int[] guiToPixel(double guiX, double guiY) {
         Minecraft mc = Minecraft.getInstance();
         int windowWidth = mc.getWindow().getScreenWidth();   // 实际像素宽
@@ -143,10 +139,10 @@ public abstract class AbstractWebScreen extends Screen {
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
-        CompletableFuture.runAsync(()->{
+        CompletableFuture.runAsync(() -> {
             int[] pos = guiToPixel(mouseX, mouseY);
             boolean dragging = !heldMouseButtons.isEmpty();
-            browserManager.mouseMove(pos[0], pos[1], dragging);
+            browserManager.getMouseHandler().mouseMove(pos[0], pos[1], dragging);
             // 更新光标样式
             browserManager.updateCursorAtPosition(pos[0], pos[1]);
         });
@@ -157,7 +153,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mousePress(pos[0], pos[1], button);
+        browserManager.getMouseHandler().mousePress(pos[0], pos[1], button);
         heldMouseButtons.add(button); // 记录按下
         return true;
     }
@@ -165,7 +161,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mouseRelease(pos[0], pos[1], button);
+        browserManager.getMouseHandler().mouseRelease(pos[0], pos[1], button);
         heldMouseButtons.remove(button); // 移除按下记录
         return true;
     }
@@ -173,7 +169,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
+        browserManager.getMouseHandler().mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
         return true;
     }
 
@@ -184,7 +180,7 @@ public abstract class AbstractWebScreen extends Screen {
             return true;
         }
 
-        browserManager.keyPress(keyCode, modifiers, false, false);
+        browserManager.getKeyHandler().keyPress(keyCode, modifiers, false, false);
         heldKeys.put(keyCode, System.currentTimeMillis());
 
         return true;
@@ -196,14 +192,14 @@ public abstract class AbstractWebScreen extends Screen {
             this.onClose();
             return true;
         }
-        browserManager.keyPress(keyCode, modifiers, true, false);
+        browserManager.getKeyHandler().keyPress(keyCode, modifiers, true, false);
         heldKeys.remove(keyCode);
         return true;
     }
 
     @Override
     public void onClose() {
-        browserManager.loadCustomizeURL("about:blank");
+        browserManager.getPageHandler().loadCustomizeURL("about:blank");
         heldKeys.clear();
 
         // 恢复默认光标

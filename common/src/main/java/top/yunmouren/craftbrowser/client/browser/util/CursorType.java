@@ -2,9 +2,6 @@ package top.yunmouren.craftbrowser.client.browser.util;
 
 import org.lwjgl.glfw.GLFW;
 
-/**
- * CEF 光标类型映射到 GLFW 光标类型
- */
 public enum CursorType {
     POINTER(GLFW.GLFW_HAND_CURSOR),          // 手型（链接）
     CROSS(GLFW.GLFW_CROSSHAIR_CURSOR),       // 十字
