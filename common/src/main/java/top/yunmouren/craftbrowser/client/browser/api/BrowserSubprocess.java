@@ -5,7 +5,10 @@ import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserKeyHandler;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserMouseHandler;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserPageHandler;
+import top.yunmouren.craftbrowser.client.browser.util.CursorType;
 import top.yunmouren.craftbrowser.client.config.Config;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 public class BrowserSubprocess {
     private BrowserRender render;
@@ -14,7 +17,7 @@ public class BrowserSubprocess {
     private final BrowserPageHandler pageHandler;
     private final BrowserFactory browserFactory;
     private final String spoutID;
-
+    private final AtomicReference<CursorType> currentCursor = new AtomicReference<>(CursorType.DEFAULT);
     BrowserSubprocess(String spoutID) {
         String host = "127.0.0.1";
         int port = Config.CLIENT.customizeBrowserPort.get();
@@ -23,18 +26,28 @@ public class BrowserSubprocess {
         this.mouseHandler = new BrowserMouseHandler(this.browserFactory);
         this.keyHandler = new BrowserKeyHandler(this.browserFactory);
         this.pageHandler = new BrowserPageHandler(this.browserFactory);
+        initializeCursorListener(browserFactory);
     }
+    private void initializeCursorListener(BrowserFactory browserFactory) {
+        if (browserFactory == null) return;
+        browserFactory.runtime().enable();
+    }
+    public void updateCursorAtPosition(int x, int y) {
+        if (browserFactory == null) return;
 
+        browserFactory.runtime().getCursorAtPosition(x, y).thenAccept(cursorStyle -> {
+            CursorType newCursor = CursorType.fromCssValue(cursorStyle);
+            currentCursor.set(newCursor);
+        });
+    }
+    public CursorType getCurrentCursor() {
+        return currentCursor.get();
+    }
     public int getRender(int width, int height) {
         if (render == null) {
             this.render = new BrowserRender(spoutID, width, height);
         }
         return render.render(width, height);
-    }
-    public void releaseSpout(){
-        if (this.render!=null){
-            this.render.releaseSpout();
-        }
     }
 
     public BrowserMouseHandler getMouseHandler() {
@@ -51,5 +64,9 @@ public class BrowserSubprocess {
 
     public BrowserFactory getBrowserFactory() {
         return browserFactory;
+    }
+
+    public void releaseSpout() {
+        render.close();
     }
 }

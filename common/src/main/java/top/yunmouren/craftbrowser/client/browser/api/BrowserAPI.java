@@ -2,7 +2,6 @@ package top.yunmouren.craftbrowser.client.browser.api;
 
 import net.minecraft.client.Minecraft;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
-import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -14,25 +13,20 @@ import static top.yunmouren.craftbrowser.client.browser.util.JSScript.getRemoveS
 public class BrowserAPI {
 
     private static BrowserAPI INSTANCE;
-    private final BrowserManager manager = new BrowserManager();
-
-    private BrowserRender globalRender;
-
+    private static final BrowserManager globalManager = new BrowserManager();
     private static final HashMap<String, BrowserSubprocess> Subprocess = new HashMap<>();
-
     public static BrowserAPI getInstance() {
         if (INSTANCE == null) {
             BrowserAPI.INSTANCE = new BrowserAPI();
         }
         return INSTANCE;
     }
-
     public static void createBrowserAsync(String OnlyKey, String Url, int width, int height, int MaxFps, Consumer<BrowserSubprocess> callback) {
         if (Subprocess.containsKey(OnlyKey)) {
             callback.accept(Subprocess.get(OnlyKey));
             return;
         }
-        BrowserAPI.getInstance().getManager().getBrowserFactory().runtime().evaluate(getCreateScript(
+        globalManager.getBrowserFactory().runtime().evaluate(getCreateScript(
                 Url, width, height, OnlyKey, MaxFps
         ));
         CompletableFuture.supplyAsync(() -> {
@@ -56,17 +50,6 @@ public class BrowserAPI {
         return Subprocess.get(OnlyKey);
     }
 
-    public BrowserRender getRender() {
-        if (globalRender == null) {
-            globalRender = new BrowserRender();
-        }
-        return globalRender;
-    }
-
-    public BrowserManager getManager() {
-        return manager;
-    }
-
     public static void removeBrowser(String OnlyKey) {
         if (Subprocess.containsKey(OnlyKey)) {
             BrowserSubprocess proc = Subprocess.remove(OnlyKey);
@@ -81,7 +64,7 @@ public class BrowserAPI {
 
                 CompletableFuture.runAsync(() -> {
                     try {
-                        BrowserAPI.getInstance().getManager().getBrowserFactory().runtime().evaluate(getRemoveScript(OnlyKey));
+                        globalManager.getBrowserFactory().runtime().evaluate(getRemoveScript(OnlyKey));
                         proc.getBrowserFactory().close();
                     } catch (Exception e) {
                         e.printStackTrace();

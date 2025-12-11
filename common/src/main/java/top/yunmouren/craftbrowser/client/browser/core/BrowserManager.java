@@ -15,7 +15,6 @@ public class BrowserManager implements AutoCloseable {
     private final BrowserMouseHandler mouseHandler;
     private final BrowserKeyHandler keyHandler;
     private final BrowserPageHandler pageHandler;
-    private final AtomicReference<CursorType> currentCursor = new AtomicReference<>(CursorType.DEFAULT);
     private static final String host = "127.0.0.1";
     private static final int port = Config.CLIENT.customizeBrowserPort.get();
     public BrowserManager() {
@@ -24,14 +23,13 @@ public class BrowserManager implements AutoCloseable {
 
     public BrowserManager(String host, int port) {
         try {
-            this.browserFactory = BrowserFactory.launch(host, port);
+            this.browserFactory = BrowserFactory.launch(host, port,Config.CLIENT.customizeSpoutID.get());
         } catch (Exception e) {
             Craftbrowser.LOGGER.error("Failed to connect to ChromeDevTools", e);
         }
         this.mouseHandler = new BrowserMouseHandler(browserFactory);
         this.keyHandler = new BrowserKeyHandler(browserFactory);
         this.pageHandler = new BrowserPageHandler(browserFactory);
-        initializeCursorListener(browserFactory);
     }
 
     public BrowserMouseHandler getMouseHandler() {
@@ -44,24 +42,6 @@ public class BrowserManager implements AutoCloseable {
 
     public BrowserPageHandler getPageHandler() {
         return pageHandler;
-    }
-
-    private void initializeCursorListener(BrowserFactory browserFactory) {
-        if (browserFactory == null) return;
-        browserFactory.runtime().enable();
-    }
-
-    public CursorType getCurrentCursor() {
-        return currentCursor.get();
-    }
-
-    public void updateCursorAtPosition(int x, int y) {
-        if (browserFactory == null) return;
-
-        browserFactory.runtime().getCursorAtPosition(x, y).thenAccept(cursorStyle -> {
-            CursorType newCursor = CursorType.fromCssValue(cursorStyle);
-            currentCursor.set(newCursor);
-        });
     }
     public BrowserFactory getBrowserFactory() {
         return browserFactory;

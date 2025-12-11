@@ -7,25 +7,24 @@ import top.yunmouren.httpserver.ServerHttp;
 public class WebScreen extends AbstractWebScreen {
 
     public WebScreen(String url) {
-        // 调用带布尔参数的构造函数，默认 false
         this(url, false);
     }
 
     public WebScreen(String url, boolean loadCustomizeURL) {
         super(Component.literal("WebScreen"));
         if (loadCustomizeURL) {
-            browserManager.getPageHandler().loadCustomizeURL(url);
+            browserSubprocess.getPageHandler().loadCustomizeURL(url);
         } else {
-            browserManager.getPageHandler().loadUrl(url);
+            browserSubprocess.getPageHandler().loadUrl(url);
         }
     }
 
     public WebScreen() {
         super(Component.literal("WebScreen"));
         if (ServerHttp.getBoundPort() == 0) {
-            browserManager.getPageHandler().customizeLoadingScreenUrl();
+            browserSubprocess.getPageHandler().customizeLoadingScreenUrl();
         } else {
-            browserManager.getPageHandler().loadUrl("http://localhost:" + ServerHttp.getBoundPort() + "/");
+            browserSubprocess.getPageHandler().loadUrl("http://localhost:" + ServerHttp.getBoundPort() + "/");
         }
     }
 }
