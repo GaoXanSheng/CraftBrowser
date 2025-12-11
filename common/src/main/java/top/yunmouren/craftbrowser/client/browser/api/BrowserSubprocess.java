@@ -5,10 +5,7 @@ import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserKeyHandler;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserMouseHandler;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserPageHandler;
-import top.yunmouren.craftbrowser.client.browser.util.CursorType;
 import top.yunmouren.craftbrowser.client.config.Config;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 public class BrowserSubprocess {
     private BrowserRender render;
@@ -17,7 +14,7 @@ public class BrowserSubprocess {
     private final BrowserPageHandler pageHandler;
     private final BrowserFactory browserFactory;
     private final String spoutID;
-    private final AtomicReference<CursorType> currentCursor = new AtomicReference<>(CursorType.DEFAULT);
+
     BrowserSubprocess(String spoutID) {
         String host = "127.0.0.1";
         int port = Config.CLIENT.customizeBrowserPort.get();
@@ -32,17 +29,7 @@ public class BrowserSubprocess {
         if (browserFactory == null) return;
         browserFactory.runtime().enable();
     }
-    public void updateCursorAtPosition(int x, int y) {
-        if (browserFactory == null) return;
 
-        browserFactory.runtime().getCursorAtPosition(x, y).thenAccept(cursorStyle -> {
-            CursorType newCursor = CursorType.fromCssValue(cursorStyle);
-            currentCursor.set(newCursor);
-        });
-    }
-    public CursorType getCurrentCursor() {
-        return currentCursor.get();
-    }
     public int getRender(int width, int height) {
         if (render == null) {
             this.render = new BrowserRender(spoutID, width, height);

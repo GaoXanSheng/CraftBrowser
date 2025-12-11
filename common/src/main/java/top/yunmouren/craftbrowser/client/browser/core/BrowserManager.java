@@ -17,6 +17,7 @@ public class BrowserManager implements AutoCloseable {
     private final BrowserPageHandler pageHandler;
     private static final String host = "127.0.0.1";
     private static final int port = Config.CLIENT.customizeBrowserPort.get();
+    private final AtomicReference<CursorType> currentCursor = new AtomicReference<>(CursorType.DEFAULT);
     public BrowserManager() {
         this(host, port);
     }
@@ -53,5 +54,17 @@ public class BrowserManager implements AutoCloseable {
         } catch (Exception e) {
             Craftbrowser.LOGGER.warn("Error closing browserFactory", e);
         }
+    }
+
+    public void updateCursorAtPosition(int x, int y) {
+        if (browserFactory == null) return;
+
+        browserFactory.runtime().getCursorAtPosition(x, y).thenAccept(cursorStyle -> {
+            CursorType newCursor = CursorType.fromCssValue(cursorStyle);
+            currentCursor.set(newCursor);
+        });
+    }
+    public CursorType getCurrentCursor() {
+        return currentCursor.get();
     }
 }

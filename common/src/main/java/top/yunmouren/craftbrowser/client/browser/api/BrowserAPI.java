@@ -2,6 +2,7 @@ package top.yunmouren.craftbrowser.client.browser.api;
 
 import net.minecraft.client.Minecraft;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
+import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -14,7 +15,17 @@ public class BrowserAPI {
 
     private static BrowserAPI INSTANCE;
     private static final BrowserManager globalManager = new BrowserManager();
+    private static final BrowserRender globalRender = new BrowserRender();
     private static final HashMap<String, BrowserSubprocess> Subprocess = new HashMap<>();
+
+    public static BrowserManager getGlobalManager() {
+        return globalManager;
+    }
+
+    public static BrowserRender getGlobalRender() {
+        return globalRender;
+    }
+
     public static BrowserAPI getInstance() {
         if (INSTANCE == null) {
             BrowserAPI.INSTANCE = new BrowserAPI();

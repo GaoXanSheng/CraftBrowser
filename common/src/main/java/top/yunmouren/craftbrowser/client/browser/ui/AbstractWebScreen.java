@@ -14,6 +14,8 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserSubprocess;
+import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
+import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.util.CursorType;
 import top.yunmouren.craftbrowser.client.config.Config;
 
@@ -32,22 +34,17 @@ public abstract class AbstractWebScreen extends Screen {
     private final Map<Integer, Long> heldKeys = new HashMap<>();
     public final BrowserAPI browser = BrowserAPI.getInstance();
     private CursorType lastCursorType = CursorType.DEFAULT;
-    public BrowserSubprocess browserSubprocess;
-    private String title;
+    public BrowserRender browserRender = BrowserAPI.getGlobalRender();
+    public BrowserManager browserManager = BrowserAPI.getGlobalManager();
+
 
     protected AbstractWebScreen(Component p_96550_) {
         super(p_96550_);
-        title = p_96550_.getString();
     }
 
     @Override
     protected void init() {
         super.init();
-        BrowserAPI.createBrowserAsync(title, "https://example.com/", texWidth, texHeight, 60, browserSubprocess -> {
-            {
-                this.browserSubprocess = browserSubprocess;
-            }
-        });
     }
 
     @Override
@@ -58,7 +55,7 @@ public abstract class AbstractWebScreen extends Screen {
             int keyCode = entry.getKey();
             long lastTime = entry.getValue();
             if (now - lastTime >= Config.CLIENT.keyPressDelay.get()) {
-                browserSubprocess.getKeyHandler().keyPress(keyCode, 0, false, true); // repeat
+                browserManager.getKeyHandler().keyPress(keyCode, 0, false, true); // repeat
                 entry.setValue(now);
             }
         }
@@ -67,7 +64,7 @@ public abstract class AbstractWebScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        var render = browserSubprocess.getRender(texWidth, texHeight);
+        var render = browserRender.render(texWidth, texHeight);
         if (render == 0) {
             return;
         }
@@ -98,7 +95,7 @@ public abstract class AbstractWebScreen extends Screen {
     }
 
     private void updateCursor() {
-        CursorType currentCursor = browserSubprocess.getCurrentCursor();
+        CursorType currentCursor = browserManager.getCurrentCursor();
 
         // 只有在光标类型改变时才更新
         if (currentCursor != lastCursorType) {
@@ -123,7 +120,7 @@ public abstract class AbstractWebScreen extends Screen {
         pendingResizeTask = scheduler.schedule(() -> {
             this.texWidth = mc.getWindow().getScreenWidth();
             this.texHeight = mc.getWindow().getScreenHeight();
-            browserSubprocess.getPageHandler().resizeViewport(texWidth, texHeight);
+            browserManager.getPageHandler().resizeViewport(texWidth, texHeight);
         }, RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
@@ -145,9 +142,9 @@ public abstract class AbstractWebScreen extends Screen {
         CompletableFuture.runAsync(() -> {
             int[] pos = guiToPixel(mouseX, mouseY);
             boolean dragging = !heldMouseButtons.isEmpty();
-            browserSubprocess.getMouseHandler().mouseMove(pos[0], pos[1], dragging);
+            browserManager.getMouseHandler().mouseMove(pos[0], pos[1], dragging);
             // 更新光标样式
-            browserSubprocess.updateCursorAtPosition(pos[0], pos[1]);
+            browserManager.updateCursorAtPosition(pos[0], pos[1]);
         });
     }
 
@@ -156,7 +153,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserSubprocess.getMouseHandler().mousePress(pos[0], pos[1], button);
+        browserManager.getMouseHandler().mousePress(pos[0], pos[1], button);
         heldMouseButtons.add(button); // 记录按下
         return true;
     }
@@ -164,7 +161,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserSubprocess.getMouseHandler().mouseRelease(pos[0], pos[1], button);
+        browserManager.getMouseHandler().mouseRelease(pos[0], pos[1], button);
         heldMouseButtons.remove(button); // 移除按下记录
         return true;
     }
@@ -172,7 +169,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserSubprocess.getMouseHandler().mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
+        browserManager.getMouseHandler().mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
         return true;
     }
 
@@ -183,7 +180,7 @@ public abstract class AbstractWebScreen extends Screen {
             return true;
         }
 
-        browserSubprocess.getKeyHandler().keyPress(keyCode, modifiers, false, false);
+        browserManager.getKeyHandler().keyPress(keyCode, modifiers, false, false);
         heldKeys.put(keyCode, System.currentTimeMillis());
 
         return true;
@@ -195,14 +192,14 @@ public abstract class AbstractWebScreen extends Screen {
             this.onClose();
             return true;
         }
-        browserSubprocess.getKeyHandler().keyPress(keyCode, modifiers, true, false);
+        browserManager.getKeyHandler().keyPress(keyCode, modifiers, true, false);
         heldKeys.remove(keyCode);
         return true;
     }
 
     @Override
     public void onClose() {
-        browserSubprocess.getPageHandler().loadCustomizeURL("about:blank");
+        browserManager.getPageHandler().loadCustomizeURL("about:blank");
         heldKeys.clear();
 
         // 恢复默认光标

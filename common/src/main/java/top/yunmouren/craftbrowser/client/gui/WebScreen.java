@@ -13,18 +13,18 @@ public class WebScreen extends AbstractWebScreen {
     public WebScreen(String url, boolean loadCustomizeURL) {
         super(Component.literal("WebScreen"));
         if (loadCustomizeURL) {
-            browserSubprocess.getPageHandler().loadCustomizeURL(url);
+            browserManager.getPageHandler().loadCustomizeURL(url);
         } else {
-            browserSubprocess.getPageHandler().loadUrl(url);
+            browserManager.getPageHandler().loadUrl(url);
         }
     }
 
     public WebScreen() {
         super(Component.literal("WebScreen"));
         if (ServerHttp.getBoundPort() == 0) {
-            browserSubprocess.getPageHandler().customizeLoadingScreenUrl();
+            browserManager.getPageHandler().customizeLoadingScreenUrl();
         } else {
-            browserSubprocess.getPageHandler().loadUrl("http://localhost:" + ServerHttp.getBoundPort() + "/");
+            browserManager.getPageHandler().loadUrl("http://localhost:" + ServerHttp.getBoundPort() + "/");
         }
     }
 }
