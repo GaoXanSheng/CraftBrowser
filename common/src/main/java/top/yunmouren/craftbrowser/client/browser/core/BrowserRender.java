@@ -18,13 +18,17 @@ public class BrowserRender extends JNISpout implements AutoCloseable {
 
     public BrowserRender(String spoutID, int width, int height) {
         super();
-        this.currentSpoutID = "WebViewSpoutCapture_"+spoutID;
+        this.currentSpoutID = "WebViewSpoutCapture_" + spoutID;
         this.dim[0] = Math.max(1, width);
         this.dim[1] = Math.max(1, height);
         dynTex = new DynamicTexture(this.dim[0], this.dim[1], true);
         boolean connected = this.createReceiver(currentSpoutID, dim, spoutPtr);
         if (connected) {
-            Craftbrowser.LOGGER.info("Spout Connected successfully to '{}'", currentSpoutID);
+            if (this.getSenderName(spoutPtr).equals(this.currentSpoutID)) {
+                Craftbrowser.LOGGER.info("Spout Connected successfully to '{}'", currentSpoutID);
+            }else {
+                this.setReceiverName(this.currentSpoutID, spoutPtr);
+            }
         }
     }
 
