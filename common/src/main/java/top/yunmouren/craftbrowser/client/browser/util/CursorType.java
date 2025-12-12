@@ -60,13 +60,10 @@ public enum CursorType {
     }
 
     /**
-     * 从 CSS 光标类型字符串转换为枚举
-     * 参考: https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
+     * See: https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
      */
     public static CursorType fromCssValue(String cssValue) {
         if (cssValue == null || cssValue.isEmpty()) return DEFAULT;
-
-        // CSS 光标值使用连字符，转换为枚举匹配
         String normalized = cssValue.toLowerCase().trim();
 
         return switch (normalized) {

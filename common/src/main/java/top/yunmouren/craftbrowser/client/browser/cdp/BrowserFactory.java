@@ -73,7 +73,7 @@ public class BrowserFactory {
     private static void scheduleRetry(String host, int port, String id, int currentRetry, int maxRetries, CompletableFuture<BrowserFactory> future) {
         SCHEDULER.schedule(() -> {
             attemptConnection(host, port, id, currentRetry + 1, maxRetries, future);
-        }, 100, TimeUnit.MILLISECONDS); // 每 100ms 重试一次
+        }, 100, TimeUnit.MILLISECONDS);
     }
     @Deprecated
     public static BrowserFactory launch(String host, int port, String id) {

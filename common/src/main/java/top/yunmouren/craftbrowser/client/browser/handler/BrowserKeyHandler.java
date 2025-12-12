@@ -39,8 +39,6 @@ public record BrowserKeyHandler(BrowserFactory browserFactory) {
             unmodifiedText = info.key();
         }
 
-        // 调用我们手搓的库中 Input 模块的 dispatchKeyEvent 方法
-        // 参数一一对应，代码更清晰
         browserFactory.input().dispatchKeyEvent(
                 type,
                 cdpModifiers,
