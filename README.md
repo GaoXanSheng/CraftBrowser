@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src=".readme/8e384c4e-a15b-4704-b375-455eeb24166b.png" width="900" alt="CraftBrowser Preview"/>
+  <img src=".readme/9c74f1bf-c7ae-4ace-aa5c-427c37e2ae81.png" width="900" alt="CraftBrowser Preview"/>
 </p>
 
 ---

@@ -27,7 +27,6 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     private int height = 1;
     private String currentUrl = Config.CLIENT.customURL.get();
 
-    // ID 不需要保存，每次重建生成新的即可
     private String browserId;
     private final Object browserLock = new Object();
 
@@ -37,7 +36,6 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     private boolean isLoading = false;
     private boolean hasInitialized = false;
 
-    // 初始化延迟计数器
     private int initTimer = 0;
     private static final int INIT_DELAY = 20;
 
@@ -54,7 +52,6 @@ public class BrowserMasterBlockEntity extends BlockEntity {
 
     public static void clientTick(Level level, BlockPos pos, BlockState state, BrowserMasterBlockEntity be) {
         if (!be.hasInitialized && !be.isLoading) {
-            // 只有当尺寸合法（大于0）才开始创建
             if (be.width > 0 && be.height > 0) {
                 if (be.initTimer < INIT_DELAY) {
                     be.initTimer++;
@@ -148,7 +145,6 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         synchronized (browserLock) {
             if (browserSubprocess != null) {
                 try {
-                    // 传入当前尺寸，渲染器内部会检测是否匹配
                     return browserSubprocess.getRender(width * 64, height * 64);
                 } catch (Throwable e) {
                     return -1;
@@ -172,11 +168,20 @@ public class BrowserMasterBlockEntity extends BlockEntity {
                 double dz = hit.getLocation().z - nodeBe.getBlockPos().getZ();
                 double localHitX;
                 switch (facing) {
-                    case SOUTH: localHitX = dx; break;
-                    case NORTH: localHitX = 1.0 - dx; break;
-                    case WEST: localHitX = dz; break;
-                    case EAST: localHitX = 1.0 - dz; break;
-                    default: return;
+                    case SOUTH:
+                        localHitX = dx;
+                        break;
+                    case NORTH:
+                        localHitX = 1.0 - dx;
+                        break;
+                    case WEST:
+                        localHitX = dz;
+                        break;
+                    case EAST:
+                        localHitX = 1.0 - dz;
+                        break;
+                    default:
+                        return;
                 }
                 int relX = nodeBe.getRelX();
                 int relY = nodeBe.getRelY();
@@ -189,7 +194,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
                 int browserY = (int) ((globalYFromTop / height) * pixelH);
                 browserSubprocess.getMouseHandler().mousePress(browserX, browserY, 0);
                 browserSubprocess.getMouseHandler().mouseRelease(browserX, browserY, 0);
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {
+            }
         }
     }
 
@@ -216,7 +222,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         }
         if (level != null && level.isClientSide) {
             if (width != oldWidth || height != oldHeight) {
-               destroyBrowser();
+                destroyBrowser();
             }
         }
     }
@@ -240,17 +246,39 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         return saveWithoutMetadata();
     }
 
-    public int getWidth() { return width; }
-    public int getHeight() { return height; }
-    public String getUrl() { return currentUrl; }
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public String getUrl() {
+        return currentUrl;
+    }
+
+    private double volume = 1.0;
+
+    public double getVolume() {
+        return volume;
+    }
+
     public void setUrl(String url) {
         this.currentUrl = url;
         if (level != null && level.isClientSide) {
             synchronized (browserLock) {
-                if (browserSubprocess != null) browserSubprocess.getPageHandler().loadUrl(url);
+                if (browserSubprocess != null) {
+                    browserSubprocess.getPageHandler().loadUrl(url);
+                    browserSubprocess.SetBrowserVolume(volume);
+                }
             }
         }
         this.setChanged();
         if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+    }
+
+    public void setVolume(double volume) {
+        this.volume = volume;
     }
 }

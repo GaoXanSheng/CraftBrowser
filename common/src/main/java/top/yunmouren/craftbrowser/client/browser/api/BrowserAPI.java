@@ -3,13 +3,12 @@ package top.yunmouren.craftbrowser.client.browser.api;
 import net.minecraft.client.Minecraft;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
+import top.yunmouren.craftbrowser.client.browser.util.JSScript;
 
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import static top.yunmouren.craftbrowser.client.browser.util.JSScript.getCreateScript;
-import static top.yunmouren.craftbrowser.client.browser.util.JSScript.getRemoveScript;
 
 public class BrowserAPI {
 
@@ -32,12 +31,13 @@ public class BrowserAPI {
         }
         return INSTANCE;
     }
+
     public static void createBrowserAsync(String OnlyKey, String Url, int width, int height, int MaxFps, Consumer<BrowserSubprocess> callback) {
         if (Subprocess.containsKey(OnlyKey)) {
             callback.accept(Subprocess.get(OnlyKey));
             return;
         }
-        globalManager.getBrowserFactory().runtime().evaluate(getCreateScript(
+        globalManager.getBrowserFactory().runtime().evaluate(JSScript.CreateBrowser(
                 Url, width, height, OnlyKey, MaxFps
         ));
         CompletableFuture.supplyAsync(() -> {
@@ -75,7 +75,7 @@ public class BrowserAPI {
 
                 CompletableFuture.runAsync(() -> {
                     try {
-                        globalManager.getBrowserFactory().runtime().evaluate(getRemoveScript(OnlyKey));
+                        globalManager.getBrowserFactory().runtime().evaluate(JSScript.CloseBrowser(OnlyKey));
                         proc.getBrowserFactory().close();
                     } catch (Exception e) {
                         e.printStackTrace();
