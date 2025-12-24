@@ -3,7 +3,6 @@ package top.yunmouren.browserblock.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -18,6 +17,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import top.yunmouren.browserblock.ModBlocks;
 import top.yunmouren.browserblock.client.BrowserClientHooks;
@@ -56,22 +56,22 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
-                                 InteractionHand hand, BlockHitResult hit) {
-
+    @Override
+    protected @NotNull InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (hit.getDirection() != state.getValue(FACING)) {
             return InteractionResult.PASS;
         }
-
         if (!(level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity be)) {
             return InteractionResult.PASS;
         }
+
         if (player.isShiftKeyDown()) {
             if (level.isClientSide) {
                 BrowserClientHooks.openBrowserScreen(be);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
+
         if (!level.isClientSide) {
             boolean success = StructureHelper.reformStructure(level, pos, state.getValue(FACING));
             if (success) {
@@ -88,8 +88,6 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
 
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
-
-
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);

@@ -140,7 +140,10 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         synchronized (browserLock) {
             if (browserSubprocess == null) return null;
 
-            return browserSubprocess.getRender(width,height);
+            int pixelW = Math.max(64, this.width * 64);
+            int pixelH = Math.max(64, this.height * 64);
+
+            return browserSubprocess.getRender(pixelW, pixelH);
         }
     }
 
@@ -148,7 +151,6 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         return new AABB(worldPosition).inflate(Math.max(width, height) + 1);
     }
 
-    // 省略 handleClick (未改动) ...
     public void handleClick(BrowserNodeBlockEntity nodeBe, BlockHitResult hit, Direction facing) {
         synchronized (browserLock) {
             if (browserSubprocess == null) return;

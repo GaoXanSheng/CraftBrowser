@@ -78,11 +78,11 @@ public abstract class AbstractWebScreen extends Screen {
         int guiH = mc.getWindow().getGuiScaledHeight();
         guiGraphics.blit(
                 render,
-                0, 0,               // 屏幕上的位置 (X, Y)
-                guiW, guiH,         // 屏幕上的大小 (宽, 高) -> 适配 GUI
-                0.0F, 0.0F,         // 纹理起始 UV
-                pixelW, pixelH,     // 纹理采样大小 (采样整张高清图)
-                pixelW, pixelH      // 纹理总大小
+                0, 0,
+                guiW, guiH,
+                0.0F, 0.0F,
+                pixelW, pixelH,
+                pixelW, pixelH
         );
     }
 
