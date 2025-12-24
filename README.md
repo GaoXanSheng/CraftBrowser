@@ -12,6 +12,11 @@
 
 ---
 
+This project is provided for research and educational purposes only.
+It does not grant any patent license for H.264/AVC or other proprietary codecs.
+Users are responsible for ensuring compliance with applicable patent laws.
+
+---
 ## Browser Implementation
 
 - **[NCEF](https://github.com/GaoXanSheng/NCEF)** – Minecraft browser implementation based on **CefSharp**
