@@ -1,6 +1,7 @@
 package top.yunmouren.browserblock.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -39,8 +40,8 @@ public class BrowserNodeBlockEntity extends BlockEntity {
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         if (tag.contains("MX")) {
             masterPos = new BlockPos(tag.getInt("MX"), tag.getInt("MY"), tag.getInt("MZ"));
         } else {
@@ -51,8 +52,8 @@ public class BrowserNodeBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
         if (masterPos != null) {
             tag.putInt("MX", masterPos.getX());
             tag.putInt("MY", masterPos.getY());
@@ -76,8 +77,10 @@ public class BrowserNodeBlockEntity extends BlockEntity {
     }
 
     @Override
-    public CompoundTag getUpdateTag() {
-        return saveWithoutMetadata();
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = super.getUpdateTag(registries);
+        this.saveAdditional(tag, registries);
+        return tag;
     }
 
     public int getRelX() { return relX; }

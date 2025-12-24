@@ -1,5 +1,6 @@
 package top.yunmouren.craftbrowser.client.config;
 
+
 import top.yunmouren.craftbrowser.Craftbrowser;
 
 import java.io.IOException;
@@ -105,7 +106,7 @@ public class Config {
                     Config.CLIENT.customizeBrowserPort.set(generateRandomPort());
                 }
                 if (!Config.CLIENT.customizeSpoutIDEnabled.get()) {
-                    Config.CLIENT.customizeSpoutID.set("WebViewSpoutCapture_" + generateRandomString(10));
+                    Config.CLIENT.customizeSpoutID.set(generateRandomString(10));
                 }
                 if (!Config.CLIENT.customizeLoadingScreenEnabled.get()) {
                     Config.CLIENT.customizeLoadingScreenUrl.set("https://example.com/");

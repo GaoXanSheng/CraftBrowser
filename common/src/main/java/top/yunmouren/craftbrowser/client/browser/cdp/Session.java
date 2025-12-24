@@ -23,7 +23,7 @@ public class Session implements WebSocket.Listener {
         CompletableFuture<Session> sessionFuture = new CompletableFuture<>();
         HttpClient client = HttpClient.newHttpClient();
         client.newWebSocketBuilder()
-                .buildAsync(URI.create(webSocketUrl), new Session.WebSocketListener(sessionFuture));
+                .buildAsync(URI.create(webSocketUrl), new WebSocketListener(sessionFuture));
         return sessionFuture;
     }
 

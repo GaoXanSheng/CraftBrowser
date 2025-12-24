@@ -2,24 +2,25 @@ package top.yunmouren.browserblock.block;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.core.Direction;
 import org.jetbrains.annotations.Nullable;
 import top.yunmouren.browserblock.ModBlocks;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserSubprocess;
 import top.yunmouren.craftbrowser.client.config.Config;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public class BrowserMasterBlockEntity extends BlockEntity {
@@ -39,7 +40,6 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     private int initTimer = 0;
     private static final int INIT_DELAY = 20;
 
-    private final Set<BlockPos> nodePositions = new HashSet<>();
 
     public BrowserMasterBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlocks.BROWSER_MASTER_ENTITY.get(), pos, state);
@@ -76,7 +76,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         this.generateNewId();
         String id = this.browserId;
 
-        BrowserAPI.createBrowserAsync(id, this.currentUrl, pixelW, pixelH, 60, (subprocess) -> {
+        BrowserAPI.createBrowserAsync(id, this.currentUrl, pixelW, pixelH, 60, (subprocess) ->
             Minecraft.getInstance().execute(() -> {
                 if (this.isRemoved()) {
                     BrowserAPI.removeBrowser(id);
@@ -95,8 +95,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
                 if (this.level != null) {
                     this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_ALL);
                 }
-            });
-        });
+            })
+        );
     }
 
     public void destroyBrowser() {
@@ -128,30 +128,20 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     }
 
     public void setStructureInfo(int w, int h, Set<BlockPos> nodes) {
-        boolean changed = (this.width != w || this.height != h);
         this.width = w;
         this.height = h;
-        this.nodePositions.clear();
-        if (nodes != null) {
-            this.nodePositions.addAll(nodes);
-        }
         this.setChanged();
         if (level != null) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
     }
 
-    public int getBrowserTextureId() {
+    public ResourceLocation getBrowserTextureId() {
         synchronized (browserLock) {
-            if (browserSubprocess != null) {
-                try {
-                    return browserSubprocess.getRender(width * 64, height * 64);
-                } catch (Throwable e) {
-                    return -1;
-                }
-            }
+            if (browserSubprocess == null) return null;
+
+            return browserSubprocess.getRender(width,height);
         }
-        return -1;
     }
 
     public AABB getRenderBoundingBox() {
@@ -200,8 +190,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         int oldWidth = this.width;
         int oldHeight = this.height;
         width = tag.getInt("W");
@@ -228,8 +218,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
         tag.putInt("W", width);
         tag.putInt("H", height);
         tag.putString("Url", currentUrl);
@@ -242,8 +232,10 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     }
 
     @Override
-    public CompoundTag getUpdateTag() {
-        return saveWithoutMetadata();
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = super.getUpdateTag(registries);
+        this.saveAdditional(tag, registries);
+        return tag;
     }
 
     public int getWidth() {

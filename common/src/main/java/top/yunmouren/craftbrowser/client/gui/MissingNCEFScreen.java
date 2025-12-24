@@ -42,7 +42,7 @@ public class MissingNCEFScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBlurredBackground(1);
         drawCenteredText(guiGraphics, "NCEF is missing!", this.height / 2 - 40, 0xFF0000);
         drawCenteredText(guiGraphics, "Please download it from GitHub", this.height / 2 - 25, 0xFFFFFF);
         drawCenteredText(guiGraphics, "And placed in: " + Minecraft.getInstance().gameDirectory.toPath().toAbsolutePath(), this.height / 2 - 10, 0xFFFFFF);

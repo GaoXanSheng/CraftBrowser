@@ -17,7 +17,7 @@ import java.util.Objects;
  * 通用命令注册类
  * 提供跨平台的命令构建逻辑
  */
-public record CommonCommand(BrowserNetworkHandler networkHandler) {
+public record CommonCommand() {
     /**
      * 构建命令树
      */
@@ -60,7 +60,7 @@ public record CommonCommand(BrowserNetworkHandler networkHandler) {
         ServerPlayer targetPlayer = EntityArgument.getPlayer(ctx, "PlayerName");
 
         if (Objects.requireNonNull(commandType) == CommandType.OPEN_GUI) {
-            networkHandler.sendOpenGui(targetPlayer);
+            BrowserNetworkHandler.sendOpenGui(targetPlayer);
         } else {
             return 0;
         }
@@ -75,7 +75,7 @@ public record CommonCommand(BrowserNetworkHandler networkHandler) {
         ServerPlayer targetPlayer = EntityArgument.getPlayer(ctx, "PlayerName");
 
         if (Objects.requireNonNull(commandType) == CommandType.LOAD_URL) {
-            networkHandler.sendLoadUrl(targetPlayer, arg);
+            BrowserNetworkHandler.sendLoadUrl(targetPlayer, arg);
         } else {
             return 0;
         }

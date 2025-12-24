@@ -5,12 +5,11 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
 import org.joml.Matrix4f;
 import top.yunmouren.browserblock.block.BrowserMasterBlock;
 import top.yunmouren.browserblock.block.BrowserMasterBlockEntity;
@@ -22,8 +21,8 @@ public class BrowserMasterBlockRenderer implements BlockEntityRenderer<BrowserMa
 
     @Override
     public void render(BrowserMasterBlockEntity entity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
-        int textureId = entity.getBrowserTextureId();
-        if (textureId <= 0) {
+        ResourceLocation textureId = entity.getBrowserTextureId();
+        if (textureId == null || textureId.equals(ResourceLocation.withDefaultNamespace(""))) {
             return;
         }
 
@@ -48,20 +47,21 @@ public class BrowserMasterBlockRenderer implements BlockEntityRenderer<BrowserMa
         RenderSystem.defaultBlendFunc();
 
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
+        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         Matrix4f mat = poseStack.last().pose();
-
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
         float halfWidth = totalW / 2f;
         float halfHeight = totalH / 2f;
 
-        buffer.vertex(mat, -halfWidth, halfHeight, 0).uv(0, 0).endVertex();
-        buffer.vertex(mat, -halfWidth, -halfHeight, 0).uv(0, 1).endVertex();
-        buffer.vertex(mat, halfWidth, -halfHeight, 0).uv(1, 1).endVertex();
-        buffer.vertex(mat, halfWidth, halfHeight, 0).uv(1, 0).endVertex();
+        buffer.addVertex(mat, -halfWidth, halfHeight, 0).setUv(0, 0);
+        buffer.addVertex(mat, -halfWidth, -halfHeight, 0).setUv(0, 1);
+        buffer.addVertex(mat, halfWidth, -halfHeight, 0).setUv(1, 1);
+        buffer.addVertex(mat, halfWidth, halfHeight, 0).setUv(1, 0);
 
-        tesselator.end();
+        MeshData meshData = buffer.build();
+        if (meshData != null) {
+            BufferUploader.drawWithShader(meshData);
+        }
 
         RenderSystem.disableBlend();
         poseStack.popPose();

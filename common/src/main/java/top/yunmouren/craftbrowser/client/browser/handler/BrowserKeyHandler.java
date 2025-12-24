@@ -1,10 +1,10 @@
 package top.yunmouren.craftbrowser.client.browser.handler;
 
 import org.lwjgl.glfw.GLFW;
+import top.yunmouren.craftbrowser.client.browser.cdp.BrowserFactory;
 import top.yunmouren.craftbrowser.client.browser.util.CdpUtil;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper;
 import top.yunmouren.craftbrowser.client.browser.util.KeyEventMapper.KeyEventInfo;
-import top.yunmouren.craftbrowser.client.browser.cdp.BrowserFactory;
 
 public record BrowserKeyHandler(BrowserFactory browserFactory) {
 

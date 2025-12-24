@@ -12,7 +12,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class BrowserFactory {
     private final Session session;
@@ -71,11 +74,9 @@ public class BrowserFactory {
     }
 
     private static void scheduleRetry(String host, int port, String id, int currentRetry, int maxRetries, CompletableFuture<BrowserFactory> future) {
-        SCHEDULER.schedule(() -> {
-            attemptConnection(host, port, id, currentRetry + 1, maxRetries, future);
-        }, 100, TimeUnit.MILLISECONDS);
+        SCHEDULER.schedule(() -> attemptConnection(host, port, id, currentRetry + 1, maxRetries, future), 100, TimeUnit.MILLISECONDS);
     }
-    @Deprecated
+
     public static BrowserFactory launch(String host, int port, String id) {
         try {
             return launchAsync(host, port, id).get(60, TimeUnit.SECONDS);

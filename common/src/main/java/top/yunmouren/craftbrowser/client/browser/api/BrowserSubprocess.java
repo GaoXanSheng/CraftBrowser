@@ -1,7 +1,6 @@
 package top.yunmouren.craftbrowser.client.browser.api;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.minecraft.resources.ResourceLocation;
 import top.yunmouren.craftbrowser.client.browser.cdp.BrowserFactory;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserKeyHandler;
@@ -11,7 +10,6 @@ import top.yunmouren.craftbrowser.client.browser.util.JSScript;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 public class BrowserSubprocess {
-    private static final Logger log = LoggerFactory.getLogger(BrowserSubprocess.class);
     private volatile BrowserRender render;
 
     private final BrowserMouseHandler mouseHandler;
@@ -36,7 +34,7 @@ public class BrowserSubprocess {
         browserFactory.runtime().enable();
     }
 
-    public int getRender(int width, int height) {
+    public ResourceLocation getRender(int width, int height) {
         if (render == null) {
             this.render = new BrowserRender(spoutID);
         }

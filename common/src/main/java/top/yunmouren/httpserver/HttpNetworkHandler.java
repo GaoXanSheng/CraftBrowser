@@ -1,10 +1,12 @@
 package top.yunmouren.httpserver;
 
 import dev.architectury.networking.NetworkManager;
-import io.netty.buffer.Unpooled;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
+import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.io.IOException;
@@ -18,35 +20,93 @@ import static top.yunmouren.craftbrowser.Craftbrowser.MOD_ID;
 
 public class HttpNetworkHandler {
 
-    public static final ResourceLocation HTTP_REQUEST_PACKET_ID = new ResourceLocation(MOD_ID, "http_request");
-    public static final ResourceLocation HTTP_RESPONSE_PACKET_ID = new ResourceLocation(MOD_ID, "http_response");
+    public static final ResourceLocation HTTP_REQUEST_PACKET_ID =  ResourceLocation.fromNamespaceAndPath(MOD_ID, "http_request");
+    public static final ResourceLocation HTTP_RESPONSE_PACKET_ID =  ResourceLocation.fromNamespaceAndPath(MOD_ID, "http_response");
 
     private static final ConcurrentHashMap<UUID, CompletableFuture<String>> PENDING_REQUESTS = new ConcurrentHashMap<>();
 
-    public static void registerC2SReceivers() {
-        NetworkManager.registerReceiver(NetworkManager.Side.C2S, HTTP_REQUEST_PACKET_ID, (buf, context) -> {
-            HttpRequestPacket pkt = new HttpRequestPacket(buf);
-            context.queue(() -> HttpRequestPacket.handle(pkt, context));
-        });
-    }
-    public static void registerS2CReceivers() {
-        NetworkManager.registerReceiver(NetworkManager.Side.S2C, HTTP_RESPONSE_PACKET_ID, (buf, context) -> {
-            HttpResponsePacket pkt = new HttpResponsePacket(buf);
-            context.queue(() -> HttpResponsePacket.handle(pkt, context));
-        });
+
+
+    public record HttpRequestPayload(
+            UUID requestId,
+            String data
+    ) implements CustomPacketPayload {
+
+        public static final Type<HttpRequestPayload> TYPE =
+                new Type<>(HTTP_REQUEST_PACKET_ID);
+
+        public static final StreamCodec<RegistryFriendlyByteBuf, HttpRequestPayload> CODEC =
+                StreamCodec.of(
+                        HttpRequestPayload::encode,
+                        HttpRequestPayload::decode
+                );
+
+        @Override
+        public @NotNull Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+
+        private static void encode(RegistryFriendlyByteBuf buf, HttpRequestPayload pkt) {
+            buf.writeUUID(pkt.requestId);
+            buf.writeUtf(pkt.data);
+        }
+
+        private static HttpRequestPayload decode(RegistryFriendlyByteBuf buf) {
+            return new HttpRequestPayload(buf.readUUID(), buf.readUtf(32767));
+        }
     }
 
+    public record HttpResponsePayload(
+            UUID requestId,
+            String responseData
+    ) implements CustomPacketPayload {
+
+        public static final Type<HttpResponsePayload> TYPE =
+                new Type<>(HTTP_RESPONSE_PACKET_ID);
+
+        public static final StreamCodec<RegistryFriendlyByteBuf, HttpResponsePayload> CODEC =
+                StreamCodec.of(
+                        HttpResponsePayload::encode,
+                        HttpResponsePayload::decode
+                );
+
+        @Override
+        public @NotNull Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+
+        private static void encode(RegistryFriendlyByteBuf buf, HttpResponsePayload pkt) {
+            buf.writeUUID(pkt.requestId);
+            buf.writeUtf(pkt.responseData);
+        }
+
+        private static HttpResponsePayload decode(RegistryFriendlyByteBuf buf) {
+            return new HttpResponsePayload(buf.readUUID(), buf.readUtf(32767));
+        }
+    }
+
+    public static void registerC2SReceivers() {
+        NetworkManager.registerReceiver(
+                NetworkManager.Side.C2S,
+                HttpRequestPayload.TYPE,
+                HttpRequestPayload.CODEC,
+                (payload, context) -> context.queue(() -> handleHttpRequest(payload, context))
+        );
+    }
+
+    public static void registerS2CReceivers() {
+        NetworkManager.registerReceiver(
+                NetworkManager.Side.S2C,
+                HttpResponsePayload.TYPE,
+                HttpResponsePayload.CODEC,
+                (payload, context) -> context.queue(() -> handleHttpResponse(payload, context))
+        );
+    }
 
     public static void sendToServer(String data, CompletableFuture<String> future) {
         UUID requestId = UUID.randomUUID();
         PENDING_REQUESTS.put(requestId, future);
-
-        HttpRequestPacket packet = new HttpRequestPacket(requestId, data);
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        packet.encode(buf);
-
-        // 4. 发送数据包到服务器
-        NetworkManager.sendToServer(HTTP_REQUEST_PACKET_ID, buf);
+        NetworkManager.sendToServer(new HttpRequestPayload(requestId, data));
     }
 
     public static CompletableFuture<String> getPendingFuture(UUID requestId) {
@@ -76,7 +136,7 @@ public class HttpNetworkHandler {
             return response;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Craftbrowser.LOGGER.error("HTTP request failed", e);
             return "HTTP request failed: " + e.getMessage();
         }
     }
@@ -97,65 +157,22 @@ public class HttpNetworkHandler {
         return con;
     }
 
+    private static void handleHttpRequest(HttpRequestPayload payload, NetworkManager.PacketContext context) {
+        String httpResponse = sendHttpToExternal(payload.data());
 
-    public record HttpRequestPacket(UUID requestId, String data) {
+        HttpResponsePayload reply = new HttpResponsePayload(payload.requestId(), httpResponse);
 
-        public void encode(FriendlyByteBuf buf) {
-            buf.writeUUID(requestId);
-            buf.writeUtf(data);
-        }
-
-        public HttpRequestPacket(FriendlyByteBuf buf) {
-            this(buf.readUUID(), buf.readUtf(32767));
-        }
-
-        public static void handle(HttpRequestPacket pkt, NetworkManager.PacketContext context) {
-            // 服务器端执行
-            String httpResponse = sendHttpToExternal(pkt.data);
-
-            HttpResponsePacket reply = new HttpResponsePacket(pkt.requestId, httpResponse);
-            FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-            reply.encode(buf);
-
-            // --- 修改开始 ---
-            // 获取玩家对象
-            net.minecraft.world.entity.player.Player player = context.getPlayer();
-
-            // 检查玩家是否是 ServerPlayer 的实例，并进行类型转换
-            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                // 使用转换后的 serverPlayer 对象发送数据包
-                NetworkManager.sendToPlayer(serverPlayer, HTTP_RESPONSE_PACKET_ID, buf);
-            }
+        net.minecraft.world.entity.player.Player player = context.getPlayer();
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            NetworkManager.sendToPlayer(serverPlayer, reply);
         }
     }
 
-    public static class HttpResponsePacket {
-        private final UUID requestId;
-        private final String responseData;
+    private static void handleHttpResponse(HttpResponsePayload payload, NetworkManager.PacketContext context) {
+        CompletableFuture<String> future = getPendingFuture(payload.requestId());
 
-        public HttpResponsePacket(UUID requestId, String responseData) {
-            this.requestId = requestId;
-            this.responseData = responseData;
-        }
-
-        public void encode(FriendlyByteBuf buf) {
-            buf.writeUUID(requestId);
-            buf.writeUtf(responseData);
-        }
-
-        // 从FriendlyByteBuf解码的构造函数
-        public HttpResponsePacket(FriendlyByteBuf buf) {
-            this.requestId = buf.readUUID();
-            this.responseData = buf.readUtf(32767);
-        }
-
-        public static void handle(HttpResponsePacket pkt, NetworkManager.PacketContext context) {
-            // 客户端执行
-            CompletableFuture<String> future = HttpNetworkHandler.getPendingFuture(pkt.requestId);
-
-            if (future != null) {
-                future.complete(pkt.responseData);
-            }
+        if (future != null) {
+            future.complete(payload.responseData());
         }
     }
 }

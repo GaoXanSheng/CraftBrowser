@@ -33,7 +33,7 @@ Users are responsible for ensuring compliance with applicable patent laws.
 
 ## System Requirements
 
-- Minecraft **1.20.1**
+- Minecraft **1.21.1**
 - **.NET Framework 4.0**
 - Windows 10
 

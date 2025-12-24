@@ -1,12 +1,12 @@
 package top.yunmouren.craftbrowser.client.browser.core;
 
 import top.yunmouren.craftbrowser.Craftbrowser;
+import top.yunmouren.craftbrowser.client.browser.cdp.BrowserFactory;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserKeyHandler;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserMouseHandler;
 import top.yunmouren.craftbrowser.client.browser.handler.BrowserPageHandler;
 import top.yunmouren.craftbrowser.client.browser.util.CursorType;
 import top.yunmouren.craftbrowser.client.config.Config;
-import top.yunmouren.craftbrowser.client.browser.cdp.BrowserFactory;
 
 import java.util.concurrent.atomic.AtomicReference;
 

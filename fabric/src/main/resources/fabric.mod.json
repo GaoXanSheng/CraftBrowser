@@ -2,33 +2,33 @@
   "schemaVersion": 1,
   "id": "craftbrowser",
   "version": "${version}",
-  "name": "craftbrowser",
+  "name": "Craftbrowser",
   "description": "",
   "authors": [
     "GaoXuShenG"
   ],
   "contact": {
-    "homepage": "https://github.com/GaoXanSheng/CraftBrowser"
+    "homepage": ""
   },
-  "license": "MIT",
+  "license": "All-Rights-Reserved",
   "icon": "assets/craftbrowser/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "top.yunmouren.craftbrowser.fabric.CraftbrowserFabric"
+      "top.yunmouren.fabric.craftbrowserFabric"
     ],
     "client": [
-      "top.yunmouren.craftbrowser.fabric.client.CraftbrowserFabricClient"
+      "top.yunmouren.fabric.client.craftbrowserFabricClient"
     ]
   },
   "mixins": [
     "craftbrowser.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.17.2",
-    "minecraft": "~1.20.1",
-    "java": ">=17",
-    "architectury": ">=9.2.14",
+    "fabricloader": ">=0.18.3",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "architectury": ">=13.0.8",
     "fabric-api": "*"
   },
   "suggests": {

@@ -1,7 +1,7 @@
 package top.yunmouren.craftbrowser.client.browser.handler;
 
-import top.yunmouren.craftbrowser.client.config.Config;
 import top.yunmouren.craftbrowser.client.browser.cdp.BrowserFactory;
+import top.yunmouren.craftbrowser.client.config.Config;
 
 public record BrowserPageHandler(BrowserFactory browserFactory) {
 

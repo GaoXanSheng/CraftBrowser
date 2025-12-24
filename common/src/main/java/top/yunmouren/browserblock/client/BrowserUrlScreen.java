@@ -59,14 +59,10 @@ public class BrowserUrlScreen extends Screen {
         });
 
         // 确认按钮
-        this.addRenderableWidget(Button.builder(Component.literal("Confirm"), button -> {
-            this.saveAndClose();
-        }).bounds(centerX - 100, centerY + 20, 98, 20).build());
+        this.addRenderableWidget(Button.builder(Component.literal("Confirm"), button -> this.saveAndClose()).bounds(centerX - 100, centerY + 20, 98, 20).build());
 
         // 取消按钮
-        this.addRenderableWidget(Button.builder(Component.literal("Cancel"), button -> {
-            this.onClose();
-        }).bounds(centerX + 2, centerY + 20, 98, 20).build());
+        this.addRenderableWidget(Button.builder(Component.literal("Cancel"), button -> this.onClose()).bounds(centerX + 2, centerY + 20, 98, 20).build());
     }
 
     private void saveAndClose() {
@@ -75,7 +71,6 @@ public class BrowserUrlScreen extends Screen {
             if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
                 newUrl = "https://" + newUrl;
             }
-            // 发送 URL 和 Volume 到服务器
             BrowserBlockNetworkHandler.sendToServer(blockEntity.getBlockPos(), newUrl, this.currentVolume);
         }
         this.onClose();
@@ -83,10 +78,9 @@ public class BrowserUrlScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBlurredBackground(1);
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFF);
         guiGraphics.drawString(this.font, "Enter URL:", this.width / 2 - 100, this.height / 2 - 52, 0xA0A0A0, false);
-        // 滑块上方可以加个标签，但滑块本身已经显示文字了，所以这里不需要额外绘制
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 

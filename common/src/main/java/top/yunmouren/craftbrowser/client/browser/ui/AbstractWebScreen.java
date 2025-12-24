@@ -10,10 +10,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL11;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
-import top.yunmouren.craftbrowser.client.browser.api.BrowserSubprocess;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.util.CursorType;
@@ -29,8 +30,6 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
-    private int texWidth = mc.getWindow().getScreenWidth();
-    private int texHeight = mc.getWindow().getScreenHeight();
     private final Map<Integer, Long> heldKeys = new HashMap<>();
     public final BrowserAPI browser = BrowserAPI.getInstance();
     private CursorType lastCursorType = CursorType.DEFAULT;
@@ -64,40 +63,33 @@ public abstract class AbstractWebScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        var render = browserRender.render(texWidth, texHeight);
-        if (render == 0) {
-            return;
-        }
-
-        // 更新光标
+        int pixelW = mc.getWindow().getScreenWidth();
+        int pixelH = mc.getWindow().getScreenHeight();
+        ResourceLocation render = browserRender.render(pixelW, pixelH);
+        if (render == null) return;
         updateCursor();
-
-        RenderSystem.disableBlend();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, render);
-
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder buffer = tessellator.getBuilder();
-
-        Matrix4f matrix = guiGraphics.pose().last().pose();
-        int guiWidth = mc.getWindow().getGuiScaledWidth();
-        int guiHeight = mc.getWindow().getGuiScaledHeight();
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        buffer.vertex(matrix, 0, guiHeight, 0).uv(0, 1).endVertex();
-        buffer.vertex(matrix, guiWidth, guiHeight, 0).uv(1, 1).endVertex();
-        buffer.vertex(matrix, guiWidth, 0, 0).uv(1, 0).endVertex();
-        buffer.vertex(matrix, 0, 0, 0).uv(0, 0).endVertex();
-        tessellator.end();
-
-        RenderSystem.enableDepthTest();
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        RenderSystem.texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        int guiW = mc.getWindow().getGuiScaledWidth();
+        int guiH = mc.getWindow().getGuiScaledHeight();
+        guiGraphics.blit(
+                render,
+                0, 0,               // 屏幕上的位置 (X, Y)
+                guiW, guiH,         // 屏幕上的大小 (宽, 高) -> 适配 GUI
+                0.0F, 0.0F,         // 纹理起始 UV
+                pixelW, pixelH,     // 纹理采样大小 (采样整张高清图)
+                pixelW, pixelH      // 纹理总大小
+        );
     }
+
+
 
     private void updateCursor() {
         CursorType currentCursor = browserManager.getCurrentCursor();
-
-        // 只有在光标类型改变时才更新
         if (currentCursor != lastCursorType) {
             long window = mc.getWindow().getWindow();
             glfwSetCursor(window, glfwCreateStandardCursor(currentCursor.getGlfwCursor()));
@@ -116,25 +108,27 @@ public abstract class AbstractWebScreen extends Screen {
         if (pendingResizeTask != null && !pendingResizeTask.isDone()) {
             pendingResizeTask.cancel(false);
         }
-        int RESIZE_DELAY_MS = 200;
+
         pendingResizeTask = scheduler.schedule(() -> {
-            this.texWidth = mc.getWindow().getScreenWidth();
-            this.texHeight = mc.getWindow().getScreenHeight();
-            browserManager.getPageHandler().resizeViewport(texWidth, texHeight);
-        }, RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
+            int pixelW = mc.getWindow().getScreenWidth();
+            int pixelH = mc.getWindow().getScreenHeight();
+            browserManager.getPageHandler().resizeViewport(pixelW, pixelH);
+        }, 200, TimeUnit.MILLISECONDS);
     }
+
 
     public static int[] guiToPixel(double guiX, double guiY) {
         Minecraft mc = Minecraft.getInstance();
-        int windowWidth = mc.getWindow().getScreenWidth();   // 实际像素宽
-        int windowHeight = mc.getWindow().getScreenHeight(); // 实际像素高
-        int guiWidth = mc.getWindow().getGuiScaledWidth();   // GUI 逻辑宽
-        int guiHeight = mc.getWindow().getGuiScaledHeight(); // GUI 逻辑高
 
-        int pixelX = (int) (guiX * ((double) windowWidth / guiWidth));
-        int pixelY = (int) (guiY * ((double) windowHeight / guiHeight));
+        int pixelW = mc.getWindow().getScreenWidth();
+        int pixelH = mc.getWindow().getScreenHeight();
+        int guiW = mc.getWindow().getGuiScaledWidth();
+        int guiH = mc.getWindow().getGuiScaledHeight();
 
-        return new int[]{pixelX, pixelY};
+        return new int[] {
+                (int) (guiX * pixelW / guiW),
+                (int) (guiY * pixelH / guiH)
+        };
     }
 
     @Override
@@ -143,7 +137,6 @@ public abstract class AbstractWebScreen extends Screen {
             int[] pos = guiToPixel(mouseX, mouseY);
             boolean dragging = !heldMouseButtons.isEmpty();
             browserManager.getMouseHandler().mouseMove(pos[0], pos[1], dragging);
-            // 更新光标样式
             browserManager.updateCursorAtPosition(pos[0], pos[1]);
         });
     }
@@ -166,7 +159,6 @@ public abstract class AbstractWebScreen extends Screen {
         return true;
     }
 
-    @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int[] pos = guiToPixel(mouseX, mouseY);
         browserManager.getMouseHandler().mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
