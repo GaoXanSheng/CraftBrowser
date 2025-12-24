@@ -147,9 +147,6 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         }
     }
 
-    public AABB getRenderBoundingBox() {
-        return new AABB(worldPosition).inflate(Math.max(width, height) + 1);
-    }
 
     public void handleClick(BrowserNodeBlockEntity nodeBe, BlockHitResult hit, Direction facing) {
         synchronized (browserLock) {

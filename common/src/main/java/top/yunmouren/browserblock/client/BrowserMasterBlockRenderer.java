@@ -4,17 +4,17 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL11; // 必须导入这个
+import org.lwjgl.opengl.GL11;
 import top.yunmouren.browserblock.block.BrowserMasterBlock;
 import top.yunmouren.browserblock.block.BrowserMasterBlockEntity;
 
@@ -63,6 +63,15 @@ public class BrowserMasterBlockRenderer implements BlockEntityRenderer<BrowserMa
         RenderSystem.disableBlend();
 
         poseStack.popPose();
+    }
+
+    @Override
+    public boolean shouldRender(BrowserMasterBlockEntity blockEntity, Vec3 vec3) {
+        return true;
+    }
+    @Override
+    public int getViewDistance() {
+        return 128;
     }
 
     @Override
