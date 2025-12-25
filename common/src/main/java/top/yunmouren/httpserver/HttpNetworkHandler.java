@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.config.Config;
+import top.yunmouren.craftbrowser.server.network.packet.HttpRequestPacket;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -20,98 +21,6 @@ import static top.yunmouren.craftbrowser.Craftbrowser.MOD_ID;
 
 public class HttpNetworkHandler {
 
-    public static final ResourceLocation HTTP_REQUEST_PACKET_ID =  ResourceLocation.fromNamespaceAndPath(MOD_ID, "http_request");
-    public static final ResourceLocation HTTP_RESPONSE_PACKET_ID =  ResourceLocation.fromNamespaceAndPath(MOD_ID, "http_response");
-
-    private static final ConcurrentHashMap<UUID, CompletableFuture<String>> PENDING_REQUESTS = new ConcurrentHashMap<>();
-
-
-
-    public record HttpRequestPayload(
-            UUID requestId,
-            String data
-    ) implements CustomPacketPayload {
-
-        public static final Type<HttpRequestPayload> TYPE =
-                new Type<>(HTTP_REQUEST_PACKET_ID);
-
-        public static final StreamCodec<RegistryFriendlyByteBuf, HttpRequestPayload> CODEC =
-                StreamCodec.of(
-                        HttpRequestPayload::encode,
-                        HttpRequestPayload::decode
-                );
-
-        @Override
-        public @NotNull Type<? extends CustomPacketPayload> type() {
-            return TYPE;
-        }
-
-        private static void encode(RegistryFriendlyByteBuf buf, HttpRequestPayload pkt) {
-            buf.writeUUID(pkt.requestId);
-            buf.writeUtf(pkt.data);
-        }
-
-        private static HttpRequestPayload decode(RegistryFriendlyByteBuf buf) {
-            return new HttpRequestPayload(buf.readUUID(), buf.readUtf(32767));
-        }
-    }
-
-    public record HttpResponsePayload(
-            UUID requestId,
-            String responseData
-    ) implements CustomPacketPayload {
-
-        public static final Type<HttpResponsePayload> TYPE =
-                new Type<>(HTTP_RESPONSE_PACKET_ID);
-
-        public static final StreamCodec<RegistryFriendlyByteBuf, HttpResponsePayload> CODEC =
-                StreamCodec.of(
-                        HttpResponsePayload::encode,
-                        HttpResponsePayload::decode
-                );
-
-        @Override
-        public @NotNull Type<? extends CustomPacketPayload> type() {
-            return TYPE;
-        }
-
-        private static void encode(RegistryFriendlyByteBuf buf, HttpResponsePayload pkt) {
-            buf.writeUUID(pkt.requestId);
-            buf.writeUtf(pkt.responseData);
-        }
-
-        private static HttpResponsePayload decode(RegistryFriendlyByteBuf buf) {
-            return new HttpResponsePayload(buf.readUUID(), buf.readUtf(32767));
-        }
-    }
-
-    public static void registerC2SReceivers() {
-        NetworkManager.registerReceiver(
-                NetworkManager.Side.C2S,
-                HttpRequestPayload.TYPE,
-                HttpRequestPayload.CODEC,
-                (payload, context) -> context.queue(() -> handleHttpRequest(payload, context))
-        );
-    }
-
-    public static void registerS2CReceivers() {
-        NetworkManager.registerReceiver(
-                NetworkManager.Side.S2C,
-                HttpResponsePayload.TYPE,
-                HttpResponsePayload.CODEC,
-                (payload, context) -> context.queue(() -> handleHttpResponse(payload, context))
-        );
-    }
-
-    public static void sendToServer(String data, CompletableFuture<String> future) {
-        UUID requestId = UUID.randomUUID();
-        PENDING_REQUESTS.put(requestId, future);
-        NetworkManager.sendToServer(new HttpRequestPayload(requestId, data));
-    }
-
-    public static CompletableFuture<String> getPendingFuture(UUID requestId) {
-        return PENDING_REQUESTS.remove(requestId);
-    }
 
     public static String sendHttpToExternal(String data) {
         try {
@@ -157,22 +66,15 @@ public class HttpNetworkHandler {
         return con;
     }
 
-    private static void handleHttpRequest(HttpRequestPayload payload, NetworkManager.PacketContext context) {
-        String httpResponse = sendHttpToExternal(payload.data());
-
-        HttpResponsePayload reply = new HttpResponsePayload(payload.requestId(), httpResponse);
-
-        net.minecraft.world.entity.player.Player player = context.getPlayer();
-        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-            NetworkManager.sendToPlayer(serverPlayer, reply);
-        }
+    private static final ConcurrentHashMap<UUID, CompletableFuture<String>> PENDING_REQUESTS = new ConcurrentHashMap<>();
+    public static void sendToServer(String data, CompletableFuture<String> future) {
+        UUID requestId = UUID.randomUUID();
+        PENDING_REQUESTS.put(requestId, future);
+        HttpRequestPacket packet = new HttpRequestPacket(requestId, data);
+        NetworkManager.sendToServer(packet);
     }
 
-    private static void handleHttpResponse(HttpResponsePayload payload, NetworkManager.PacketContext context) {
-        CompletableFuture<String> future = getPendingFuture(payload.requestId());
-
-        if (future != null) {
-            future.complete(payload.responseData());
-        }
+    public static CompletableFuture<String> getPendingFuture(UUID requestId) {
+        return PENDING_REQUESTS.remove(requestId);
     }
 }
