@@ -14,7 +14,7 @@ public final class CraftbrowserFabric implements ModInitializer {
         FabricCommand.register();
 
         HttpNetworkHandler.registerC2SReceivers();
-        top.yunmouren.browserblock.registry.ModBlocks.register();
+        top.yunmouren.browserblock.ModBlocks.register();
         BrowserBlockNetworkHandler.registerC2SReceivers();
         HttpNetworkHandler.registerS2CReceivers();
         BrowserNetworkHandler.getInstance().registerClientReceiver();

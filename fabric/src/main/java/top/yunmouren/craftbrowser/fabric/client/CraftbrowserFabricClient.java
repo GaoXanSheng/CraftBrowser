@@ -2,14 +2,13 @@ package top.yunmouren.craftbrowser.fabric.client;
 
 import dev.architectury.registry.client.rendering.BlockEntityRendererRegistry;
 import net.fabricmc.api.ClientModInitializer;
-import top.yunmouren.browserblock.client.MasterRenderer;
-
-import static top.yunmouren.browserblock.registry.ModBlocks.BROWSER_BLOCK_ENTITY;
+import top.yunmouren.browserblock.ModBlocks;
+import top.yunmouren.browserblock.client.BrowserMasterBlockRenderer;
 
 
 public final class CraftbrowserFabricClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        BlockEntityRendererRegistry.register(BROWSER_BLOCK_ENTITY.get(), MasterRenderer::new);
+        BlockEntityRendererRegistry.register(ModBlocks.BROWSER_MASTER_ENTITY.get(), BrowserMasterBlockRenderer::new);
     }
 }
