@@ -126,17 +126,21 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     public void onChunkUnloaded() {
         destroyBrowser();
     }
-
-    public void setStructureInfo(int w, int h, Set<BlockPos> nodes) {
-        boolean changed = (this.width != w || this.height != h);
+    private int masterRelX = 0;
+    private int masterRelY = 0;
+    public void setStructureInfo(int w, int h, int mRelX, int mRelY, Set<BlockPos> nodes) {
+        boolean changed = (this.width != w || this.height != h || this.masterRelX != mRelX || this.masterRelY != mRelY);
         this.width = w;
         this.height = h;
+        this.masterRelX = mRelX;
+        this.masterRelY = mRelY;
+
         this.nodePositions.clear();
         if (nodes != null) {
             this.nodePositions.addAll(nodes);
         }
         this.setChanged();
-        if (level != null) {
+        if (changed && level != null) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
     }
@@ -252,6 +256,12 @@ public class BrowserMasterBlockEntity extends BlockEntity {
 
     public int getHeight() {
         return height;
+    }
+    public int getMasterRelX() {
+        return masterRelX;
+    }
+    public int getMasterRelY() {
+        return masterRelY;
     }
 
     public String getUrl() {

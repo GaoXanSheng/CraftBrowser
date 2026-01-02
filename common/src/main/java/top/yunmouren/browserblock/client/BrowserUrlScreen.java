@@ -13,18 +13,14 @@ import top.yunmouren.browserblock.network.BrowserBlockNetworkHandler;
 public class BrowserUrlScreen extends Screen {
     private final BrowserMasterBlockEntity blockEntity;
     private EditBox urlEditBox;
-    // 不需要单独的 Button 变量除非你需要禁用它，这里为了简洁省略了 confirmButton 的成员变量引用
 
     private final String initialUrl;
-    private double currentVolume; // 当前音量变量
+    private double currentVolume;
 
     public BrowserUrlScreen(BrowserMasterBlockEntity blockEntity) {
         super(Component.literal("Set Browser URL & Volume"));
         this.blockEntity = blockEntity;
         this.initialUrl = blockEntity.getUrl();
-        // 假设 BlockEntity 有 getVolume()，如果没有请默认 1.0 或添加该方法
-        // this.currentVolume = blockEntity.getVolume();
-        // 暂时用 1.0 代替，如果你有 getVolume 请替换下面这就话：
         this.currentVolume = 1.0;
     }
 
@@ -33,16 +29,11 @@ public class BrowserUrlScreen extends Screen {
         super.init();
         int centerX = this.width / 2;
         int centerY = this.height / 2;
-
-        // URL 输入框
         this.urlEditBox = new EditBox(this.font, centerX - 100, centerY - 40, 200, 20, Component.literal("URL"));
         this.urlEditBox.setMaxLength(32767);
         this.urlEditBox.setValue(initialUrl);
         this.addRenderableWidget(this.urlEditBox);
         this.setInitialFocus(this.urlEditBox);
-
-        // 音量滑块 (AbstractSliderButton)
-        // 参数: x, y, width, height, message, initialValue
         this.addRenderableWidget(new AbstractSliderButton(centerX - 100, centerY - 10, 200, 20, Component.literal("Volume"), this.currentVolume) {
             @Override
             protected void updateMessage() {
@@ -53,17 +44,12 @@ public class BrowserUrlScreen extends Screen {
 
             @Override
             protected void applyValue() {
-                // 当滑块移动时更新 currentVolume
                 BrowserUrlScreen.this.currentVolume = this.value;
             }
         });
-
-        // 确认按钮
         this.addRenderableWidget(Button.builder(Component.literal("Confirm"), button -> {
             this.saveAndClose();
         }).bounds(centerX - 100, centerY + 20, 98, 20).build());
-
-        // 取消按钮
         this.addRenderableWidget(Button.builder(Component.literal("Cancel"), button -> {
             this.onClose();
         }).bounds(centerX + 2, centerY + 20, 98, 20).build());
@@ -75,7 +61,6 @@ public class BrowserUrlScreen extends Screen {
             if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
                 newUrl = "https://" + newUrl;
             }
-            // 发送 URL 和 Volume 到服务器
             BrowserBlockNetworkHandler.sendToServer(blockEntity.getBlockPos(), newUrl, this.currentVolume);
         }
         this.onClose();

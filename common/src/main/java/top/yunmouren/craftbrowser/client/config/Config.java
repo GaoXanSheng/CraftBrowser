@@ -14,7 +14,6 @@ public class Config {
 
         public final ConfigSpec.ConfigValue<Boolean> customizeLoadingScreenEnabled;
         public final ConfigSpec.ConfigValue<String> customizeLoadingScreenUrl;
-        public final ConfigSpec.ConfigValue<Boolean> openCustomWebOnStart;
         public final ConfigSpec.ConfigValue<Boolean> useCustomURL;
         public final ConfigSpec.ConfigValue<String> customURL;
         public final ConfigSpec.ConfigValue<Integer> browserMaxfps;
@@ -39,9 +38,6 @@ public class Config {
             customizeLoadingScreenUrl = builder
                     .comment("Custom loading screen URL")
                     .define("Url", "https://example.com");
-            openCustomWebOnStart = builder
-                    .comment("Open custom web page on game start")
-                    .define("OpenOnStart", false);
             useCustomURL = builder
                     .comment("Use custom URL on start")
                     .define("UseCustomUrl", false);

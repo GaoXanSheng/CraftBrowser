@@ -14,8 +14,15 @@ CefSharp.BindObjectAsync("AppController").then(() => {
     );
 });
 
-Inject a JavaScript script to control the volume when the page loads
-demo :
+(function () {
+    return {
+        hasCefSharp: typeof CefSharp !== "undefined",
+        hasBind: CefSharp && typeof CefSharp.BindObjectAsync === "function",
+        hasApp: typeof AppController !== "undefined",
+        appKeys: typeof AppController !== "undefined" ? Object.keys(AppController) : []
+    };
+})()
+
 (function() {
     const volume = %s;
     document.querySelectorAll('audio, video').forEach(elem => {

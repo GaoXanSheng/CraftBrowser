@@ -6,7 +6,9 @@ import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.util.JSScript;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 
@@ -15,7 +17,7 @@ public class BrowserAPI {
     private static BrowserAPI INSTANCE;
     private static final BrowserManager globalManager = new BrowserManager();
     private static final BrowserRender globalRender = new BrowserRender();
-    private static final HashMap<String, BrowserSubprocess> Subprocess = new HashMap<>();
+    private static final ConcurrentHashMap<String, BrowserSubprocess> Subprocess = new ConcurrentHashMap<>();
 
     public static BrowserManager getGlobalManager() {
         return globalManager;
@@ -32,30 +34,35 @@ public class BrowserAPI {
         return INSTANCE;
     }
 
-    public static void createBrowserAsync(String OnlyKey, String Url, int width, int height, int MaxFps, Consumer<BrowserSubprocess> callback) {
-        if (Subprocess.containsKey(OnlyKey)) {
-            callback.accept(Subprocess.get(OnlyKey));
+    public static void createBrowserAsync(String key, String url, int width, int height, int maxFps, Consumer<BrowserSubprocess> callback) {
+        BrowserSubprocess existing = Subprocess.get(key);
+        if (existing != null) {
+            callback.accept(existing);
             return;
         }
-        globalManager.getBrowserFactory().runtime().evaluate(JSScript.CreateBrowser(
-                Url, width, height, OnlyKey, MaxFps
-        ));
-        CompletableFuture.supplyAsync(() -> {
-            try {
-                return new BrowserSubprocess(OnlyKey);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-        }).thenAcceptAsync(subprocess -> {
-            if (subprocess != null) {
-                Minecraft.getInstance().execute(() -> {
-                    Subprocess.put(OnlyKey, subprocess);
-                    callback.accept(subprocess);
+        globalManager.getBrowserFactory()
+                .runtime()
+                .evaluate(JSScript.CreateBrowser(url, width, height, key, maxFps))
+                .thenRunAsync(() -> {
+                    try {
+                        BrowserSubprocess again = Subprocess.get(key);
+                        if (again != null) {
+                            Minecraft.getInstance().execute(() -> callback.accept(again));
+                            return;
+                        }
+
+                        BrowserSubprocess proc = new BrowserSubprocess(key);
+                        Minecraft.getInstance().execute(() -> {
+                            Subprocess.put(key, proc);
+                            callback.accept(proc);
+                        });
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 });
-            }
-        });
     }
+
 
     public static BrowserSubprocess getBrowser(String OnlyKey) {
         return Subprocess.get(OnlyKey);

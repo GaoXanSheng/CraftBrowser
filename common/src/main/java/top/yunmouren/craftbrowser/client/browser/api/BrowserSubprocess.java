@@ -64,7 +64,7 @@ public class BrowserSubprocess {
     public void releaseSpout() {
         if (render != null) {
             render.close();
-            render = null; // 防止重复释放
+            render = null;
         }
     }
 }

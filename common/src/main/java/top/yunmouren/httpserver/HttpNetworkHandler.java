@@ -45,7 +45,6 @@ public class HttpNetworkHandler {
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         packet.encode(buf);
 
-        // 4. 发送数据包到服务器
         NetworkManager.sendToServer(HTTP_REQUEST_PACKET_ID, buf);
     }
 
@@ -110,20 +109,12 @@ public class HttpNetworkHandler {
         }
 
         public static void handle(HttpRequestPacket pkt, NetworkManager.PacketContext context) {
-            // 服务器端执行
             String httpResponse = sendHttpToExternal(pkt.data);
-
             HttpResponsePacket reply = new HttpResponsePacket(pkt.requestId, httpResponse);
             FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
             reply.encode(buf);
-
-            // --- 修改开始 ---
-            // 获取玩家对象
             net.minecraft.world.entity.player.Player player = context.getPlayer();
-
-            // 检查玩家是否是 ServerPlayer 的实例，并进行类型转换
             if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                // 使用转换后的 serverPlayer 对象发送数据包
                 NetworkManager.sendToPlayer(serverPlayer, HTTP_RESPONSE_PACKET_ID, buf);
             }
         }
@@ -143,7 +134,6 @@ public class HttpNetworkHandler {
             buf.writeUtf(responseData);
         }
 
-        // 从FriendlyByteBuf解码的构造函数
         public HttpResponsePacket(FriendlyByteBuf buf) {
             this.requestId = buf.readUUID();
             this.responseData = buf.readUtf(32767);

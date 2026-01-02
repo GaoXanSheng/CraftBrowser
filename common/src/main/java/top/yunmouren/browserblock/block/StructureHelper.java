@@ -15,7 +15,6 @@ public class StructureHelper {
     public static boolean reformStructure(Level level, BlockPos startPos, Direction facing) {
         Set<BlockPos> connectedNodes = new HashSet<>();
         BlockPos masterPos = null;
-
         Stack<BlockPos> toVisit = new Stack<>();
         toVisit.push(startPos);
         Set<BlockPos> visited = new HashSet<>();
@@ -74,26 +73,39 @@ public class StructureHelper {
 
         int height = maxY - minY + 1;
         int width;
+        int masterRelX = 0;
+        int masterRelY = masterPos.getY() - minY; // 屏幕平面上的纵向偏移
+
         if (facing == Direction.NORTH || facing == Direction.SOUTH) {
             width = maxX - minX + 1;
+            if (facing == Direction.NORTH) {
+                masterRelX = maxX - masterPos.getX();
+            } else {
+                masterRelX = masterPos.getX() - minX;
+            }
         } else {
             width = maxZ - minZ + 1;
+            if (facing == Direction.WEST) {
+                masterRelX = masterPos.getZ() - minZ;
+            } else {
+                masterRelX = maxZ - masterPos.getZ();
+            }
         }
 
         if (level.getBlockEntity(masterPos) instanceof BrowserMasterBlockEntity master) {
-            master.setStructureInfo(width, height, connectedNodes);
+            master.setStructureInfo(width, height, masterRelX, masterRelY, connectedNodes);
         }
 
         for (BlockPos p : connectedNodes) {
             if (level.getBlockEntity(p) instanceof BrowserNodeBlockEntity be) {
                 int relY = p.getY() - minY;
-                int relX = switch (facing) {
-                    case SOUTH -> p.getX() - minX;
-                    case NORTH -> maxX - p.getX();
-                    case WEST -> p.getZ() - minZ;
-                    case EAST -> maxZ - p.getZ();
-                    default -> 0;
-                };
+                int relX = 0;
+                switch (facing) {
+                    case SOUTH -> relX = p.getX() - minX;
+                    case NORTH -> relX = maxX - p.getX();
+                    case WEST -> relX = p.getZ() - minZ;
+                    case EAST -> relX = maxZ - p.getZ();
+                }
                 be.setMasterInfo(masterPos, relX, relY);
             }
         }

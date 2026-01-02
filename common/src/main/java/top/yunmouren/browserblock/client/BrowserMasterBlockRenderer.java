@@ -23,25 +23,21 @@ public class BrowserMasterBlockRenderer implements BlockEntityRenderer<BrowserMa
     @Override
     public void render(BrowserMasterBlockEntity entity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
         int textureId = entity.getBrowserTextureId();
-        if (textureId <= 0) {
-            return;
-        }
+        if (textureId <= 0) return;
 
         poseStack.pushPose();
         poseStack.translate(0.5, 0.5, 0.5);
-
         BlockState state = entity.getBlockState();
         Direction facing = state.getOptionalValue(BrowserMasterBlock.FACING).orElse(Direction.NORTH);
         poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
-
         poseStack.translate(0, 0, 0.501);
-
         int totalW = entity.getWidth();
         int totalH = entity.getHeight();
-        double centerOffsetX = (totalW / 2.0) - 0.5;
-        double centerOffsetY = (totalH / 2.0) - 0.5;
-        poseStack.translate(centerOffsetX, centerOffsetY, 0);
-
+        int mRelX = entity.getMasterRelX();
+        int mRelY = entity.getMasterRelY();
+        double offsetX = -mRelX + (totalW / 2.0) - 0.5;
+        double offsetY = -mRelY + (totalH / 2.0) - 0.5;
+        poseStack.translate(offsetX, offsetY, 0);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, textureId);
         RenderSystem.enableBlend();
@@ -52,21 +48,18 @@ public class BrowserMasterBlockRenderer implements BlockEntityRenderer<BrowserMa
         Matrix4f mat = poseStack.last().pose();
 
         buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-
         float halfWidth = totalW / 2f;
         float halfHeight = totalH / 2f;
 
-        buffer.vertex(mat, -halfWidth, halfHeight, 0).uv(0, 0).endVertex();
-        buffer.vertex(mat, -halfWidth, -halfHeight, 0).uv(0, 1).endVertex();
-        buffer.vertex(mat, halfWidth, -halfHeight, 0).uv(1, 1).endVertex();
-        buffer.vertex(mat, halfWidth, halfHeight, 0).uv(1, 0).endVertex();
+        buffer.vertex(mat, -halfWidth, halfHeight, 0).uv(0, 0).endVertex();   // 左上
+        buffer.vertex(mat, -halfWidth, -halfHeight, 0).uv(0, 1).endVertex();  // 左下
+        buffer.vertex(mat, halfWidth, -halfHeight, 0).uv(1, 1).endVertex();   // 右下
+        buffer.vertex(mat, halfWidth, halfHeight, 0).uv(1, 0).endVertex();    // 右上
 
         tesselator.end();
-
         RenderSystem.disableBlend();
         poseStack.popPose();
     }
-
     @Override
     public boolean shouldRenderOffScreen(BrowserMasterBlockEntity blockEntity) {
         return true;

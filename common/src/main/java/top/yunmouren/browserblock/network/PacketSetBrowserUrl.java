@@ -12,7 +12,7 @@ import top.yunmouren.browserblock.block.BrowserMasterBlockEntity;
 public class PacketSetBrowserUrl {
     private final BlockPos pos;
     private final String url;
-    private final double volume; // 新增音量字段
+    private final double volume;
 
     public PacketSetBrowserUrl(BlockPos pos, String url, double volume) {
         this.pos = pos;
