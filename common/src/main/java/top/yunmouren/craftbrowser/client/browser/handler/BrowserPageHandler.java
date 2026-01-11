@@ -18,7 +18,7 @@ public record BrowserPageHandler(BrowserFactory browserFactory) {
     public void customizeLoadingScreenUrl() {
         this.loadCustomizeURL(Config.CLIENT.customizeLoadingScreenUrl.get());
     }
-    public void resizeViewport(int width, int height) {
+    public void resizeViewport(int width, int height,double deviceScaleFactor) {
         if (browserFactory == null) return;
         browserFactory.emulation().setDeviceMetricsOverride(width, height, 1.0, false);
     }

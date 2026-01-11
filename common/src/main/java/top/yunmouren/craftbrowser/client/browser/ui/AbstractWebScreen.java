@@ -1,5 +1,6 @@
 package top.yunmouren.craftbrowser.client.browser.ui;
 
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -13,7 +14,6 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
-import top.yunmouren.craftbrowser.client.browser.api.BrowserSubprocess;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.util.CursorType;
@@ -29,82 +29,25 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
-    private int texWidth = mc.getWindow().getScreenWidth();
-    private int texHeight = mc.getWindow().getScreenHeight();
     private final Map<Integer, Long> heldKeys = new HashMap<>();
     public final BrowserAPI browser = BrowserAPI.getInstance();
     private CursorType lastCursorType = CursorType.DEFAULT;
     public BrowserRender browserRender = BrowserAPI.getGlobalRender();
     public BrowserManager browserManager = BrowserAPI.getGlobalManager();
 
+    private Window getWindow() {
+        return mc.getWindow();
+    }
 
     protected AbstractWebScreen(Component p_96550_) {
         super(p_96550_);
+        resize(mc, mc.getWindow().getScreenWidth(), mc.getWindow().getScreenHeight());
     }
 
     @Override
     protected void init() {
         super.init();
     }
-
-    @Override
-    public void tick() {
-        super.tick();
-        long now = System.currentTimeMillis();
-        for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
-            int keyCode = entry.getKey();
-            long lastTime = entry.getValue();
-            if (now - lastTime >= Config.CLIENT.keyPressDelay.get()) {
-                browserManager.getKeyHandler().keyPress(keyCode, 0, false, true); // repeat
-                entry.setValue(now);
-            }
-        }
-
-    }
-
-    @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        var render = browserRender.render(texWidth, texHeight);
-        if (render == 0) {
-            return;
-        }
-
-        // 更新光标
-        updateCursor();
-
-        RenderSystem.disableBlend();
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, render);
-
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder buffer = tessellator.getBuilder();
-
-        Matrix4f matrix = guiGraphics.pose().last().pose();
-        int guiWidth = mc.getWindow().getGuiScaledWidth();
-        int guiHeight = mc.getWindow().getGuiScaledHeight();
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        buffer.vertex(matrix, 0, guiHeight, 0).uv(0, 1).endVertex();
-        buffer.vertex(matrix, guiWidth, guiHeight, 0).uv(1, 1).endVertex();
-        buffer.vertex(matrix, guiWidth, 0, 0).uv(1, 0).endVertex();
-        buffer.vertex(matrix, 0, 0, 0).uv(0, 0).endVertex();
-        tessellator.end();
-
-        RenderSystem.enableDepthTest();
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
-    }
-
-    private void updateCursor() {
-        CursorType currentCursor = browserManager.getCurrentCursor();
-
-        // 只有在光标类型改变时才更新
-        if (currentCursor != lastCursorType) {
-            long window = mc.getWindow().getWindow();
-            glfwSetCursor(window, glfwCreateStandardCursor(currentCursor.getGlfwCursor()));
-            lastCursorType = currentCursor;
-        }
-    }
-
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> pendingResizeTask = null;
@@ -117,20 +60,56 @@ public abstract class AbstractWebScreen extends Screen {
             pendingResizeTask.cancel(false);
         }
         int RESIZE_DELAY_MS = 200;
+
         pendingResizeTask = scheduler.schedule(() -> {
-            this.texWidth = mc.getWindow().getScreenWidth();
-            this.texHeight = mc.getWindow().getScreenHeight();
-            browserManager.getPageHandler().resizeViewport(texWidth, texHeight);
+            minecraft.execute(() -> {
+                int physWidth = getWindow().getScreenWidth();
+                int physHeight = getWindow().getScreenHeight();
+                double scale = getWindow().getGuiScale();
+                browserManager.getPageHandler().resizeViewport(physWidth, physHeight, scale);
+            });
         }, RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
     }
+    @Override
+    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        int physWidth = getWindow().getScreenWidth();
+        int physHeight = getWindow().getScreenHeight();
+        var render = browserRender.render(physWidth, physHeight);
+        if (render == 0) return;
 
+        updateCursor();
+
+        RenderSystem.disableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, render);
+
+        float maxU = browserRender.getValidU();
+        float maxV = browserRender.getValidV();
+
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder buffer = tessellator.getBuilder();
+        float guiScale = (float) getWindow().getGuiScale();
+        var poseStack = guiGraphics.pose();
+        poseStack.pushPose();
+        poseStack.scale(1.0f / guiScale, 1.0f / guiScale, 1.0f);
+        Matrix4f matrix = poseStack.last().pose();
+
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        buffer.vertex(matrix, 0, physHeight, 0).uv(0f, maxV).endVertex();
+        buffer.vertex(matrix, physWidth, physHeight, 0).uv(maxU, maxV).endVertex();
+        buffer.vertex(matrix, physWidth, 0, 0).uv(maxU, 0f).endVertex();
+        buffer.vertex(matrix, 0, 0, 0).uv(0f, 0f).endVertex();
+
+        tessellator.end();
+        poseStack.popPose();
+        RenderSystem.enableDepthTest();
+    }
     public static int[] guiToPixel(double guiX, double guiY) {
         Minecraft mc = Minecraft.getInstance();
-        int windowWidth = mc.getWindow().getScreenWidth();   // 实际像素宽
-        int windowHeight = mc.getWindow().getScreenHeight(); // 实际像素高
-        int guiWidth = mc.getWindow().getGuiScaledWidth();   // GUI 逻辑宽
-        int guiHeight = mc.getWindow().getGuiScaledHeight(); // GUI 逻辑高
-
+        int windowWidth = mc.getWindow().getScreenWidth();
+        int windowHeight = mc.getWindow().getScreenHeight();
+        int guiWidth = mc.getWindow().getGuiScaledWidth();
+        int guiHeight = mc.getWindow().getGuiScaledHeight();
         int pixelX = (int) (guiX * ((double) windowWidth / guiWidth));
         int pixelY = (int) (guiY * ((double) windowHeight / guiHeight));
 
@@ -143,18 +122,16 @@ public abstract class AbstractWebScreen extends Screen {
             int[] pos = guiToPixel(mouseX, mouseY);
             boolean dragging = !heldMouseButtons.isEmpty();
             browserManager.getMouseHandler().mouseMove(pos[0], pos[1], dragging);
-            // 更新光标样式
             browserManager.updateCursorAtPosition(pos[0], pos[1]);
         });
     }
-
     private final Set<Integer> heldMouseButtons = new HashSet<>();
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
         browserManager.getMouseHandler().mousePress(pos[0], pos[1], button);
-        heldMouseButtons.add(button); // 记录按下
+        heldMouseButtons.add(button);
         return true;
     }
 
@@ -162,7 +139,7 @@ public abstract class AbstractWebScreen extends Screen {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
         browserManager.getMouseHandler().mouseRelease(pos[0], pos[1], button);
-        heldMouseButtons.remove(button); // 移除按下记录
+        heldMouseButtons.remove(button);
         return true;
     }
 
@@ -172,6 +149,17 @@ public abstract class AbstractWebScreen extends Screen {
         browserManager.getMouseHandler().mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
         return true;
     }
+    @Override
+    public void tick() {
+        super.tick();
+        long now = System.currentTimeMillis();
+        for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
+            if (now - entry.getValue() >= Config.CLIENT.keyPressDelay.get()) {
+                browserManager.getKeyHandler().keyPress(entry.getKey(), 0, false, true);
+                entry.setValue(now);
+            }
+        }
+    }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -179,10 +167,8 @@ public abstract class AbstractWebScreen extends Screen {
             this.onClose();
             return true;
         }
-
         browserManager.getKeyHandler().keyPress(keyCode, modifiers, false, false);
         heldKeys.put(keyCode, System.currentTimeMillis());
-
         return true;
     }
 
@@ -201,12 +187,18 @@ public abstract class AbstractWebScreen extends Screen {
     public void onClose() {
         browserManager.getPageHandler().loadCustomizeURL("about:blank");
         heldKeys.clear();
-
-        // 恢复默认光标
         long window = mc.getWindow().getWindow();
         glfwSetCursor(window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
         lastCursorType = CursorType.DEFAULT;
-
         Minecraft.getInstance().setScreen(null);
+    }
+
+    private void updateCursor() {
+        CursorType currentCursor = browserManager.getCurrentCursor();
+        if (currentCursor != lastCursorType) {
+            long window = mc.getWindow().getWindow();
+            glfwSetCursor(window, glfwCreateStandardCursor(currentCursor.getGlfwCursor()));
+            lastCursorType = currentCursor;
+        }
     }
 }
