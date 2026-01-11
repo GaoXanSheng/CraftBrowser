@@ -34,7 +34,6 @@ public abstract class AbstractWebScreen extends Screen {
     private CursorType lastCursorType = CursorType.DEFAULT;
     public BrowserRender browserRender = BrowserAPI.getGlobalRender();
     public BrowserManager browserManager = BrowserAPI.getGlobalManager();
-    private Boolean lastAppliedGui = false;
 
     private Window getWindow() {
         return mc.getWindow();
@@ -48,42 +47,28 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        lastAppliedGui = false;
-    }
 
-    @Override
-    public void tick() {
-        if (!lastAppliedGui) {
-            lastAppliedGui = true;
-            resizeBrowser(mc, mc.getWindow().getScreenWidth(), mc.getWindow().getScreenHeight());
-        }
-        long now = System.currentTimeMillis();
-        for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
-            if (now - entry.getValue() >= Config.CLIENT.keyPressDelay.get()) {
-                browserManager.getKeyHandler().keyPress(entry.getKey(), 0, false, true);
-                entry.setValue(now);
-            }
-        }
     }
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> pendingResizeTask = null;
 
-
-    public void resizeBrowser(Minecraft minecraft, int width, int height) {
+    @Override
+    public void resize(Minecraft minecraft, int width, int height) {
+        BrowserResize();
+    }
+    public void BrowserResize(){
         if (pendingResizeTask != null && !pendingResizeTask.isDone()) {
             pendingResizeTask.cancel(false);
         }
         int RESIZE_DELAY_MS = 200;
 
-        pendingResizeTask = scheduler.schedule(() -> {
-            minecraft.execute(() -> {
-                int physWidth = getWindow().getScreenWidth();
-                int physHeight = getWindow().getScreenHeight();
-                double scale = getWindow().getGuiScale();
-                browserManager.getPageHandler().resizeViewport(physWidth, physHeight, scale);
-            });
-        }, RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
+        pendingResizeTask = scheduler.schedule(() -> minecraft.execute(() -> {
+            int physWidth = getWindow().getScreenWidth();
+            int physHeight = getWindow().getScreenHeight();
+            double scale = getWindow().getGuiScale();
+            browserManager.getPageHandler().resizeViewport(physWidth, physHeight, scale);
+        }), RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -168,6 +153,29 @@ public abstract class AbstractWebScreen extends Screen {
         return true;
     }
 
+    private int cachedPhysWidth = -1;
+    private int cachedPhysHeight = -1;
+
+    @Override
+    public void tick() {
+        super.tick();
+        long now = System.currentTimeMillis();
+        for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
+            if (now - entry.getValue() >= Config.CLIENT.keyPressDelay.get()) {
+                browserManager.getKeyHandler().keyPress(entry.getKey(), 0, false, true);
+                entry.setValue(now);
+            }
+        }
+        Window window = getWindow();
+        int physWidth = window.getScreenWidth();
+        int physHeight = window.getScreenHeight();
+        if (physWidth != cachedPhysWidth || physHeight != cachedPhysHeight) {
+            cachedPhysWidth = physWidth;
+            cachedPhysHeight = physHeight;
+            this.BrowserResize();
+        }
+    }
+
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -208,9 +216,5 @@ public abstract class AbstractWebScreen extends Screen {
             glfwSetCursor(window, glfwCreateStandardCursor(currentCursor.getGlfwCursor()));
             lastCursorType = currentCursor;
         }
-    }
-
-    public Boolean getLastAppliedGui() {
-        return lastAppliedGui;
     }
 }
