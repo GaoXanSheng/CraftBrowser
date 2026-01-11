@@ -34,6 +34,7 @@ public abstract class AbstractWebScreen extends Screen {
     private CursorType lastCursorType = CursorType.DEFAULT;
     public BrowserRender browserRender = BrowserAPI.getGlobalRender();
     public BrowserManager browserManager = BrowserAPI.getGlobalManager();
+    private Boolean lastAppliedGui = false;
 
     private Window getWindow() {
         return mc.getWindow();
@@ -47,15 +48,29 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        lastAppliedGui = false;
+    }
+
+    @Override
+    public void tick() {
+        if (!lastAppliedGui) {
+            lastAppliedGui = true;
+            resizeBrowser(mc, mc.getWindow().getScreenWidth(), mc.getWindow().getScreenHeight());
+        }
+        long now = System.currentTimeMillis();
+        for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
+            if (now - entry.getValue() >= Config.CLIENT.keyPressDelay.get()) {
+                browserManager.getKeyHandler().keyPress(entry.getKey(), 0, false, true);
+                entry.setValue(now);
+            }
+        }
     }
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> pendingResizeTask = null;
 
-    @Override
-    public void resize(Minecraft minecraft, int width, int height) {
-        super.resize(minecraft, width, height);
 
+    public void resizeBrowser(Minecraft minecraft, int width, int height) {
         if (pendingResizeTask != null && !pendingResizeTask.isDone()) {
             pendingResizeTask.cancel(false);
         }
@@ -70,6 +85,7 @@ public abstract class AbstractWebScreen extends Screen {
             });
         }, RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
     }
+
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         int physWidth = getWindow().getScreenWidth();
@@ -104,6 +120,7 @@ public abstract class AbstractWebScreen extends Screen {
         poseStack.popPose();
         RenderSystem.enableDepthTest();
     }
+
     public static int[] guiToPixel(double guiX, double guiY) {
         Minecraft mc = Minecraft.getInstance();
         int windowWidth = mc.getWindow().getScreenWidth();
@@ -125,6 +142,7 @@ public abstract class AbstractWebScreen extends Screen {
             browserManager.updateCursorAtPosition(pos[0], pos[1]);
         });
     }
+
     private final Set<Integer> heldMouseButtons = new HashSet<>();
 
     @Override
@@ -149,17 +167,7 @@ public abstract class AbstractWebScreen extends Screen {
         browserManager.getMouseHandler().mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
         return true;
     }
-    @Override
-    public void tick() {
-        super.tick();
-        long now = System.currentTimeMillis();
-        for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
-            if (now - entry.getValue() >= Config.CLIENT.keyPressDelay.get()) {
-                browserManager.getKeyHandler().keyPress(entry.getKey(), 0, false, true);
-                entry.setValue(now);
-            }
-        }
-    }
+
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -200,5 +208,9 @@ public abstract class AbstractWebScreen extends Screen {
             glfwSetCursor(window, glfwCreateStandardCursor(currentCursor.getGlfwCursor()));
             lastCursorType = currentCursor;
         }
+    }
+
+    public Boolean getLastAppliedGui() {
+        return lastAppliedGui;
     }
 }
