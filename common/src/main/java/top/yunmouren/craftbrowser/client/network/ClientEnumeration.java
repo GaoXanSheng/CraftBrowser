@@ -8,7 +8,7 @@ public class ClientEnumeration {
     public ClientEnumeration(CommandType messageType, String body) {
         switch (messageType) {
             case OPEN_GUI:
-                Minecraft.getInstance().setScreen(new WebScreen());
+                Minecraft.getInstance().setScreen(new WebScreen(""));
                 break;
             case LOAD_URL:
                 Minecraft.getInstance().setScreen(new WebScreen(body));

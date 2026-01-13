@@ -7,6 +7,8 @@ import spout.JNISpout;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.config.Config;
 
+import static top.yunmouren.craftbrowser.client.config.Config.Client.generateRandomString;
+
 public class BrowserRender extends JNISpout implements AutoCloseable {
     private long spoutPtr = 0;
     private final String currentSpoutID;
@@ -20,11 +22,7 @@ public class BrowserRender extends JNISpout implements AutoCloseable {
 
     public BrowserRender(String spoutID) {
         super();
-        this.currentSpoutID = "WebViewSpoutCapture_" + spoutID;
-    }
-
-    public BrowserRender() {
-        this(Config.CLIENT.customizeSpoutID.get());
+        this.currentSpoutID =  spoutID;
     }
 
     private boolean checkInit() {

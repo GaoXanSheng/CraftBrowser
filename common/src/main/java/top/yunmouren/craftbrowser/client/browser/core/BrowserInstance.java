@@ -46,14 +46,11 @@ public class BrowserInstance {
             Thread outputThread = new Thread(() -> readStream(process.getInputStream()));
             outputThread.setDaemon(true);
             outputThread.start();
-
-            Craftbrowser.LOGGER.info("WebViewSpoutCapture started on port {}", Config.CLIENT.customizeBrowserPort.get());
-
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (process != null && process.isAlive()) {
                     process.destroyForcibly();
                     try {
-                        process.waitFor(5, TimeUnit.SECONDS); // 等待最多 5 秒
+                        process.waitFor(5, TimeUnit.SECONDS);
                     } catch (InterruptedException ignored) {
                     }
                     Craftbrowser.LOGGER.info("WebViewSpoutCapture process stopped on JVM exit");
@@ -83,13 +80,9 @@ public class BrowserInstance {
 
         ProcessBuilder builder = new ProcessBuilder(exePath.toString());
         builder.directory(modsDir.toFile());
-
         Map<String, String> env = builder.environment();
         env.put("LANG", "en_US.UTF-8");
-        env.put("BROWSER_PORT", String.valueOf(Config.CLIENT.customizeBrowserPort.get()));
-        env.put("SPOUT_ID", Config.CLIENT.customizeSpoutID.get());
-        env.put("MAXFPS", Config.CLIENT.browserMaxfps.get().toString());
-        env.put("CUSTOMIZE_LOADING_SCREEN_URL", Config.CLIENT.customizeLoadingScreenUrl.get());
+        env.put("MASTER_RPC_ID", Config.CLIENT.customizeRpc_ID.get());
         builder.inheritIO();
         return builder;
     }

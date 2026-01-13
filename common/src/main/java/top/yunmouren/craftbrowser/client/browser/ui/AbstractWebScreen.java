@@ -14,9 +14,8 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
-import top.yunmouren.craftbrowser.client.browser.core.BrowserManager;
+import top.yunmouren.craftbrowser.client.browser.api.IBrowserController;
 import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
-import top.yunmouren.craftbrowser.client.browser.util.CursorType;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.HashMap;
@@ -30,24 +29,23 @@ import static org.lwjgl.glfw.GLFW.*;
 public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
     private final Map<Integer, Long> heldKeys = new HashMap<>();
-    public final BrowserAPI browser = BrowserAPI.getInstance();
-    private CursorType lastCursorType = CursorType.DEFAULT;
-    public BrowserRender browserRender = BrowserAPI.getGlobalRender();
-    public BrowserManager browserManager = BrowserAPI.getGlobalManager();
+    public BrowserRender browserRender;
+    public IBrowserController browserController;
 
     private Window getWindow() {
         return mc.getWindow();
     }
 
-    protected AbstractWebScreen(Component p_96550_) {
+    protected AbstractWebScreen(Component p_96550_, String url) {
         super(p_96550_);
-        resize(mc, mc.getWindow().getScreenWidth(), mc.getWindow().getScreenHeight());
+        browserController = BrowserAPI.getInstance().createBrowser(url, 1920, 1080, 60);
+        browserRender = BrowserAPI.getInstance().GetBrowserRender(browserController);
+        BrowserResize();
     }
 
     @Override
     protected void init() {
         super.init();
-
     }
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -57,7 +55,8 @@ public abstract class AbstractWebScreen extends Screen {
     public void resize(Minecraft minecraft, int width, int height) {
         BrowserResize();
     }
-    public void BrowserResize(){
+
+    public void BrowserResize() {
         if (pendingResizeTask != null && !pendingResizeTask.isDone()) {
             pendingResizeTask.cancel(false);
         }
@@ -67,7 +66,7 @@ public abstract class AbstractWebScreen extends Screen {
             int physWidth = getWindow().getScreenWidth();
             int physHeight = getWindow().getScreenHeight();
             double scale = getWindow().getGuiScale();
-            browserManager.getPageHandler().resizeViewport(physWidth, physHeight, scale);
+            browserController.Resize(physWidth, physHeight, (int) scale, false);
         }), RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
@@ -123,8 +122,7 @@ public abstract class AbstractWebScreen extends Screen {
         CompletableFuture.runAsync(() -> {
             int[] pos = guiToPixel(mouseX, mouseY);
             boolean dragging = !heldMouseButtons.isEmpty();
-            browserManager.getMouseHandler().mouseMove(pos[0], pos[1], dragging);
-            browserManager.updateCursorAtPosition(pos[0], pos[1]);
+            browserController.SendMouseMove(pos[0], pos[1], dragging);
         });
     }
 
@@ -133,7 +131,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.getMouseHandler().mousePress(pos[0], pos[1], button);
+        browserController.SendMouseClick(pos[0], pos[1], button,false);
         heldMouseButtons.add(button);
         return true;
     }
@@ -141,7 +139,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.getMouseHandler().mouseRelease(pos[0], pos[1], button);
+        browserController.SendMouseClick(pos[0], pos[1], button,true);
         heldMouseButtons.remove(button);
         return true;
     }
@@ -149,7 +147,8 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserManager.getMouseHandler().mouseWheel(pos[0], pos[1], (int) (-delta * Config.CLIENT.scrollWheelPixels.get()));
+        int scrollAmountY = (int) (delta * Config.CLIENT.scrollWheelPixels.get());
+        browserController.SendMouseWheel(pos[0], pos[1], 0, scrollAmountY);
         return true;
     }
 
@@ -162,7 +161,9 @@ public abstract class AbstractWebScreen extends Screen {
         long now = System.currentTimeMillis();
         for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
             if (now - entry.getValue() >= Config.CLIENT.keyPressDelay.get()) {
-                browserManager.getKeyHandler().keyPress(entry.getKey(), 0, false, true);
+                int glfwKey = entry.getKey();
+                int winKeyCode = getWindowsKeyCode(glfwKey);
+                browserController.SendKeyEvent(winKeyCode, true);
                 entry.setValue(now);
             }
         }
@@ -176,14 +177,28 @@ public abstract class AbstractWebScreen extends Screen {
         }
     }
 
-
+    /**
+     *  1-9
+     *  A-Z
+     *  esc
+     *  enter
+     *  backspace
+     */
+    public int getWindowsKeyCode(int glfwKey) {
+        return switch (glfwKey) {
+            case 257 -> 13; // GLFW_KEY_ENTER -> VK_RETURN
+            case 256 -> 27; // GLFW_KEY_ESCAPE -> VK_ESCAPE
+            case 259 -> 8;  // GLFW_KEY_BACKSPACE -> VK_BACK
+            default -> glfwKey;
+        };
+    }
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == GLFW_KEY_ESCAPE && (modifiers & GLFW_MOD_SHIFT) != 0) {
             this.onClose();
             return true;
         }
-        browserManager.getKeyHandler().keyPress(keyCode, modifiers, false, false);
+        browserController.SendKeyEvent(getWindowsKeyCode(keyCode), false);
         heldKeys.put(keyCode, System.currentTimeMillis());
         return true;
     }
@@ -194,27 +209,28 @@ public abstract class AbstractWebScreen extends Screen {
             this.onClose();
             return true;
         }
-        browserManager.getKeyHandler().keyPress(keyCode, modifiers, true, false);
+        browserController.SendKeyEvent(getWindowsKeyCode(keyCode), true);
         heldKeys.remove(keyCode);
         return true;
     }
 
     @Override
     public void onClose() {
-        browserManager.getPageHandler().loadCustomizeURL("about:blank");
         heldKeys.clear();
         long window = mc.getWindow().getWindow();
         glfwSetCursor(window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
-        lastCursorType = CursorType.DEFAULT;
+//        lastCursorType = CursorType.DEFAULT;
+        browserRender.close();
+        BrowserAPI.getInstance().removeBrowser(browserController);
         Minecraft.getInstance().setScreen(null);
     }
 
     private void updateCursor() {
-        CursorType currentCursor = browserManager.getCurrentCursor();
-        if (currentCursor != lastCursorType) {
-            long window = mc.getWindow().getWindow();
-            glfwSetCursor(window, glfwCreateStandardCursor(currentCursor.getGlfwCursor()));
-            lastCursorType = currentCursor;
-        }
+//        CursorType currentCursor = browserManager.getCurrentCursor();
+//        if (currentCursor != lastCursorType) {
+//            long window = mc.getWindow().getWindow();
+//            glfwSetCursor(window, glfwCreateStandardCursor(currentCursor.getGlfwCursor()));
+//            lastCursorType = currentCursor;
+//        }
     }
 }
