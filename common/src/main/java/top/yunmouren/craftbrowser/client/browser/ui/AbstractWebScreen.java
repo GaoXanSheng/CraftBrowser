@@ -13,9 +13,11 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import top.yunmouren.craftbrowser.client.browser.Controller.TestController;
+import top.yunmouren.craftbrowser.client.browser.Tools.CursorType;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
-import top.yunmouren.craftbrowser.client.browser.api.IBrowserController;
-import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
+import top.yunmouren.craftbrowser.client.browser.Controller.IBrowserController;
+import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.HashMap;
@@ -41,6 +43,12 @@ public abstract class AbstractWebScreen extends Screen {
         browserController = BrowserAPI.getInstance().createBrowser(url, 1920, 1080, 60);
         browserRender = BrowserAPI.getInstance().GetBrowserRender(browserController);
         BrowserResize();
+
+        BrowserAPI.getInstance().GetBrowserEventBus(browserController).register(new TestController());
+    }
+    @Override
+    public boolean isPauseScreen() {
+        return false;
     }
 
     @Override
@@ -77,8 +85,6 @@ public abstract class AbstractWebScreen extends Screen {
         var render = browserRender.render(physWidth, physHeight);
         if (render == 0) return;
 
-        updateCursor();
-
         RenderSystem.disableBlend();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, render);
@@ -103,6 +109,7 @@ public abstract class AbstractWebScreen extends Screen {
         tessellator.end();
         poseStack.popPose();
         RenderSystem.enableDepthTest();
+        updateCursor();
     }
 
     public static int[] guiToPixel(double guiX, double guiY) {
@@ -131,7 +138,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserController.SendMouseClick(pos[0], pos[1], button,false);
+        browserController.SendMouseClick(pos[0], pos[1], button, false);
         heldMouseButtons.add(button);
         return true;
     }
@@ -139,7 +146,7 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
-        browserController.SendMouseClick(pos[0], pos[1], button,true);
+        browserController.SendMouseClick(pos[0], pos[1], button, true);
         heldMouseButtons.remove(button);
         return true;
     }
@@ -178,11 +185,11 @@ public abstract class AbstractWebScreen extends Screen {
     }
 
     /**
-     *  1-9
-     *  A-Z
-     *  esc
-     *  enter
-     *  backspace
+     * 1-9
+     * A-Z
+     * esc
+     * enter
+     * backspace
      */
     public int getWindowsKeyCode(int glfwKey) {
         return switch (glfwKey) {
@@ -192,6 +199,7 @@ public abstract class AbstractWebScreen extends Screen {
             default -> glfwKey;
         };
     }
+
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == GLFW_KEY_ESCAPE && (modifiers & GLFW_MOD_SHIFT) != 0) {
@@ -219,18 +227,20 @@ public abstract class AbstractWebScreen extends Screen {
         heldKeys.clear();
         long window = mc.getWindow().getWindow();
         glfwSetCursor(window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
-//        lastCursorType = CursorType.DEFAULT;
         browserRender.close();
         BrowserAPI.getInstance().removeBrowser(browserController);
         Minecraft.getInstance().setScreen(null);
     }
 
+    private int lastCursorType;
+
     private void updateCursor() {
-//        CursorType currentCursor = browserManager.getCurrentCursor();
-//        if (currentCursor != lastCursorType) {
-//            long window = mc.getWindow().getWindow();
-//            glfwSetCursor(window, glfwCreateStandardCursor(currentCursor.getGlfwCursor()));
-//            lastCursorType = currentCursor;
-//        }
+        var currentCursorIndex = CursorType.values()[browserController.GetCursorType()];
+        int targetGlfwCursor = CursorType.fromBrowserInt(currentCursorIndex);
+        if (targetGlfwCursor != lastCursorType) {
+            lastCursorType = targetGlfwCursor;
+            long window = mc.getWindow().getWindow();
+            glfwSetCursor(window, glfwCreateStandardCursor(targetGlfwCursor));
+        }
     }
 }

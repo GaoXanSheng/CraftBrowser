@@ -1,4 +1,6 @@
-package top.yunmouren.craftbrowser.client.browser.tools;
+package top.yunmouren.craftbrowser.client.browser.Tools;
+
+import org.lwjgl.glfw.GLFW;
 
 public enum CursorType
 {
@@ -201,5 +203,27 @@ public enum CursorType
     /// <summary>
     /// DndLink
     /// </summary>
-    DndLink
+    DndLink;
+
+    /**
+     * 将 BrowserCursorType 直接转换为 GLFW 的标准光标形状常量 (int)。
+     * 映射逻辑基于原 GLFW CursorType 枚举：
+     * - 不支持的类型统一回退为 GLFW_ARROW_CURSOR
+     * - Pointer/Hand/Grab -> HAND
+     * - Resize -> HRESIZE/VRESIZE
+     */
+    public static int fromBrowserInt(CursorType browserType) {
+        if (browserType == null) {
+            return GLFW.GLFW_ARROW_CURSOR;
+        }
+
+        return switch (browserType) {
+            case Pointer, Hand, Grab, Grabbing -> GLFW.GLFW_HAND_CURSOR;
+            case Cross -> GLFW.GLFW_CROSSHAIR_CURSOR;
+            case IBeam, VerticalText -> GLFW.GLFW_IBEAM_CURSOR;
+            case EastResize, WestResize, EastWestResize, ColumnResize -> GLFW.GLFW_HRESIZE_CURSOR;
+            case NorthResize, SouthResize, NorthSouthResize, RowResize -> GLFW.GLFW_VRESIZE_CURSOR;
+            default -> GLFW.GLFW_ARROW_CURSOR;
+        };
+    }
 }

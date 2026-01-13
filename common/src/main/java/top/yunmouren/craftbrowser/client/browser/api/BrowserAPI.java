@@ -1,8 +1,14 @@
 package top.yunmouren.craftbrowser.client.browser.api;
 
-import top.yunmouren.craftbrowser.client.browser.core.BrowserRender;
-import top.yunmouren.craftbrowser.client.browser.rpc.RpcClient;
+import top.yunmouren.craftbrowser.client.browser.Controller.IBrowserController;
+import top.yunmouren.craftbrowser.client.browser.Controller.IMasterController;
+import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
+import top.yunmouren.craftbrowser.client.browser.Rpc.BrowserEventBus;
+import top.yunmouren.craftbrowser.client.browser.Rpc.RpcClient;
 import top.yunmouren.craftbrowser.client.config.Config;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 
 
 public class BrowserAPI {
@@ -24,6 +30,21 @@ public class BrowserAPI {
 
     public BrowserRender GetBrowserRender(IBrowserController browserController) {
         return new BrowserRender(browserController.GetSpoutId());
+    }
+
+    public BrowserEventBus GetBrowserEventBus(IBrowserController browserController) {
+        if (browserController == null) {
+            throw new IllegalArgumentException("BrowserController cannot be null");
+        }
+        if (Proxy.isProxyClass(browserController.getClass())) {
+            InvocationHandler handler = Proxy.getInvocationHandler(browserController);
+            if (handler instanceof RpcClient) {
+                BrowserEventBus bus = ((RpcClient) handler).getEventBus();
+                bus.setResponseChannel(browserController);
+                return bus;
+            }
+        }
+        throw new IllegalArgumentException("The passed browserController is not a valid RPC client proxy object！");
     }
 
     public void removeBrowser(IBrowserController OnlyKey) {

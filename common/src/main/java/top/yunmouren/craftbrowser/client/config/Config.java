@@ -17,6 +17,7 @@ public class Config {
         public final ConfigSpec.ConfigValue<Integer> scrollWheelPixels;
         public final ConfigSpec.ConfigValue<Boolean> customizeRpc_IDEnabled;
         public final ConfigSpec.ConfigValue<String> customizeRpc_ID;
+        public final ConfigSpec.ConfigValue<Integer> customizeDebugPort;
 
         public Client() {
             ConfigSpec.Builder builder = new ConfigSpec.Builder();
@@ -40,6 +41,8 @@ public class Config {
                     .define("CustomIdEnabled", false);
             customizeRpc_ID = builder
                     .define("CustomId", "NCEF");
+            customizeDebugPort = builder
+                    .define("DebugPort", 0, 0, 65535);
             builder.pop();
             this.spec = builder.build("craftbrowser_settings.toml");
         }

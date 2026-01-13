@@ -1,13 +1,10 @@
-package top.yunmouren.craftbrowser.client.browser.core;
+package top.yunmouren.craftbrowser.client.browser.Core;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.lwjgl.opengl.GL11;
 import spout.JNISpout;
 import top.yunmouren.craftbrowser.Craftbrowser;
-import top.yunmouren.craftbrowser.client.config.Config;
-
-import static top.yunmouren.craftbrowser.client.config.Config.Client.generateRandomString;
 
 public class BrowserRender extends JNISpout implements AutoCloseable {
     private long spoutPtr = 0;

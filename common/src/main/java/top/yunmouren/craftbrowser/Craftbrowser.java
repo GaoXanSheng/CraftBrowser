@@ -4,7 +4,7 @@ import com.mojang.logging.LogUtils;
 import dev.architectury.platform.Platform;
 import dev.architectury.utils.Env;
 import org.slf4j.Logger;
-import top.yunmouren.craftbrowser.client.browser.core.BrowserInstance;
+import top.yunmouren.craftbrowser.client.browser.Core.BrowserInstance;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 public final class Craftbrowser {
