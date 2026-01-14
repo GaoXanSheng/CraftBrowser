@@ -23,6 +23,10 @@ public class BrowserAPI {
         return INSTANCE;
     }
 
+    /**
+     * Synchronization
+     */
+
     public IBrowserController createBrowser(String url, int width, int height, int maxFps) {
         var hashed = master.CreateBrowser(url, width, height, maxFps);
         return RpcClient.create(IBrowserController.class, hashed);

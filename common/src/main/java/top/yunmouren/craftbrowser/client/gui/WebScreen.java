@@ -8,6 +8,5 @@ public class WebScreen extends AbstractWebScreen {
 
     public WebScreen(String url) {
         super(Component.literal("WebScreen"),url);
-
     }
 }

@@ -40,7 +40,7 @@ public abstract class AbstractWebScreen extends Screen {
 
     protected AbstractWebScreen(Component p_96550_, String url) {
         super(p_96550_);
-        browserController = BrowserAPI.getInstance().createBrowser(url, 1920, 1080, 60);
+        browserController = BrowserAPI.getInstance().createBrowser(url, 1920, 1080, Config.CLIENT.browserMaxfps.get());
         browserRender = BrowserAPI.getInstance().GetBrowserRender(browserController);
         BrowserResize();
 

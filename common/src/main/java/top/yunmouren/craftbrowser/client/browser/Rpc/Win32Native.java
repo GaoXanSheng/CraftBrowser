@@ -11,7 +11,7 @@ import com.sun.jna.win32.W32APIOptions;
  */
 public interface Win32Native extends StdCallLibrary {
     Win32Native INSTANCE = Native.load("kernel32", Win32Native.class, W32APIOptions.DEFAULT_OPTIONS);
-    int FILE_MAP_ALL_ACCESS = 0xF001F;
+    int FILE_MAP_READ_WRITE  = 0x0006;
     int EVENT_ALL_ACCESS = 0x1F0003;
     int WAIT_OBJECT_0 = 0x000000;
     WinNT.HANDLE OpenFileMapping(int dwDesiredAccess, boolean bInheritHandle, String lpName);

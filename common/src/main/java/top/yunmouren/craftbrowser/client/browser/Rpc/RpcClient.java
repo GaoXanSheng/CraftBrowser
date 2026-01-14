@@ -20,11 +20,11 @@ public class RpcClient implements InvocationHandler, AutoCloseable {
     private static final String PREFIX_EVT_READY = "NCEF_EVT_READY_";
     private static final String PREFIX_EVT_ACK = "NCEF_EVT_ACK_";
 
-    private static final int RPC_MAP_SIZE = 1024 * 1024;     // 1MB
-    private static final int EVENT_MAP_SIZE = 512 * 1024;    // 1MB
+    private static final int RPC_MAP_SIZE = 1024 * 1024 * 8;
+    private static final int EVENT_MAP_SIZE = RPC_MAP_SIZE/2;
     private static final int REQ_OFFSET = 0;
-    private static final int RES_OFFSET = 1024 * 1024;        // 1MB offset
-    private static final int RPC_TIMEOUT_MS = 2000;
+    private static final int RES_OFFSET = RPC_MAP_SIZE/2;
+    private static final int RPC_TIMEOUT_MS = 10000;
 
     private static final String METHOD_TO_STRING = "toString";
     private static final String METHOD_HASH_CODE = "hashCode";
@@ -62,18 +62,18 @@ public class RpcClient implements InvocationHandler, AutoCloseable {
 
     private RpcClient(String rpcId) throws Exception {
         // 初始化 RPC 通道
-        hMap = Win32Native.INSTANCE.OpenFileMapping(Win32Native.FILE_MAP_ALL_ACCESS, false, PREFIX_MAP + rpcId);
+        hMap = Win32Native.INSTANCE.OpenFileMapping(Win32Native.FILE_MAP_READ_WRITE, false, PREFIX_MAP + rpcId);
         if (hMap == null) throw new Exception("SharedMemory Not Found: " + PREFIX_MAP + rpcId);
 
-        pBase = Win32Native.INSTANCE.MapViewOfFile(hMap, Win32Native.FILE_MAP_ALL_ACCESS, 0, 0, RPC_MAP_SIZE);
+        pBase = Win32Native.INSTANCE.MapViewOfFile(hMap, Win32Native.FILE_MAP_READ_WRITE, 0, 0, RPC_MAP_SIZE);
         hReq = Win32Native.INSTANCE.OpenEvent(Win32Native.EVENT_ALL_ACCESS, false, PREFIX_REQ_EVENT + rpcId);
         hRes = Win32Native.INSTANCE.OpenEvent(Win32Native.EVENT_ALL_ACCESS, false, PREFIX_RES_EVENT + rpcId);
 
         // 初始化 Event 通道
-        hEvtMap = Win32Native.INSTANCE.OpenFileMapping(Win32Native.FILE_MAP_ALL_ACCESS, false, PREFIX_EVT_MAP + rpcId);
+        hEvtMap = Win32Native.INSTANCE.OpenFileMapping(Win32Native.FILE_MAP_READ_WRITE, false, PREFIX_EVT_MAP + rpcId);
         if (hEvtMap == null) throw new Exception("Event SharedMemory Not Found: " + PREFIX_EVT_MAP + rpcId);
 
-        pEvtBase = Win32Native.INSTANCE.MapViewOfFile(hEvtMap, Win32Native.FILE_MAP_ALL_ACCESS, 0, 0, EVENT_MAP_SIZE);
+        pEvtBase = Win32Native.INSTANCE.MapViewOfFile(hEvtMap, Win32Native.FILE_MAP_READ_WRITE, 0, 0, EVENT_MAP_SIZE);
         hEvtReady = Win32Native.INSTANCE.OpenEvent(Win32Native.EVENT_ALL_ACCESS, false, PREFIX_EVT_READY + rpcId);
         hEvtAck = Win32Native.INSTANCE.OpenEvent(Win32Native.EVENT_ALL_ACCESS, false, PREFIX_EVT_ACK + rpcId);
 
