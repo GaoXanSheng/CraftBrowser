@@ -21,9 +21,7 @@ import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.*;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -128,18 +126,14 @@ public abstract class AbstractWebScreen extends Screen {
     public void mouseMoved(double mouseX, double mouseY) {
         CompletableFuture.runAsync(() -> {
             int[] pos = guiToPixel(mouseX, mouseY);
-            boolean dragging = !heldMouseButtons.isEmpty();
-            browserController.SendMouseMove(pos[0], pos[1], dragging);
+            browserController.SendMouseMove(pos[0], pos[1], false);
         });
     }
-
-    private final Set<Integer> heldMouseButtons = new HashSet<>();
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
         browserController.SendMouseClick(pos[0], pos[1], button, false);
-        heldMouseButtons.add(button);
         return true;
     }
 
@@ -147,7 +141,6 @@ public abstract class AbstractWebScreen extends Screen {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         int[] pos = guiToPixel(mouseX, mouseY);
         browserController.SendMouseClick(pos[0], pos[1], button, true);
-        heldMouseButtons.remove(button);
         return true;
     }
 
