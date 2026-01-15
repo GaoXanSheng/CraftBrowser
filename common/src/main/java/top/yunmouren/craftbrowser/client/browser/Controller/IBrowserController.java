@@ -16,7 +16,7 @@ public interface IBrowserController {
 
     Boolean Resize(int width, int height, int deviceScaleFactor, Boolean mobile);
 
-    void SendMouseMove(int x, int y, Boolean mouseLeave);
+    void SendMouseMove(int x, int y, Boolean mouseLeave,Boolean leftButtonPressed);
 
     void SendMouseMove(int x, int y);
 

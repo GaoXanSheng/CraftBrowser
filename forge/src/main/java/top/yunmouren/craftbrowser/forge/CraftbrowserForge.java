@@ -10,6 +10,9 @@ import top.yunmouren.craftbrowser.proxy.CommonProxy;
 
 @Mod(Craftbrowser.MOD_ID)
 public final class CraftbrowserForge {
+    static {
+        Craftbrowser.init();
+    }
     private static final CommonProxy proxy = DistExecutor.unsafeRunForDist(
             () -> ClientProxy::new,
             () -> CommonProxy::new
@@ -17,7 +20,6 @@ public final class CraftbrowserForge {
 
     public CraftbrowserForge() {
         EventBuses.registerModEventBus(Craftbrowser.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
-        Craftbrowser.init();
         proxy.init();
     }
 }

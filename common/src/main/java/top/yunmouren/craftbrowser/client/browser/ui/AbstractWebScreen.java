@@ -44,6 +44,7 @@ public abstract class AbstractWebScreen extends Screen {
 
         BrowserAPI.getInstance().GetBrowserEventBus(browserController).register(new TestController());
     }
+
     @Override
     public boolean isPauseScreen() {
         return false;
@@ -121,24 +122,35 @@ public abstract class AbstractWebScreen extends Screen {
 
         return new int[]{pixelX, pixelY};
     }
-
+    private boolean isLeftMouseDown = false;
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
         CompletableFuture.runAsync(() -> {
             int[] pos = guiToPixel(mouseX, mouseY);
-            browserController.SendMouseMove(pos[0], pos[1], false);
+            browserController.SendMouseMove(pos[0], pos[1], false, isLeftMouseDown);
         });
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) { // 0 是左键
+            isLeftMouseDown = true;
+        }
         int[] pos = guiToPixel(mouseX, mouseY);
         browserController.SendMouseClick(pos[0], pos[1], button, false);
         return true;
     }
-
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        int[] pos = guiToPixel(mouseX, mouseY);
+        browserController.SendMouseMove(pos[0], pos[1], false, button == 0 || isLeftMouseDown);
+        return true;
+    }
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            isLeftMouseDown = false;
+        }
         int[] pos = guiToPixel(mouseX, mouseY);
         browserController.SendMouseClick(pos[0], pos[1], button, true);
         return true;

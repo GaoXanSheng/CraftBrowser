@@ -8,9 +8,11 @@ import top.yunmouren.craftbrowser.server.network.BrowserNetworkHandler;
 import top.yunmouren.httpserver.HttpNetworkHandler;
 
 public final class CraftbrowserFabric implements ModInitializer {
+    static {
+        Craftbrowser.init();
+    }
     @Override
     public void onInitialize() {
-        Craftbrowser.init();
         FabricCommand.register();
 
         HttpNetworkHandler.registerC2SReceivers();
