@@ -11,7 +11,6 @@ public class Config {
 
     public static class Client {
         public final ConfigSpec spec;
-
         public final ConfigSpec.ConfigValue<Integer> browserMaxfps;
         public final ConfigSpec.ConfigValue<Integer> keyPressDelay;
         public final ConfigSpec.ConfigValue<Integer> scrollWheelPixels;

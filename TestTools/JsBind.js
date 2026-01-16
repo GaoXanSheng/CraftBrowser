@@ -1,4 +1,0 @@
-
-CefSharp.BindObjectAsync("craftBridge").then(() => {
-
-});

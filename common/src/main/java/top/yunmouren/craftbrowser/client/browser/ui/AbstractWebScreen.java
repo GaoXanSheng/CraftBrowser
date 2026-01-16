@@ -20,15 +20,15 @@ import top.yunmouren.craftbrowser.client.browser.Controller.IBrowserController;
 import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
 import top.yunmouren.craftbrowser.client.config.Config;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static top.yunmouren.craftbrowser.client.browser.Tools.KeyToChar.getCharFromKeyCode;
+import static top.yunmouren.craftbrowser.client.browser.Tools.KeyToChar.getWindowsKeyCode;
 
 public abstract class AbstractWebScreen extends Screen {
     private final Minecraft mc = Minecraft.getInstance();
-    private final Map<Integer, Long> heldKeys = new HashMap<>();
     public BrowserRender browserRender;
     public IBrowserController browserController;
 
@@ -41,7 +41,6 @@ public abstract class AbstractWebScreen extends Screen {
         browserController = BrowserAPI.getInstance().createBrowser(url, 1920, 1080, Config.CLIENT.browserMaxfps.get());
         browserRender = BrowserAPI.getInstance().GetBrowserRender(browserController);
         BrowserResize();
-
         BrowserAPI.getInstance().GetBrowserEventBus(browserController).register(new TestController());
     }
 
@@ -122,7 +121,9 @@ public abstract class AbstractWebScreen extends Screen {
 
         return new int[]{pixelX, pixelY};
     }
+
     private boolean isLeftMouseDown = false;
+
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
         CompletableFuture.runAsync(() -> {
@@ -140,12 +141,14 @@ public abstract class AbstractWebScreen extends Screen {
         browserController.SendMouseClick(pos[0], pos[1], button, false);
         return true;
     }
+
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         int[] pos = guiToPixel(mouseX, mouseY);
         browserController.SendMouseMove(pos[0], pos[1], false, button == 0 || isLeftMouseDown);
         return true;
     }
+
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (button == 0) {
@@ -170,15 +173,6 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        long now = System.currentTimeMillis();
-        for (Map.Entry<Integer, Long> entry : heldKeys.entrySet()) {
-            if (now - entry.getValue() >= Config.CLIENT.keyPressDelay.get()) {
-                int glfwKey = entry.getKey();
-                int winKeyCode = getWindowsKeyCode(glfwKey);
-                browserController.SendKeyEvent(winKeyCode, true);
-                entry.setValue(now);
-            }
-        }
         Window window = getWindow();
         int physWidth = window.getScreenWidth();
         int physHeight = window.getScreenHeight();
@@ -189,21 +183,8 @@ public abstract class AbstractWebScreen extends Screen {
         }
     }
 
-    /**
-     * 1-9
-     * A-Z
-     * esc
-     * enter
-     * backspace
-     */
-    public int getWindowsKeyCode(int glfwKey) {
-        return switch (glfwKey) {
-            case 257 -> 13; // GLFW_KEY_ENTER -> VK_RETURN
-            case 256 -> 27; // GLFW_KEY_ESCAPE -> VK_ESCAPE
-            case 259 -> 8;  // GLFW_KEY_BACKSPACE -> VK_BACK
-            default -> glfwKey;
-        };
-    }
+    private final Map<Integer, ScheduledFuture<?>> repeatTasks = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService keyScheduler = Executors.newScheduledThreadPool(1);
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -211,8 +192,18 @@ public abstract class AbstractWebScreen extends Screen {
             this.onClose();
             return true;
         }
-        browserController.SendKeyEvent(getWindowsKeyCode(keyCode), false);
-        heldKeys.put(keyCode, System.currentTimeMillis());
+        if (browserController == null) return true;
+        if (repeatTasks.containsKey(keyCode)) return true;
+        Runnable task = () -> {
+            char ch = getCharFromKeyCode(keyCode, modifiers);
+            if (ch != 0) {
+                browserController.SendText(String.valueOf(ch));
+            }
+            browserController.SendKeyEvent(getWindowsKeyCode(keyCode, scanCode, modifiers), false);
+        };
+        ScheduledFuture<?> future = keyScheduler.scheduleAtFixedRate(task, 0, 50, TimeUnit.MILLISECONDS);
+        repeatTasks.put(keyCode, future);
+
         return true;
     }
 
@@ -222,14 +213,21 @@ public abstract class AbstractWebScreen extends Screen {
             this.onClose();
             return true;
         }
-        browserController.SendKeyEvent(getWindowsKeyCode(keyCode), true);
-        heldKeys.remove(keyCode);
+
+        // 停止循环
+        ScheduledFuture<?> future = repeatTasks.remove(keyCode);
+        if (future != null) future.cancel(false);
+
+        if (browserController != null) {
+            browserController.SendKeyEvent(getWindowsKeyCode(keyCode, scanCode, modifiers), true);
+        }
+
         return true;
     }
 
+
     @Override
     public void onClose() {
-        heldKeys.clear();
         long window = mc.getWindow().getWindow();
         glfwSetCursor(window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
         browserRender.close();
