@@ -20,7 +20,7 @@ public class RpcClient implements InvocationHandler, AutoCloseable {
     private static final String PREFIX_EVT_READY = "NCEF_EVT_READY_";
     private static final String PREFIX_EVT_ACK = "NCEF_EVT_ACK_";
 
-    private static final int RPC_MAP_SIZE = 1024 * 1024 * 8;
+    private static final int RPC_MAP_SIZE = 1024 * 1024 * 2;
     private static final int EVENT_MAP_SIZE = RPC_MAP_SIZE/2;
     private static final int REQ_OFFSET = 0;
     private static final int RES_OFFSET = RPC_MAP_SIZE/2;

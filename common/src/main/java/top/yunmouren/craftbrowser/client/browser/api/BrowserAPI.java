@@ -28,8 +28,7 @@ public class BrowserAPI {
      */
 
     public IBrowserController createBrowser(String url, int width, int height, int maxFps) {
-        var hashed = master.CreateBrowser(url, width, height, maxFps);
-        return RpcClient.create(IBrowserController.class, hashed);
+        return RpcClient.create(IBrowserController.class, master.CreateBrowser(url, width, height, maxFps));
     }
 
     public BrowserRender GetBrowserRender(IBrowserController browserController) {
