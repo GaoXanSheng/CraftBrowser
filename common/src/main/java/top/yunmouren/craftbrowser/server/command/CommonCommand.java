@@ -19,7 +19,6 @@ public record CommonCommand(BrowserNetworkHandler networkHandler) {
     public LiteralArgumentBuilder<CommandSourceStack> buildCommandTree() {
         return Commands.literal("ncef")
                 .requires(src -> src.hasPermission(2))
-                .then(playerCommand(CommandType.OPEN_GUI))
                 .then(playerCommandWithArg(CommandType.LOAD_URL, "url"));
     }
 

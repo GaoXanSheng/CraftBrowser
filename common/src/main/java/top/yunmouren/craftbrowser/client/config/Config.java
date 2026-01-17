@@ -20,6 +20,7 @@ public class Config {
         public final ConfigSpec.ConfigValue<Boolean> externalHttpServer;
         public final ConfigSpec.ConfigValue<String> externalApiUrl;
         public final ConfigSpec.ConfigValue<Integer> externalHttpServerPort;
+        public final ConfigSpec.ConfigValue<Boolean> DevTools;
 
         public Client() {
             ConfigSpec.Builder builder = new ConfigSpec.Builder();
@@ -36,6 +37,7 @@ public class Config {
             customizeRpc_IDEnabled = builder.define("CustomIdEnabled", false);
             customizeRpc_ID = builder.define("CustomId", "GLOBAL_NCEF");
             customizeDebugPort = builder.define("DebugPort", 0, 0, 65535);
+            DevTools = builder.define("DevTools", false);
             builder.pop();
             // ------------------ ExternalHttp ------------------
             builder.push("ExternalHttp"); // 配置文件的分组

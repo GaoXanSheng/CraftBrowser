@@ -213,7 +213,10 @@ public abstract class AbstractWebScreen extends Screen {
             this.onClose();
             return true;
         }
-
+        if (keyCode == GLFW_KEY_F12 && Config.CLIENT.DevTools.get()) {
+            browserController.ShowDevTools();
+            return true;
+        }
         // 停止循环
         ScheduledFuture<?> future = repeatTasks.remove(keyCode);
         if (future != null) future.cancel(false);
