@@ -9,10 +9,7 @@ import top.yunmouren.craftbrowser.client.config.Config;
 import top.yunmouren.httpserver.ServerHttp;
 
 public final class Craftbrowser {
-    public static final String MOD_ID = "craftbrowser";;
-    public static final Logger LOGGER = LogUtils.getLogger();
-
-    public static void init() {
+    static {
         Config.CLIENT.load();
         if (Platform.getEnvironment() == Env.CLIENT) {
             new BrowserInstance();
@@ -21,4 +18,6 @@ public final class Craftbrowser {
             ServerHttp.startServer();
         }
     }
+    public static final String MOD_ID = "craftbrowser";;
+    public static final Logger LOGGER = LogUtils.getLogger();
 }
