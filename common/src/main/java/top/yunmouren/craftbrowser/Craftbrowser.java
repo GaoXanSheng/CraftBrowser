@@ -16,7 +16,6 @@ public final class Craftbrowser {
         Config.CLIENT.load();
         if (Platform.getEnvironment() == Env.CLIENT) {
             new BrowserInstance();
-
         }
         if(Config.CLIENT.externalHttpServer.get()){
             ServerHttp.startServer();

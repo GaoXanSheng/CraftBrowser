@@ -10,9 +10,6 @@ import top.yunmouren.craftbrowser.proxy.CommonProxy;
 
 @Mod(Craftbrowser.MOD_ID)
 public final class CraftbrowserForge {
-    static {
-        Craftbrowser.init();
-    }
     private static final CommonProxy proxy = DistExecutor.unsafeRunForDist(
             () -> ClientProxy::new,
             () -> CommonProxy::new
