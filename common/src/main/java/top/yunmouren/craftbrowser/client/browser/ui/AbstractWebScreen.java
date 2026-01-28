@@ -111,6 +111,7 @@ public abstract class AbstractWebScreen extends Screen {
         tessellator.end();
         poseStack.popPose();
         RenderSystem.disableBlend();
+        RenderSystem.defaultBlendFunc();
     }
 
     public static int[] guiToPixel(double guiX, double guiY) {
