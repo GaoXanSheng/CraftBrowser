@@ -1,5 +1,6 @@
 package top.yunmouren.craftbrowser.client.browser.ui;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -23,6 +24,8 @@ import top.yunmouren.craftbrowser.client.config.Config;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import static com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA;
+import static com.mojang.blaze3d.platform.GlStateManager.SourceFactor.ONE;
 import static org.lwjgl.glfw.GLFW.*;
 import static top.yunmouren.craftbrowser.client.browser.Tools.KeyToChar.getCharFromKeyCode;
 import static top.yunmouren.craftbrowser.client.browser.Tools.KeyToChar.getWindowsKeyCode;
@@ -82,8 +85,9 @@ public abstract class AbstractWebScreen extends Screen {
         int physHeight = getWindow().getScreenHeight();
         var render = browserRender.render(physWidth, physHeight);
         if (render == 0) return;
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(ONE, ONE_MINUS_SRC_ALPHA);
 
-        RenderSystem.disableBlend();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, render);
 
@@ -106,8 +110,7 @@ public abstract class AbstractWebScreen extends Screen {
 
         tessellator.end();
         poseStack.popPose();
-        RenderSystem.enableDepthTest();
-        updateCursor();
+        RenderSystem.disableBlend();
     }
 
     public static int[] guiToPixel(double guiX, double guiY) {

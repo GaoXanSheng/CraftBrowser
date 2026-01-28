@@ -8,16 +8,22 @@ import top.yunmouren.craftbrowser.client.browser.Core.BrowserInstance;
 import top.yunmouren.craftbrowser.client.config.Config;
 import top.yunmouren.httpserver.ServerHttp;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public final class Craftbrowser {
+    public static final Logger LOGGER = LogUtils.getLogger();
+    public static final String MOD_ID = "craftbrowser";
+    private static final AtomicBoolean STARTED = new AtomicBoolean(false);
+
     static {
-        Config.CLIENT.load();
-        if (Platform.getEnvironment() == Env.CLIENT) {
-            new BrowserInstance();
-        }
-        if(Config.CLIENT.externalHttpServer.get()){
-            ServerHttp.startServer();
+        if (STARTED.compareAndSet(false, true)) {
+            Config.CLIENT.load();
+            if (Platform.getEnvironment() == Env.CLIENT) {
+                new BrowserInstance();
+            }
+            if (Config.CLIENT.externalHttpServer.get()) {
+                ServerHttp.startServer();
+            }
         }
     }
-    public static final String MOD_ID = "craftbrowser";;
-    public static final Logger LOGGER = LogUtils.getLogger();
 }

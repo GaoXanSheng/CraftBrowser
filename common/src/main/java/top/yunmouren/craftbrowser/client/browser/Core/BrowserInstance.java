@@ -82,7 +82,7 @@ public class BrowserInstance {
         builder.directory(modsDir.toFile());
         Map<String, String> env = builder.environment();
         env.put("LANG", "en_US.UTF-8");
-        env.put("BROWSER_PORT", ""+Config.CLIENT.customizeDebugPort.get());
+        env.put("BROWSER_PORT", "" + Config.CLIENT.customizeDebugPort.get());
         env.put("MASTER_RPC_ID", Config.CLIENT.customizeRpc_ID.get());
         builder.inheritIO();
         return builder;
