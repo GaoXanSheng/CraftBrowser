@@ -21,7 +21,7 @@ public class Config {
         public final ConfigSpec.ConfigValue<String> externalApiUrl;
         public final ConfigSpec.ConfigValue<Integer> externalHttpServerPort;
         public final ConfigSpec.ConfigValue<Boolean> DevTools;
-
+        public final ConfigSpec.ConfigValue<String> browser_cli;
         public Client() {
             ConfigSpec.Builder builder = new ConfigSpec.Builder();
 
@@ -30,6 +30,7 @@ public class Config {
             browserMaxfps = builder.comment("Maximum browser frame rate [15-240]").define("MaxFps", 120, 15, 240);
             keyPressDelay = builder.comment("Key press delay in ms [0-1000]").define("KeyPressDelay", 200, 0, 1000);
             scrollWheelPixels = builder.comment("Scroll wheel step in pixels [1-1000]").define("ScrollWheelPixels", 150, 1, 1000);
+            browser_cli = builder.comment("Browser CLI").define("BrowserCli", "--enable-begin-frame-scheduling=1");
             builder.pop();
 
             // ------------------ Debug ------------------

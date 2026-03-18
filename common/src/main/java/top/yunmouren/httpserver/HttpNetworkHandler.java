@@ -1,9 +1,12 @@
 package top.yunmouren.httpserver;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dev.architectury.networking.NetworkManager;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import top.yunmouren.craftbrowser.client.config.Config;
 
@@ -29,6 +32,7 @@ public class HttpNetworkHandler {
             context.queue(() -> HttpRequestPacket.handle(pkt, context));
         });
     }
+
     public static void registerS2CReceivers() {
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, HTTP_RESPONSE_PACKET_ID, (buf, context) -> {
             HttpResponsePacket pkt = new HttpResponsePacket(buf);
@@ -109,7 +113,7 @@ public class HttpNetworkHandler {
         }
 
         public static void handle(HttpRequestPacket pkt, NetworkManager.PacketContext context) {
-            String httpResponse = sendHttpToExternal(pkt.data);
+            String httpResponse = sendHttpToExternal(injectPlayerInfo(pkt.data, context.getPlayer()));
             HttpResponsePacket reply = new HttpResponsePacket(pkt.requestId, httpResponse);
             FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
             reply.encode(buf);
@@ -118,6 +122,20 @@ public class HttpNetworkHandler {
                 NetworkManager.sendToPlayer(serverPlayer, HTTP_RESPONSE_PACKET_ID, buf);
             }
         }
+    }
+
+    private static String injectPlayerInfo(String data, Player player) {
+        JsonObject json = JsonParser.parseString(data).getAsJsonObject();
+        JsonObject vars;
+        if (json.has("variables")) {
+            vars = json.getAsJsonObject("variables");
+        } else {
+            vars = new JsonObject();
+            json.add("variables", vars);
+        }
+        vars.addProperty("playerUUID", player.getUUID().toString());
+        vars.addProperty("playerName", player.getName().getString());
+        return json.toString();
     }
 
     public static class HttpResponsePacket {

@@ -84,6 +84,7 @@ public class BrowserInstance {
         env.put("LANG", "en_US.UTF-8");
         env.put("BROWSER_PORT", "" + Config.CLIENT.customizeDebugPort.get());
         env.put("MASTER_RPC_ID", Config.CLIENT.customizeRpc_ID.get());
+        env.put("BROWSER_CLI", Config.CLIENT.browser_cli.get());
         builder.inheritIO();
         return builder;
     }
