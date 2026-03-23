@@ -1,6 +1,5 @@
 package top.yunmouren.craftbrowser.client.browser.ui;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -15,19 +14,16 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import top.yunmouren.craftbrowser.client.browser.Controller.TestController;
-import top.yunmouren.craftbrowser.client.browser.Tools.CursorType;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
 import top.yunmouren.craftbrowser.client.browser.Controller.IBrowserController;
 import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
 import top.yunmouren.craftbrowser.client.config.Config;
 
-import java.util.Map;
 import java.util.concurrent.*;
 
 import static com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA;
 import static com.mojang.blaze3d.platform.GlStateManager.SourceFactor.ONE;
 import static org.lwjgl.glfw.GLFW.*;
-import static top.yunmouren.craftbrowser.client.browser.Tools.KeyToChar.getCharFromKeyCode;
 import static top.yunmouren.craftbrowser.client.browser.Tools.KeyToChar.getWindowsKeyCode;
 
 public abstract class AbstractWebScreen extends Screen {
@@ -186,52 +182,31 @@ public abstract class AbstractWebScreen extends Screen {
             this.BrowserResize();
         }
     }
-
-    private final Map<Integer, ScheduledFuture<?>> repeatTasks = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService keyScheduler = Executors.newScheduledThreadPool(1);
-
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == GLFW_KEY_ESCAPE && (modifiers & GLFW_MOD_SHIFT) != 0) {
             this.onClose();
             return true;
         }
-        if (browserController == null) return true;
-        if (repeatTasks.containsKey(keyCode)) return true;
-        Runnable task = () -> {
-            char ch = getCharFromKeyCode(keyCode, modifiers);
-            if (ch != 0) {
-                browserController.SendText(String.valueOf(ch));
-            }
-            browserController.SendKeyEvent(getWindowsKeyCode(keyCode, scanCode, modifiers), false);
-        };
-        ScheduledFuture<?> future = keyScheduler.scheduleAtFixedRate(task, 0, 50, TimeUnit.MILLISECONDS);
-        repeatTasks.put(keyCode, future);
-
+        if (browserController == null) return false;
+        browserController.SendKeyEvent(getWindowsKeyCode(keyCode, scanCode, modifiers), false,modifiers);
         return true;
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW_KEY_ESCAPE && (modifiers & GLFW_MOD_SHIFT) != 0) {
-            this.onClose();
-            return true;
-        }
-        if (keyCode == GLFW_KEY_F12 && Config.CLIENT.DevTools.get()) {
-            browserController.ShowDevTools();
-            return true;
-        }
-        // 停止循环
-        ScheduledFuture<?> future = repeatTasks.remove(keyCode);
-        if (future != null) future.cancel(false);
-
-        if (browserController != null) {
-            browserController.SendKeyEvent(getWindowsKeyCode(keyCode, scanCode, modifiers), true);
-        }
-
+        if (browserController == null) return false;
+        browserController.SendKeyEvent(getWindowsKeyCode(keyCode, scanCode, modifiers), true,modifiers);
         return true;
     }
-
+    @Override
+    public boolean charTyped(char chr, int modifiers) {
+        if (browserController != null) {
+            browserController.SendText(String.valueOf(chr));
+            return true;
+        }
+        return super.charTyped(chr, modifiers);
+    }
 
     @Override
     public void onClose() {
@@ -240,17 +215,5 @@ public abstract class AbstractWebScreen extends Screen {
         browserRender.close();
         BrowserAPI.getInstance().removeBrowser(browserController);
         Minecraft.getInstance().setScreen(null);
-    }
-
-    private int lastCursorType;
-
-    private void updateCursor() {
-        var currentCursorIndex = CursorType.values()[browserController.GetCursorType()];
-        int targetGlfwCursor = CursorType.fromBrowserInt(currentCursorIndex);
-        if (targetGlfwCursor != lastCursorType) {
-            lastCursorType = targetGlfwCursor;
-            long window = mc.getWindow().getWindow();
-            glfwSetCursor(window, glfwCreateStandardCursor(targetGlfwCursor));
-        }
     }
 }

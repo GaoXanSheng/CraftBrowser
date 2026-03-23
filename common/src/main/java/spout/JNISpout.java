@@ -29,14 +29,9 @@ public class JNISpout {
             }
         }
     }
-
-
-    // Initialization - return a pointer to a spout object
     public native long init();
 
     public native void deInit(long ptr);
-
-    // Sender
     public native boolean createSender(String name, int width, int height, long ptr);
 
     public native boolean updateSender(String name, int width, int height, long ptr);

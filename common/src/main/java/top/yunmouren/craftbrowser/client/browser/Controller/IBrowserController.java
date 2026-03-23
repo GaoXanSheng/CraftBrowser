@@ -24,7 +24,7 @@ public interface IBrowserController {
 
     void SendMouseWheel(int x, int y, int deltaX, int deltaY);
 
-    void SendKeyEvent(int windowsKeyCode, Boolean isUp);
+    void SendKeyEvent(int windowsKeyCode, Boolean isUp,int modifiers);
 
     void SendText(String text);
 

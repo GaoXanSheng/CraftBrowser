@@ -46,14 +46,12 @@ public class StructureHelper {
             }
         }
     }
-
     public static boolean reformStructure(Level level, BlockPos startPos, Direction facing) {
         Set<BlockPos> connectedNodes = new HashSet<>();
         BlockPos masterPos = null;
         Stack<BlockPos> toVisit = new Stack<>();
         toVisit.push(startPos);
         Set<BlockPos> visited = new HashSet<>();
-
         while (!toVisit.isEmpty()) {
             BlockPos current = toVisit.pop();
             if (visited.contains(current)) continue;
@@ -87,7 +85,6 @@ public class StructureHelper {
         }
 
         if (masterPos == null) return false;
-
         Set<BlockPos> allBlocks = new HashSet<>(connectedNodes);
         allBlocks.add(masterPos);
 
@@ -118,13 +115,20 @@ public class StructureHelper {
             if (facing == Direction.WEST) masterRelX = masterPos.getZ() - minZ;
             else masterRelX = maxZ - masterPos.getZ();
         }
-
         if (level.getBlockEntity(masterPos) instanceof BrowserMasterBlockEntity master) {
+            Set<BlockPos> oldNodes = master.getNodePositions();
+            for (BlockPos oldNode : oldNodes) {
+                if (!connectedNodes.contains(oldNode)) {
+                    if (level.getBlockEntity(oldNode) instanceof BrowserNodeBlockEntity oldNodeBe) {
+                        oldNodeBe.clearMaster();
+                    }
+                }
+            }
+
             master.setStructureInfo(width, height, masterRelX, masterRelY, connectedNodes);
             master.setChanged();
             level.sendBlockUpdated(masterPos, level.getBlockState(masterPos), level.getBlockState(masterPos), 3);
         }
-
         for (BlockPos p : connectedNodes) {
             if (level.getBlockEntity(p) instanceof BrowserNodeBlockEntity be) {
                 int relY = p.getY() - minY;

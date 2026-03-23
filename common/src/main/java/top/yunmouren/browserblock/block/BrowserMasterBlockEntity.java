@@ -43,6 +43,13 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     private double volume = 1.0;
     private int lastResizedW = -1;
     private int lastResizedH = -1;
+    public Set<BlockPos> getNodePositions() {
+        return this.nodePositions;
+    }
+
+    public double getVolume() {
+        return this.volume;
+    }
 
     private void checkAndResize() {
         synchronized (browserLock) {
@@ -195,8 +202,23 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         this.height = tag.getInt("H");
         this.masterRelX = tag.getInt("mRX");
         this.masterRelY = tag.getInt("mRY");
+        String oldUrl = this.currentUrl;
+        double oldVol = this.volume;
         this.currentUrl = tag.getString("Url");
         this.volume = tag.contains("Vol") ? tag.getDouble("Vol") : 1.0;
+        if (this.level != null && this.level.isClientSide) {
+            synchronized (browserLock) {
+                if (browserSubprocess != null) {
+                    if (!this.currentUrl.equals(oldUrl)) {
+                        browserSubprocess.LoadUrl(this.currentUrl);
+                    }
+                    if (this.volume != oldVol) {
+                        browserSubprocess.SetVolume((float) this.volume);
+                    }
+                }
+            }
+        }
+
     }
 
     @Override
@@ -221,8 +243,6 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
     }
-
-    // --- Getter & Setter ---
     public int getWidth() {
         return width;
     }
@@ -257,6 +277,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         synchronized (browserLock) {
             if (browserSubprocess != null) browserSubprocess.SetVolume((float) volume);
         }
+        this.setChanged();
+        if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
     }
 
     public void destroyBrowser() {

@@ -102,4 +102,18 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);
     }
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            // 打掉主方块时，通知所有相连的子节点清空 Master
+            if (!level.isClientSide && level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity master) {
+                for (BlockPos nodePos : master.getNodePositions()) {
+                    if (level.getBlockEntity(nodePos) instanceof BrowserNodeBlockEntity node) {
+                        node.clearMaster();
+                    }
+                }
+            }
+            super.onRemove(state, level, pos, newState, isMoving);
+        }
+    }
 }
