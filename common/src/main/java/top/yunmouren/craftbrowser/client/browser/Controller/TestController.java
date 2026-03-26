@@ -9,6 +9,7 @@ import top.yunmouren.craftbrowser.client.browser.Rpc.annotation.BrowserRpcEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.mojang.text2speech.Narrator.LOGGER;
 import static net.minecraft.util.datafix.fixes.BlockEntitySignTextStrictJsonFix.GSON;
 
 @BrowserRpcController
@@ -25,7 +26,7 @@ public class TestController {
 
     @BrowserRpcEvent("add")
     public int onAdd(int a, int b) {
-        System.out.println("Java calculating: " + a + " + " + b);
+        LOGGER.info("Java calculating: {} + {}", a, b);;
         return a + b;
     }
 

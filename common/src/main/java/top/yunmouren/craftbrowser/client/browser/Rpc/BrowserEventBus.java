@@ -10,6 +10,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.mojang.text2speech.Narrator.LOGGER;
+
 public class BrowserEventBus {
     private static final Gson GSON = new Gson();
 
@@ -53,8 +55,7 @@ public class BrowserEventBus {
                     Object[] convertedArgs = convertArgs(handler.method, rawArgs);
                     handler.method.invoke(handler.instance, convertedArgs);
                 } catch (Exception e) {
-                    System.err.println(LOG_TAG + "Error invoking event: " + eventName);
-                    e.printStackTrace();
+                    LOGGER.error(LOG_TAG + "Error invoking event: {}", eventName);
                 }
             };
 

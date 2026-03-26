@@ -10,6 +10,8 @@ import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.function.BiConsumer;
 
+import static com.mojang.text2speech.Narrator.LOGGER;
+
 public class RpcClient implements InvocationHandler, AutoCloseable {
     private static final Gson GSON = new Gson();
 
@@ -102,7 +104,7 @@ public class RpcClient implements InvocationHandler, AutoCloseable {
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println("[RpcClient] Event Loop Error: " + e.getMessage());
+                    LOGGER.error("[RpcClient] Event Loop Error: {}", e.getMessage());
                 } finally {
                     Win32Native.INSTANCE.SetEvent(hEvtAck);
                 }
