@@ -134,17 +134,24 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         this.masterRelX = mRelX;
         this.masterRelY = mRelY;
 
-        if (sizeChanged && this.browserSubprocess != null) {
-            this.browserSubprocess.Resize(getPixelW(), getPixelH(), 1, false);
-        }
-
         this.nodePositions.clear();
         if (nodes != null) this.nodePositions.addAll(nodes);
+
+        if (sizeChanged) {
+            this.destroyBrowser();
+        } else if (this.browserSubprocess == null && !this.isLoading) {
+            this.hasInitialized = false;
+            this.initTimer = 0;
+        }
 
         this.setChanged();
         if (level != null) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
+    }
+
+    public BrowserRender getBrowserRender() {
+        return this.browserRender;
     }
 
     public int getBrowserTextureId() {

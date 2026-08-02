@@ -19,7 +19,8 @@ public class BrowserRender extends JNISpout implements AutoCloseable {
 
     public BrowserRender(String spoutID) {
         super();
-        this.currentSpoutID =  spoutID;
+        this.currentSpoutID = spoutID;
+        this.isClosed = false;
     }
 
     private boolean checkInit() {
@@ -38,41 +39,42 @@ public class BrowserRender extends JNISpout implements AutoCloseable {
      * @param reqWidth
      * @param reqHeight
      */
-    public int render(int reqWidth, int reqHeight) {
-        if (reqWidth <= 0 || reqHeight <= 0) return 0;
+    public synchronized int render(int reqWidth, int reqHeight) {
+        if (isClosed || reqWidth <= 0 || reqHeight <= 0) return 0;
         if (!checkInit()) return 0;
 
         if (!isConnected) {
+            this.setReceiverName(this.currentSpoutID, spoutPtr);
             boolean created = this.createReceiver(currentSpoutID, dim, spoutPtr);
             if (created) {
-                String senderName = this.getSenderName(spoutPtr);
-                if (senderName != null && senderName.equals(this.currentSpoutID)) {
-                    Craftbrowser.LOGGER.info("Spout Connected successfully to '{}'", currentSpoutID);
-                    isConnected = true;
-                } else {
-                    this.setReceiverName(this.currentSpoutID, spoutPtr);
-                }
+                isConnected = true;
+                Craftbrowser.LOGGER.info("Spout Connected successfully to '{}'", currentSpoutID);
             } else {
                 return 0;
             }
         }
+
         int senderW = this.getSenderWidth(spoutPtr);
         int senderH = this.getSenderHeight(spoutPtr);
         if (senderW <= 0 || senderH <= 0) return 0;
+
         if (dynTex == null || dynTex.getPixels().getWidth() != senderW || dynTex.getPixels().getHeight() != senderH) {
             if (dynTex != null) {
                 dynTex.close();
             }
             dynTex = new DynamicTexture(senderW, senderH, true);
         }
-        boolean success = this.receiveTexture(dim, dynTex.getId(), GL11.GL_TEXTURE_2D, false, spoutPtr);
 
+        int glTexId = dynTex.getId();
+        if (glTexId <= 0) return 0;
+
+        boolean success = this.receiveTexture(dim, glTexId, GL11.GL_TEXTURE_2D, false, spoutPtr);
         if (success) {
             this.validU = (float) reqWidth / senderW;
             this.validV = (float) reqHeight / senderH;
             if (this.validU > 1.0f) this.validU = 1.0f;
             if (this.validV > 1.0f) this.validV = 1.0f;
-            return dynTex.getId();
+            return glTexId;
         } else {
             return 0;
         }
@@ -85,20 +87,33 @@ public class BrowserRender extends JNISpout implements AutoCloseable {
         return validV;
     }
 
+    private boolean isClosed = false;
+
     @Override
-    public void close() {
-        if (spoutPtr != 0) {
-            RenderSystem.recordRenderCall(() -> {
-                if (dynTex != null) {
-                    RenderSystem.bindTexture(0);
-                    dynTex.close();
-                    dynTex = null;
-                }
-                this.releaseReceiver(spoutPtr);
-                this.deInit(spoutPtr);
-                spoutPtr = 0;
-                isConnected = false;
-            });
+    public synchronized void close() {
+        if (isClosed) return;
+        isClosed = true;
+
+        long ptrToFree = spoutPtr;
+        spoutPtr = 0;
+        isConnected = false;
+
+        try {
+            if (dynTex != null) {
+                RenderSystem.bindTexture(0);
+                dynTex.close();
+                dynTex = null;
+            }
+        } catch (Throwable ignored) {}
+
+        if (ptrToFree != 0) {
+            try {
+                this.releaseReceiver(ptrToFree);
+            } catch (Throwable ignored) {}
+
+            try {
+                this.deInit(ptrToFree);
+            } catch (Throwable ignored) {}
         }
     }
 }

@@ -42,22 +42,35 @@ public class BrowserMasterBlockRenderer implements BlockEntityRenderer<BrowserMa
         RenderSystem.setShaderTexture(0, textureId);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
 
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder buffer = tesselator.getBuilder();
         Matrix4f mat = poseStack.last().pose();
 
+        top.yunmouren.craftbrowser.client.browser.Core.BrowserRender render = entity.getBrowserRender();
+        float uMax = 1.0f;
+        float vMax = 1.0f;
+        if (render != null) {
+            uMax = render.getValidU();
+            vMax = render.getValidV();
+            if (uMax <= 0.0f) uMax = 1.0f;
+            if (vMax <= 0.0f) vMax = 1.0f;
+        }
+
         buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         float halfWidth = totalW / 2f;
         float halfHeight = totalH / 2f;
 
-        buffer.vertex(mat, -halfWidth, halfHeight, 0).uv(0, 0).endVertex();   // 左上
-        buffer.vertex(mat, -halfWidth, -halfHeight, 0).uv(0, 1).endVertex();  // 左下
-        buffer.vertex(mat, halfWidth, -halfHeight, 0).uv(1, 1).endVertex();   // 右下
-        buffer.vertex(mat, halfWidth, halfHeight, 0).uv(1, 0).endVertex();    // 右上
+        buffer.vertex(mat, -halfWidth, halfHeight, 0).uv(0, 0).endVertex();       // 左上
+        buffer.vertex(mat, -halfWidth, -halfHeight, 0).uv(0, vMax).endVertex();  // 左下
+        buffer.vertex(mat, halfWidth, -halfHeight, 0).uv(uMax, vMax).endVertex(); // 右下
+        buffer.vertex(mat, halfWidth, halfHeight, 0).uv(uMax, 0).endVertex();    // 右上
 
         tesselator.end();
         RenderSystem.disableBlend();
+        RenderSystem.disableDepthTest();
         poseStack.popPose();
     }
     @Override

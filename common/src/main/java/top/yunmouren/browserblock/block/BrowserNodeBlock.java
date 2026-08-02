@@ -63,25 +63,24 @@ public class BrowserNodeBlock extends Block implements EntityBlock {
 
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        if (!level.isClientSide) {
-            StructureHelper.triggerNearbyScan(level, pos, state.getValue(FACING));
-        }
+        // Form structure manually via Shift + Right Click on Master Block
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
-            BlockPos masterPos = null;
-            if (!level.isClientSide && level.getBlockEntity(pos) instanceof BrowserNodeBlockEntity node) {
+            if (level.getBlockEntity(pos) instanceof BrowserNodeBlockEntity node) {
                 BrowserMasterBlockEntity master = node.getMaster();
                 if (master != null) {
-                    masterPos = master.getBlockPos();
+                    master.destroyBrowser();
+                    for (BlockPos nPos : master.getNodePositions()) {
+                        if (level.getBlockEntity(nPos) instanceof BrowserNodeBlockEntity nBe) {
+                            nBe.clearMaster();
+                        }
+                    }
                 }
             }
             super.onRemove(state, level, pos, newState, isMoving);
-            if (!level.isClientSide && masterPos != null) {
-                StructureHelper.reformStructure(level, masterPos, state.getValue(FACING));
-            }
         }
     }
 }

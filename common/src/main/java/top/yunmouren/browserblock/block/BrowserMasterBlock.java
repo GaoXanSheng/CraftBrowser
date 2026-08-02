@@ -67,34 +67,29 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
 
-        if (hit.getDirection() != state.getValue(FACING)) {
-            return InteractionResult.PASS;
-        }
-
         if (!(level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity be)) {
             return InteractionResult.PASS;
         }
+
         if (player.isShiftKeyDown()) {
+            if (!level.isClientSide) {
+                boolean success = StructureHelper.reformStructure(level, pos, state.getValue(FACING));
+                if (success) {
+                    player.displayClientMessage(Component.literal("§aBrowser structure formed successfully!"), true);
+                } else {
+                    player.displayClientMessage(Component.literal("§cFailed to form browser structure. Ensure only one Master block."), true);
+                }
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        } else {
+            if (hit.getDirection() != state.getValue(FACING)) {
+                return InteractionResult.PASS;
+            }
             if (level.isClientSide) {
                 BrowserClientHooks.openBrowserScreen(be);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-        if (!level.isClientSide) {
-            boolean success = StructureHelper.reformStructure(level, pos, state.getValue(FACING));
-            if (success) {
-                player.displayClientMessage(
-                        Component.literal("§aBrowser structure activated!"), true
-                );
-            } else {
-                player.displayClientMessage(
-                        Component.literal("§cFailed to form a valid browser structure. Make sure there is only one Master Block."),
-                        true
-                );
-            }
-        }
-
-        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
 
@@ -105,8 +100,8 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
-            // 打掉主方块时，通知所有相连的子节点清空 Master
-            if (!level.isClientSide && level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity master) {
+            if (level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity master) {
+                master.destroyBrowser();
                 for (BlockPos nodePos : master.getNodePositions()) {
                     if (level.getBlockEntity(nodePos) instanceof BrowserNodeBlockEntity node) {
                         node.clearMaster();

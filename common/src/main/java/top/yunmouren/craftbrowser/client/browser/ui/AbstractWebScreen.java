@@ -37,9 +37,12 @@ public abstract class AbstractWebScreen extends Screen {
 
     protected AbstractWebScreen(Component p_96550_, String url) {
         super(p_96550_);
-        browserController = BrowserAPI.getInstance().createBrowser(url, 1920, 1080, Config.CLIENT.browserMaxfps.get());
+        int physWidth = getWindow().getScreenWidth() > 0 ? getWindow().getScreenWidth() : 1920;
+        int physHeight = getWindow().getScreenHeight() > 0 ? getWindow().getScreenHeight() : 1080;
+        double scale = getWindow().getGuiScale();
+        browserController = BrowserAPI.getInstance().createBrowser(url, physWidth, physHeight, Config.CLIENT.browserMaxfps.get());
         browserRender = BrowserAPI.getInstance().GetBrowserRender(browserController);
-        BrowserResize();
+        browserController.Resize(physWidth, physHeight, (int) scale, false);
         BrowserAPI.getInstance().GetBrowserEventBus(browserController).register(new TestController());
     }
 
@@ -51,10 +54,8 @@ public abstract class AbstractWebScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        BrowserResize();
     }
-
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private ScheduledFuture<?> pendingResizeTask = null;
 
     @Override
     public void resize(Minecraft minecraft, int width, int height) {
@@ -62,21 +63,20 @@ public abstract class AbstractWebScreen extends Screen {
     }
 
     public void BrowserResize() {
-        if (pendingResizeTask != null && !pendingResizeTask.isDone()) {
-            pendingResizeTask.cancel(false);
-        }
-        int RESIZE_DELAY_MS = 200;
-
-        pendingResizeTask = scheduler.schedule(() -> minecraft.execute(() -> {
-            int physWidth = getWindow().getScreenWidth();
-            int physHeight = getWindow().getScreenHeight();
-            double scale = getWindow().getGuiScale();
+        if (browserController == null) return;
+        int physWidth = getWindow().getScreenWidth();
+        int physHeight = getWindow().getScreenHeight();
+        double scale = getWindow().getGuiScale();
+        if (physWidth > 0 && physHeight > 0) {
             browserController.Resize(physWidth, physHeight, (int) scale, false);
-        }), RESIZE_DELAY_MS, TimeUnit.MILLISECONDS);
+        }
     }
+
+    private volatile boolean isClosing = false;
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        if (isClosing || browserRender == null) return;
         int physWidth = getWindow().getScreenWidth();
         int physHeight = getWindow().getScreenHeight();
         var render = browserRender.render(physWidth, physHeight);
@@ -210,10 +210,31 @@ public abstract class AbstractWebScreen extends Screen {
 
     @Override
     public void onClose() {
-        long window = mc.getWindow().getWindow();
-        glfwSetCursor(window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
-        browserRender.close();
-        BrowserAPI.getInstance().removeBrowser(browserController);
-        Minecraft.getInstance().setScreen(null);
+        // 1. 标记正在退出窗口，立即停止 GUI 纹理渲染
+        this.isClosing = true;
+
+        // 2. 还原鼠标光标
+        try {
+            long window = mc.getWindow().getWindow();
+            glfwSetCursor(window, glfwCreateStandardCursor(GLFW_ARROW_CURSOR));
+        } catch (Throwable ignored) {}
+
+        // 3. 关闭 Minecraft 侧的 Spout 纹理接收器 (JNISpout / OpenGL)
+        if (browserRender != null) {
+            try {
+                browserRender.close();
+                browserRender = null;
+            } catch (Throwable ignored) {}
+        }
+
+        // 4. 发送 RPC 关闭 NCEF 端的 Spout 发送器与 WebView2 宿主窗口
+        if (browserController != null) {
+            try {
+                BrowserAPI.getInstance().removeBrowser(browserController);
+                browserController = null;
+            } catch (Throwable ignored) {}
+        }
+
+        super.onClose();
     }
 }
