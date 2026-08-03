@@ -291,9 +291,14 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     public void destroyBrowser() {
         synchronized (browserLock) {
             if (this.browserSubprocess != null) {
+                if (this.browserRender != null) {
+                    try {
+                        this.browserRender.close();
+                    } catch (Throwable ignored) {}
+                    this.browserRender = null;
+                }
                 BrowserAPI.getInstance().removeBrowser(this.browserSubprocess);
                 this.browserSubprocess = null;
-                this.browserRender = null;
             }
         }
         this.isLoading = false;

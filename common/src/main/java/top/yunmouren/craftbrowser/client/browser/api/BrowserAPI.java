@@ -51,6 +51,18 @@ public class BrowserAPI {
     }
 
     public void removeBrowser(IBrowserController OnlyKey) {
-        master.StopBrowser(OnlyKey.GetSpoutId());
+        if (OnlyKey == null) return;
+        try {
+            master.StopBrowser(OnlyKey.GetSpoutId());
+        } catch (Throwable ignored) {}
+
+        if (Proxy.isProxyClass(OnlyKey.getClass())) {
+            InvocationHandler handler = Proxy.getInvocationHandler(OnlyKey);
+            if (handler instanceof RpcClient) {
+                try {
+                    ((RpcClient) handler).close();
+                } catch (Throwable ignored) {}
+            }
+        }
     }
 }
