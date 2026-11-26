@@ -223,6 +223,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
+        int oldWidth = this.width;
+        int oldHeight = this.height;
         this.width = tag.getInt("W");
         this.height = tag.getInt("H");
         this.masterRelX = tag.getInt("mRX");
@@ -235,7 +237,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         this.pixelsPerBlock = Math.max(16, Math.min(256, tag.contains("Scale") ? tag.getInt("Scale") : 64));
         this.owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
         if (this.level != null && this.level.isClientSide) {
-            if (oldScale != this.pixelsPerBlock) {
+            if (oldWidth != this.width || oldHeight != this.height || oldScale != this.pixelsPerBlock) {
                 this.destroyBrowser();
             }
             synchronized (browserLock) {
