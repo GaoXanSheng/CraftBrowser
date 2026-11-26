@@ -27,18 +27,22 @@ public class BrowserUrlScreen extends Screen {
     private final String initialUrl;
     private final double initialVolume;
     private final int initialScale;
+    private final int initialPermission;
     private double currentVolume;
     private int currentScale;
+    private int currentPermission;
     private volatile String liveUrl = "";
 
-    public BrowserUrlScreen(BlockPos pos, String url, double volume, int pixelsPerBlock) {
+    public BrowserUrlScreen(BlockPos pos, String url, double volume, int pixelsPerBlock, int editPermission) {
         super(Component.literal("Set Browser URL & Volume"));
         this.pos = pos;
         this.initialUrl = url;
         this.initialVolume = volume;
         this.initialScale = pixelsPerBlock;
+        this.initialPermission = editPermission;
         this.currentVolume = volume;
         this.currentScale = pixelsPerBlock;
+        this.currentPermission = editPermission;
     }
 
     @Override
@@ -47,13 +51,13 @@ public class BrowserUrlScreen extends Screen {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
-        this.urlEditBox = new EditBox(this.font, centerX - 100, centerY - 58, 200, 20, Component.literal("URL"));
+        this.urlEditBox = new EditBox(this.font, centerX - 100, centerY - 70, 200, 20, Component.literal("URL"));
         this.urlEditBox.setMaxLength(32767);
         this.urlEditBox.setValue(initialUrl);
         this.addRenderableWidget(this.urlEditBox);
         this.setInitialFocus(this.urlEditBox);
 
-        this.addRenderableWidget(new AbstractSliderButton(centerX - 100, centerY - 30, 200, 20,
+        this.addRenderableWidget(new AbstractSliderButton(centerX - 100, centerY - 42, 200, 20,
                 Component.literal(volumeLabel(this.currentVolume)), toSlider(this.currentVolume)) {
 
             @Override
@@ -67,7 +71,7 @@ public class BrowserUrlScreen extends Screen {
             }
         });
 
-        this.addRenderableWidget(new AbstractSliderButton(centerX - 100, centerY - 4, 200, 20,
+        this.addRenderableWidget(new AbstractSliderButton(centerX - 100, centerY - 16, 200, 20,
                 Component.literal(scaleLabel(this.currentScale)), toScaleSlider(this.currentScale)) {
 
             @Override
@@ -81,10 +85,15 @@ public class BrowserUrlScreen extends Screen {
             }
         });
 
+        this.addRenderableWidget(Button.builder(Component.literal(permissionLabel(this.currentPermission)), button -> {
+            this.currentPermission = this.currentPermission == 0 ? 1 : 0;
+            button.setMessage(Component.literal(permissionLabel(this.currentPermission)));
+        }).bounds(centerX - 100, centerY + 10, 200, 20).build());
+
         this.addRenderableWidget(Button.builder(Component.literal("Confirm"), button -> this.saveAndClose())
-                .bounds(centerX - 100, centerY + 24, 98, 20).build());
+                .bounds(centerX - 100, centerY + 38, 98, 20).build());
         this.addRenderableWidget(Button.builder(Component.literal("Cancel"), button -> this.onClose())
-                .bounds(centerX + 2, centerY + 24, 98, 20).build());
+                .bounds(centerX + 2, centerY + 38, 98, 20).build());
 
         this.fetchLiveUrl();
     }
@@ -95,6 +104,10 @@ public class BrowserUrlScreen extends Screen {
 
     private static String scaleLabel(int pixelsPerBlock) {
         return "Resolution: " + pixelsPerBlock + " px/block";
+    }
+
+    private static String permissionLabel(int permission) {
+        return "Who can edit: " + (permission == 0 ? "Everyone" : "Owner only");
     }
 
     private static double toSlider(double volume) {
@@ -139,8 +152,9 @@ public class BrowserUrlScreen extends Screen {
             if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://") && !newUrl.startsWith("ncef://")) {
                 newUrl = "https://" + newUrl;
             }
-            if (!newUrl.equals(initialUrl) || this.currentVolume != initialVolume || this.currentScale != initialScale) {
-                BrowserBlockNetworkHandler.sendToServer(this.pos, newUrl, this.currentVolume, this.currentScale);
+            if (!newUrl.equals(initialUrl) || this.currentVolume != initialVolume
+                    || this.currentScale != initialScale || this.currentPermission != initialPermission) {
+                BrowserBlockNetworkHandler.sendToServer(this.pos, newUrl, this.currentVolume, this.currentScale, this.currentPermission);
             }
         }
         this.onClose();
@@ -149,9 +163,9 @@ public class BrowserUrlScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 88, 0xFFFFFF);
-        guiGraphics.drawString(this.font, "Enter URL:", this.width / 2 - 100, this.height / 2 - 70, 0xA0A0A0, false);
-        guiGraphics.drawCenteredString(this.font, "Current: " + this.liveUrl, this.width / 2, this.height / 2 + 52, 0x808080);
+        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 100, 0xFFFFFF);
+        guiGraphics.drawString(this.font, "Enter URL:", this.width / 2 - 100, this.height / 2 - 82, 0xA0A0A0, false);
+        guiGraphics.drawCenteredString(this.font, "Current: " + this.liveUrl, this.width / 2, this.height / 2 + 64, 0x808080);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 

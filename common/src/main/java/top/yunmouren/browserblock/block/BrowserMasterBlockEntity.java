@@ -19,7 +19,8 @@ import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.browser.Controller.IBrowserController;
 import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
-import top.yunmouren.httpserver.NcefUrls;
+import top.yunmouren.craftbrowser.client.config.Config;
+import top.yunmouren.craftbrowser.client.network.NcefUrls;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,6 +35,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
 
     private String currentUrl = "ncef://index.html";
     private int pixelsPerBlock = 64;
+    private int editPermission = 0;
     @Nullable
     private UUID owner;
     private final Object browserLock = new Object();
@@ -85,6 +87,18 @@ public class BrowserMasterBlockEntity extends BlockEntity {
 
     public int getPixelsPerBlock() {
         return this.pixelsPerBlock;
+    }
+
+    public int getEditPermission() {
+        return this.editPermission;
+    }
+
+    public void setEditPermission(int editPermission) {
+        int clamped = Math.max(0, Math.min(1, editPermission));
+        if (this.editPermission == clamped) return;
+        this.editPermission = clamped;
+        this.setChanged();
+        if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
     }
 
     public void setPixelsPerBlock(int pixelsPerBlock) {
@@ -236,6 +250,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         this.currentUrl = tag.getString("Url");
         this.volume = tag.contains("Vol") ? tag.getDouble("Vol") : 1.0;
         this.pixelsPerBlock = Math.max(16, Math.min(256, tag.contains("Scale") ? tag.getInt("Scale") : 64));
+        this.editPermission = tag.contains("Perm") ? Math.max(0, Math.min(1, tag.getInt("Perm"))) : Config.CLIENT.urlEditPermission.get();
         this.owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
         if (this.level != null && this.level.isClientSide) {
             if (oldWidth != this.width || oldHeight != this.height || oldScale != this.pixelsPerBlock) {
@@ -265,6 +280,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         tag.putString("Url", currentUrl);
         tag.putDouble("Vol", volume);
         tag.putInt("Scale", pixelsPerBlock);
+        tag.putInt("Perm", editPermission);
         if (owner != null) tag.putUUID("Owner", owner);
     }
 

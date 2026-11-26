@@ -12,7 +12,6 @@ public class Config {
     public static class Client {
         public final ConfigSpec spec;
         public final ConfigSpec.ConfigValue<Integer> browserMaxfps;
-        public final ConfigSpec.ConfigValue<Integer> keyPressDelay;
         public final ConfigSpec.ConfigValue<Integer> scrollWheelPixels;
         public final ConfigSpec.ConfigValue<Integer> urlEditRangeBlocks;
         public final ConfigSpec.ConfigValue<Integer> maxStructureBlocks;
@@ -20,7 +19,6 @@ public class Config {
         public final ConfigSpec.ConfigValue<Boolean> customizeRpc_IDEnabled;
         public final ConfigSpec.ConfigValue<String> customizeRpc_ID;
         public final ConfigSpec.ConfigValue<Integer> customizeDebugPort;
-        public final ConfigSpec.ConfigValue<Boolean> DevTools;
         public final ConfigSpec.ConfigValue<String> browser_cli;
         public Client() {
             ConfigSpec.Builder builder = new ConfigSpec.Builder();
@@ -28,7 +26,6 @@ public class Config {
             // ------------------ Browser ------------------
             builder.push("Browser");
             browserMaxfps = builder.comment("Maximum browser frame rate [15-240]").define("MaxFps", 120, 15, 240);
-            keyPressDelay = builder.comment("Key press delay in ms [0-1000]").define("KeyPressDelay", 200, 0, 1000);
             scrollWheelPixels = builder.comment("Scroll wheel step in pixels [1-1000]").define("ScrollWheelPixels", 150, 1, 1000);
             urlEditRangeBlocks = builder.comment("Max distance in blocks a player may be from the block to edit its URL [1-64]").define("UrlEditRangeBlocks", 16, 1, 64);
             maxStructureBlocks = builder.comment("Max blocks one browser structure may contain [1-1024]").define("MaxStructureBlocks", 256, 1, 1024);
@@ -41,7 +38,6 @@ public class Config {
             customizeRpc_IDEnabled = builder.define("CustomIdEnabled", false);
             customizeRpc_ID = builder.define("CustomId", "GLOBAL_NCEF");
             customizeDebugPort = builder.define("DebugPort", 0, 0, 65535);
-            DevTools = builder.define("DevTools", false);
             builder.pop();
             this.spec = builder.build("craftbrowser_settings.toml");
         }

@@ -7,7 +7,7 @@ import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.Rpc.BrowserEventBus;
 import top.yunmouren.craftbrowser.client.browser.Rpc.RpcClient;
 import top.yunmouren.craftbrowser.client.config.Config;
-import top.yunmouren.httpserver.NcefUrls;
+import top.yunmouren.craftbrowser.client.network.NcefUrls;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;

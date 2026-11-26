@@ -16,12 +16,14 @@ public class PacketSetBrowserUrl {
     private final String url;
     private final double volume;
     private final int pixelsPerBlock;
+    private final int editPermission;
 
-    public PacketSetBrowserUrl(BlockPos pos, String url, double volume, int pixelsPerBlock) {
+    public PacketSetBrowserUrl(BlockPos pos, String url, double volume, int pixelsPerBlock, int editPermission) {
         this.pos = pos;
         this.url = url;
         this.volume = volume;
         this.pixelsPerBlock = pixelsPerBlock;
+        this.editPermission = editPermission;
     }
 
     public PacketSetBrowserUrl(FriendlyByteBuf buffer) {
@@ -29,6 +31,7 @@ public class PacketSetBrowserUrl {
         this.url = buffer.readUtf(32767);
         this.volume = buffer.readDouble();
         this.pixelsPerBlock = buffer.readInt();
+        this.editPermission = buffer.readInt();
     }
 
     public void encode(FriendlyByteBuf buffer) {
@@ -36,6 +39,7 @@ public class PacketSetBrowserUrl {
         buffer.writeUtf(url);
         buffer.writeDouble(volume);
         buffer.writeInt(pixelsPerBlock);
+        buffer.writeInt(editPermission);
     }
 
     public static void handle(PacketSetBrowserUrl pkt, NetworkManager.PacketContext context) {
@@ -56,6 +60,14 @@ public class PacketSetBrowserUrl {
             return;
         }
 
+        if (pkt.editPermission != browserEntity.getEditPermission()) {
+            if (!canChangeAccess(serverPlayer, browserEntity)) {
+                player.displayClientMessage(Component.literal("§cOnly the owner can change who may edit this browser"), true);
+                return;
+            }
+            browserEntity.setEditPermission(pkt.editPermission);
+        }
+
         browserEntity.setVolume(pkt.volume);
         browserEntity.setUrl(pkt.url);
         browserEntity.setPixelsPerBlock(pkt.pixelsPerBlock);
@@ -63,7 +75,13 @@ public class PacketSetBrowserUrl {
 
     public static boolean canEdit(ServerPlayer player, BrowserMasterBlockEntity browser) {
         if (player.hasPermissions(2)) return true;
-        if (Config.CLIENT.urlEditPermission.get() == 0) return true;
+        if (browser.getEditPermission() == 0) return true;
+        if (browser.getOwner() == null) return true;
+        return browser.getOwner().equals(player.getUUID());
+    }
+
+    public static boolean canChangeAccess(ServerPlayer player, BrowserMasterBlockEntity browser) {
+        if (player.hasPermissions(2)) return true;
         if (browser.getOwner() == null) return true;
         return browser.getOwner().equals(player.getUUID());
     }

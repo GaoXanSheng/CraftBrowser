@@ -1,4 +1,4 @@
-package top.yunmouren.httpserver;
+package top.yunmouren.craftbrowser.client.network;
 
 import net.minecraft.client.Minecraft;
 

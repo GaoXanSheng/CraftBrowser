@@ -39,6 +39,6 @@ public class PacketRequestBrowserUrl {
             return;
         }
 
-        BrowserBlockNetworkHandler.sendState(player, pkt.pos, be.getUrl(), be.getVolume(), be.getPixelsPerBlock());
+        BrowserBlockNetworkHandler.sendState(player, pkt.pos, be.getUrl(), be.getVolume(), be.getPixelsPerBlock(), be.getEditPermission());
     }
 }

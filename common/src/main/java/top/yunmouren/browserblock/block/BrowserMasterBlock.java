@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import top.yunmouren.browserblock.ModBlocks;
 import top.yunmouren.browserblock.network.BrowserBlockNetworkHandler;
+import top.yunmouren.craftbrowser.client.config.Config;
 
 public class BrowserMasterBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -45,6 +46,7 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
         if (!level.isClientSide) {
             if (placer instanceof Player player && level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity be) {
                 if (be.getOwner() == null) be.setOwner(player.getUUID());
+                be.setEditPermission(Config.CLIENT.urlEditPermission.get());
             }
             StructureHelper.Result result = StructureHelper.reformStructure(level, pos);
             LOGGER.info("[CraftBrowser] Structure scan at {}: {}", pos.toShortString(), result.message());
