@@ -6,7 +6,6 @@ import dev.architectury.utils.Env;
 import org.slf4j.Logger;
 import top.yunmouren.craftbrowser.client.browser.Core.BrowserInstance;
 import top.yunmouren.craftbrowser.client.config.Config;
-import top.yunmouren.httpserver.ServerHttp;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -20,9 +19,6 @@ public final class Craftbrowser {
             Config.CLIENT.load();
             if (Platform.getEnvironment() == Env.CLIENT) {
                 new BrowserInstance();
-            }
-            if (Config.CLIENT.externalHttpServer.get()) {
-                ServerHttp.startServer();
             }
         }
     }

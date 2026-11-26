@@ -20,9 +20,6 @@ public class Config {
         public final ConfigSpec.ConfigValue<Boolean> customizeRpc_IDEnabled;
         public final ConfigSpec.ConfigValue<String> customizeRpc_ID;
         public final ConfigSpec.ConfigValue<Integer> customizeDebugPort;
-        public final ConfigSpec.ConfigValue<Boolean> externalHttpServer;
-        public final ConfigSpec.ConfigValue<String> externalApiUrl;
-        public final ConfigSpec.ConfigValue<Integer> externalHttpServerPort;
         public final ConfigSpec.ConfigValue<Boolean> DevTools;
         public final ConfigSpec.ConfigValue<String> browser_cli;
         public Client() {
@@ -45,12 +42,6 @@ public class Config {
             customizeRpc_ID = builder.define("CustomId", "GLOBAL_NCEF");
             customizeDebugPort = builder.define("DebugPort", 0, 0, 65535);
             DevTools = builder.define("DevTools", false);
-            builder.pop();
-            // ------------------ ExternalHttp ------------------
-            builder.push("ExternalHttp"); // 配置文件的分组
-            externalHttpServer = builder.comment("Enable external HTTP server").comment("Conflicts with customizeLoadingScreenUrl. When enabled, the URL will always be loaded from this HTTP server.").comment("Replace the dist folder in the JAR file").define("Enabled", false);
-            externalHttpServerPort = builder.comment("External HTTP server port [0-65535]. Use 0 for a random port.").define("Port", 0, 0, 65535);
-            externalApiUrl = builder.comment("Server only").define("externalApiUrl", "http://localhost:9000/api");
             builder.pop();
             this.spec = builder.build("craftbrowser_settings.toml");
         }

@@ -13,7 +13,6 @@ import top.yunmouren.browserblock.network.BrowserBlockNetworkHandler;
 import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.command.ForgeCommand;
 import top.yunmouren.craftbrowser.server.network.BrowserNetworkHandler;
-import top.yunmouren.httpserver.HttpNetworkHandler;
 
 public class CommonProxy {
     public void init() {
@@ -31,10 +30,8 @@ public class CommonProxy {
 
     protected void onCommonSetup(final FMLCommonSetupEvent event) {
         Craftbrowser.LOGGER.info("Common setup: register packets");
-        HttpNetworkHandler.registerC2SReceivers();
         BrowserBlockNetworkHandler.registerC2SReceivers();
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            HttpNetworkHandler.registerS2CReceivers();
             BrowserBlockNetworkHandler.registerS2CReceivers();
             BrowserNetworkHandler.getInstance().registerClientReceiver();
         });
