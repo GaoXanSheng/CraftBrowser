@@ -48,8 +48,15 @@ tasks.register('stageNcef') {
         entries.sort()
 
         new File(ncefDest, 'files.txt').text = entries.join('\n') + '\n'
-        new File(ncefDest, 'version.txt').text = project.version.toString()
-        logger.lifecycle("[craftbrowser] staged ${entries.size()} NCEF files into ${ncefDest}")
+
+        def exe = new File(ncefRelease, 'NCEF.exe')
+        def stamp = project.version.toString()
+        if (exe.isFile()) {
+            def digest = java.security.MessageDigest.getInstance('MD5').digest(exe.bytes)
+            stamp = stamp + '+' + String.format('%08x', new java.math.BigInteger(1, digest).intValue())
+        }
+        new File(ncefDest, 'version.txt').text = stamp
+        logger.lifecycle("[craftbrowser] staged ${entries.size()} NCEF files into ${ncefDest} (stamp ${stamp})")
     }
 }
 
