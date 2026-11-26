@@ -23,7 +23,7 @@ public final class NcefInstaller {
     }
 
     public static boolean ensureInstalled(Path gameDir) {
-        Path target = gameDir.resolve("NCEF");
+        Path target = gameDir.resolve("NCEF").toAbsolutePath().normalize();
 
         String bundledVersion = readText(VERSION);
         if (bundledVersion == null || bundledVersion.isBlank()) {
@@ -55,7 +55,11 @@ public final class NcefInstaller {
             for (String relative : entries) {
                 if (relative.isBlank()) continue;
                 Path out = target.resolve(relative).normalize();
-                if (!out.startsWith(target)) continue;
+                if (!out.startsWith(target)) {
+                    failed++;
+                    Craftbrowser.LOGGER.warn("[CraftBrowser] Refusing to write outside {}: {}", target, relative);
+                    continue;
+                }
                 try (InputStream in = openEntry(manifestUrl, relative)) {
                     if (in == null) {
                         Craftbrowser.LOGGER.warn("[CraftBrowser] Missing bundled resource {}", relative);
