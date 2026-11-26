@@ -54,6 +54,28 @@ tasks.register('stageNcef') {
 }
 
 sourceSets.main.resources.srcDir ncefStage
+
+def distDir = file('src/main/resources/dist')
+def distIndex = file("$buildDir/generated/ncef-dist.txt")
+
+tasks.register('distIndex') {
+    inputs.dir(distDir)
+    outputs.file(distIndex)
+    doLast {
+        distIndex.parentFile.mkdirs()
+        def base = distDir.toPath()
+        def entries = []
+        if (distDir.isDirectory()) {
+            distDir.eachFileRecurse { f ->
+                if (f.isFile()) entries << base.relativize(f.toPath()).toString().replace('\\', '/')
+            }
+        }
+        distIndex.text = entries.sort().join('\n') + '\n'
+        logger.lifecycle("[craftbrowser] indexed ${entries.size()} dist files")
+    }
+}
+
 tasks.named('processResources') {
-    dependsOn 'stageNcef'
+    dependsOn 'stageNcef', 'distIndex'
+    from(distIndex)
 }
