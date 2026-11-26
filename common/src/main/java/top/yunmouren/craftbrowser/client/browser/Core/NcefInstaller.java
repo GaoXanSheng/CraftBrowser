@@ -25,7 +25,7 @@ public final class NcefInstaller {
         Path target = gameDir.resolve("NCEF");
 
         String bundledVersion = readResource(VERSION);
-        if (bundledVersion == null) {
+        if (bundledVersion == null || bundledVersion.isBlank()) {
             Craftbrowser.LOGGER.warn("[CraftBrowser] No bundled NCEF in the mod jar, expecting {} to exist already", target);
             return Files.isRegularFile(target.resolve("NCEF.exe"));
         }
@@ -39,6 +39,7 @@ public final class NcefInstaller {
             Craftbrowser.LOGGER.error("[CraftBrowser] Bundled NCEF has no {}", INDEX);
             return false;
         }
+        Craftbrowser.LOGGER.info("[CraftBrowser] Bundled NCEF manifest lists {} files", entries.size());
 
         try {
             Files.createDirectories(target);
@@ -62,7 +63,7 @@ public final class NcefInstaller {
                     Craftbrowser.LOGGER.warn("[CraftBrowser] Could not write {}: {}", out, e.getMessage());
                 }
             }
-            if (failed == 0) {
+            if (failed == 0 && written > 0 && Files.isRegularFile(target.resolve("NCEF.exe"))) {
                 Files.writeString(target.resolve(STAMP), bundledVersion, StandardCharsets.UTF_8);
             }
             Craftbrowser.LOGGER.info("[CraftBrowser] Extracted {} NCEF files into {} (version {}, {} failed)",

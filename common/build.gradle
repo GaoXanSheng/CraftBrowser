@@ -27,6 +27,7 @@ tasks.register('stageNcef') {
         if (!ncefRelease.isDirectory()) {
             logger.warn("[craftbrowser] NCEF release output not found at ${ncefRelease}; the jar will not carry a bundled NCEF.")
             new File(ncefDest, 'files.txt').text = ''
+            new File(ncefDest, 'version.txt').text = ''
             return
         }
 

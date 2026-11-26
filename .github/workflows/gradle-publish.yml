@@ -25,7 +25,7 @@ jobs:
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Restore NCEF packages
-        run: msbuild NCEF/NCEF/NCEF.csproj /t:restore /p:RestorePackagesConfig=true /v:minimal
+        run: msbuild NCEF/NCEF.sln /t:restore /p:RestorePackagesConfig=true /v:minimal
       - name: Build NCEF
         run: msbuild NCEF/NCEF/NCEF.csproj /p:Configuration=Release /p:Platform=X64 /v:minimal
       - name: Upload NCEF
