@@ -52,7 +52,7 @@ public class BrowserNodeBlock extends Block implements EntityBlock {
         if (level.getBlockEntity(pos) instanceof BrowserNodeBlockEntity be) {
             BrowserMasterBlockEntity master = be.getMaster();
             if (master != null) {
-                master.handleClick(be, hit);
+                master.handleClick(be.getBlockPos(), be.getRelX(), be.getRelY(), hit);
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
         }

@@ -188,14 +188,14 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         }
     }
 
-    public void handleClick(BrowserNodeBlockEntity nodeBe, BlockHitResult hit) {
+    public void handleClick(BlockPos cell, int cellRelX, int cellRelY, BlockHitResult hit) {
         synchronized (browserLock) {
             if (browserSubprocess == null) return;
             try {
                 Direction facing = this.getBlockState().getValue(BrowserMasterBlock.FACING);
-                double dx = hit.getLocation().x - nodeBe.getBlockPos().getX();
-                double dy = hit.getLocation().y - nodeBe.getBlockPos().getY();
-                double dz = hit.getLocation().z - nodeBe.getBlockPos().getZ();
+                double dx = hit.getLocation().x - cell.getX();
+                double dy = hit.getLocation().y - cell.getY();
+                double dz = hit.getLocation().z - cell.getZ();
 
                 double localHitX;
                 switch (facing) {
@@ -208,8 +208,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
                     }
                 }
 
-                double globalX = nodeBe.getRelX() + localHitX;
-                double globalYFromTop = height - (nodeBe.getRelY() + dy);
+                double globalX = cellRelX + localHitX;
+                double globalYFromTop = height - (cellRelY + dy);
                 int browserX = (int) ((globalX / width) * getPixelW());
                 int browserY = (int) ((globalYFromTop / height) * getPixelH());
 

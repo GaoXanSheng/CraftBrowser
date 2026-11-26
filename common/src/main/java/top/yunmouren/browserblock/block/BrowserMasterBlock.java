@@ -74,26 +74,23 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
 
-        if (!(level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity)) {
+        if (!(level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity be)) {
+            return InteractionResult.PASS;
+        }
+
+        if (hit.getDirection() != state.getValue(FACING)) {
             return InteractionResult.PASS;
         }
 
         if (player.isShiftKeyDown()) {
-            if (!level.isClientSide) {
-                StructureHelper.Result result = StructureHelper.reformStructure(level, pos);
-                player.displayClientMessage(
-                        Component.literal((result.ok() ? "§a" : "§c") + result.message()), true);
-            }
-            return InteractionResult.sidedSuccess(level.isClientSide);
-        } else {
-            if (hit.getDirection() != state.getValue(FACING)) {
-                return InteractionResult.PASS;
-            }
             if (level.isClientSide) {
                 BrowserBlockNetworkHandler.requestState(pos);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
+
+        be.handleClick(pos, be.getMasterRelX(), be.getMasterRelY(), hit);
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
 
