@@ -7,11 +7,14 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class JNISpout {
+    private static boolean loaded;
+
     public JNISpout(){
         DllInit();
     }
 
-    protected static void DllInit() {
+    protected static synchronized void DllInit() {
+        if (loaded) return;
         {
             String sunDataModel = System.getProperty("sun.arch.data.model");
             String dllName = sunDataModel.equals("32") ? "JNISpout_32.dll" : "JNISpout_64.dll";
@@ -24,6 +27,7 @@ public class JNISpout {
                 Files.copy(dllStream, tempDll, StandardCopyOption.REPLACE_EXISTING);
 
                 System.load(tempDll.toAbsolutePath().toString());
+                loaded = true;
             } catch (IOException e) {
                 throw new RuntimeException("Failed to load Spout DLL", e);
             }

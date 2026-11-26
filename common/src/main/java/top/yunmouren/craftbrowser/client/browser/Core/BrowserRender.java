@@ -95,6 +95,7 @@ public class BrowserRender extends JNISpout implements AutoCloseable {
         isClosed = true;
 
         long ptrToFree = spoutPtr;
+        boolean hadReceiver = isConnected;
         spoutPtr = 0;
         isConnected = false;
 
@@ -107,9 +108,13 @@ public class BrowserRender extends JNISpout implements AutoCloseable {
         } catch (Throwable ignored) {}
 
         if (ptrToFree != 0) {
-            try {
-                this.releaseReceiver(ptrToFree);
-            } catch (Throwable ignored) {}
+            if (hadReceiver) {
+                try {
+                    this.releaseReceiver(ptrToFree);
+                } catch (Throwable t) {
+                    Craftbrowser.LOGGER.warn("[CraftBrowser] releaseReceiver failed: {}", t.getMessage());
+                }
+            }
 
             try {
                 this.deInit(ptrToFree);
