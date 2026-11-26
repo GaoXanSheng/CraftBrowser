@@ -15,23 +15,27 @@ public class PacketSetBrowserUrl {
     private final BlockPos pos;
     private final String url;
     private final double volume;
+    private final int pixelsPerBlock;
 
-    public PacketSetBrowserUrl(BlockPos pos, String url, double volume) {
+    public PacketSetBrowserUrl(BlockPos pos, String url, double volume, int pixelsPerBlock) {
         this.pos = pos;
         this.url = url;
         this.volume = volume;
+        this.pixelsPerBlock = pixelsPerBlock;
     }
 
     public PacketSetBrowserUrl(FriendlyByteBuf buffer) {
         this.pos = buffer.readBlockPos();
         this.url = buffer.readUtf(32767);
         this.volume = buffer.readDouble();
+        this.pixelsPerBlock = buffer.readInt();
     }
 
     public void encode(FriendlyByteBuf buffer) {
         buffer.writeBlockPos(pos);
         buffer.writeUtf(url);
         buffer.writeDouble(volume);
+        buffer.writeInt(pixelsPerBlock);
     }
 
     public static void handle(PacketSetBrowserUrl pkt, NetworkManager.PacketContext context) {
@@ -54,6 +58,7 @@ public class PacketSetBrowserUrl {
 
         browserEntity.setVolume(pkt.volume);
         browserEntity.setUrl(pkt.url);
+        browserEntity.setPixelsPerBlock(pkt.pixelsPerBlock);
     }
 
     public static boolean canEdit(ServerPlayer player, BrowserMasterBlockEntity browser) {

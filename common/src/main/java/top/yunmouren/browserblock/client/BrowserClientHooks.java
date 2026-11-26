@@ -8,9 +8,9 @@ import net.minecraft.core.BlockPos;
 @Environment(EnvType.CLIENT)
 public class BrowserClientHooks {
 
-    public static void openBrowserScreen(BlockPos pos, String url, double volume) {
+    public static void openBrowserScreen(BlockPos pos, String url, double volume, int pixelsPerBlock) {
         Minecraft.getInstance().setScreen(
-                new BrowserUrlScreen(pos, url, volume)
+                new BrowserUrlScreen(pos, url, volume, pixelsPerBlock)
         );
     }
 }

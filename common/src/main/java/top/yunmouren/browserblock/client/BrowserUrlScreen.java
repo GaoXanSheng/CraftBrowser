@@ -16,20 +16,29 @@ import top.yunmouren.craftbrowser.client.browser.Controller.IBrowserController;
 import java.util.concurrent.CompletableFuture;
 
 public class BrowserUrlScreen extends Screen {
+    private static final int MIN_SCALE = 16;
+    private static final int MAX_SCALE = 256;
+    private static final int SCALE_STEP = 16;
+    private static final int SCALE_SLOTS = (MAX_SCALE - MIN_SCALE) / SCALE_STEP;
+
     private final BlockPos pos;
     private EditBox urlEditBox;
 
     private final String initialUrl;
     private final double initialVolume;
+    private final int initialScale;
     private double currentVolume;
+    private int currentScale;
     private volatile String liveUrl = "";
 
-    public BrowserUrlScreen(BlockPos pos, String url, double volume) {
+    public BrowserUrlScreen(BlockPos pos, String url, double volume, int pixelsPerBlock) {
         super(Component.literal("Set Browser URL & Volume"));
         this.pos = pos;
         this.initialUrl = url;
         this.initialVolume = volume;
+        this.initialScale = pixelsPerBlock;
         this.currentVolume = volume;
+        this.currentScale = pixelsPerBlock;
     }
 
     @Override
@@ -37,17 +46,19 @@ public class BrowserUrlScreen extends Screen {
         super.init();
         int centerX = this.width / 2;
         int centerY = this.height / 2;
-        this.urlEditBox = new EditBox(this.font, centerX - 100, centerY - 40, 200, 20, Component.literal("URL"));
+
+        this.urlEditBox = new EditBox(this.font, centerX - 100, centerY - 58, 200, 20, Component.literal("URL"));
         this.urlEditBox.setMaxLength(32767);
         this.urlEditBox.setValue(initialUrl);
         this.addRenderableWidget(this.urlEditBox);
         this.setInitialFocus(this.urlEditBox);
-        this.addRenderableWidget(new AbstractSliderButton(centerX - 100, centerY - 10, 200, 20, Component.literal("Volume: " + (int) (this.currentVolume * 100) + "%"), this.currentVolume) {
+
+        this.addRenderableWidget(new AbstractSliderButton(centerX - 100, centerY - 30, 200, 20,
+                Component.literal(volumeLabel(this.currentVolume)), toSlider(this.currentVolume)) {
 
             @Override
             protected void updateMessage() {
-                int percent = (int) (this.value * 100);
-                this.setMessage(Component.literal("Volume: " + percent + "%"));
+                this.setMessage(Component.literal(volumeLabel(this.value)));
             }
 
             @Override
@@ -55,19 +66,49 @@ public class BrowserUrlScreen extends Screen {
                 BrowserUrlScreen.this.currentVolume = this.value;
             }
         });
-        this.addRenderableWidget(Button.builder(Component.literal("Confirm"), button ->
-                {
-                    this.saveAndClose();
-                }).
-                bounds(centerX - 100, centerY + 20, 98, 20).
-                build());
-        this.addRenderableWidget(Button.builder(Component.literal("Cancel"), button ->
-                {
-                    this.onClose();
-                }).
-                bounds(centerX + 2, centerY + 20, 98, 20).
-                build());
+
+        this.addRenderableWidget(new AbstractSliderButton(centerX - 100, centerY - 4, 200, 20,
+                Component.literal(scaleLabel(this.currentScale)), toScaleSlider(this.currentScale)) {
+
+            @Override
+            protected void updateMessage() {
+                this.setMessage(Component.literal(scaleLabel(fromScaleSlider(this.value))));
+            }
+
+            @Override
+            protected void applyValue() {
+                BrowserUrlScreen.this.currentScale = fromScaleSlider(this.value);
+            }
+        });
+
+        this.addRenderableWidget(Button.builder(Component.literal("Confirm"), button -> this.saveAndClose())
+                .bounds(centerX - 100, centerY + 24, 98, 20).build());
+        this.addRenderableWidget(Button.builder(Component.literal("Cancel"), button -> this.onClose())
+                .bounds(centerX + 2, centerY + 24, 98, 20).build());
+
         this.fetchLiveUrl();
+    }
+
+    private static String volumeLabel(double value) {
+        return "Volume: " + (int) (value * 100) + "%";
+    }
+
+    private static String scaleLabel(int pixelsPerBlock) {
+        return "Resolution: " + pixelsPerBlock + " px/block";
+    }
+
+    private static double toSlider(double volume) {
+        return Math.max(0.0, Math.min(1.0, volume));
+    }
+
+    private static double toScaleSlider(int pixelsPerBlock) {
+        int index = (pixelsPerBlock - MIN_SCALE) / SCALE_STEP;
+        return Math.max(0, Math.min(SCALE_SLOTS, index)) / (double) SCALE_SLOTS;
+    }
+
+    private static int fromScaleSlider(double value) {
+        int index = (int) Math.round(value * SCALE_SLOTS);
+        return MIN_SCALE + index * SCALE_STEP;
     }
 
     private void fetchLiveUrl() {
@@ -98,8 +139,8 @@ public class BrowserUrlScreen extends Screen {
             if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
                 newUrl = "https://" + newUrl;
             }
-            if (!newUrl.equals(initialUrl) || this.currentVolume != initialVolume) {
-                BrowserBlockNetworkHandler.sendToServer(this.pos, newUrl, this.currentVolume);
+            if (!newUrl.equals(initialUrl) || this.currentVolume != initialVolume || this.currentScale != initialScale) {
+                BrowserBlockNetworkHandler.sendToServer(this.pos, newUrl, this.currentVolume, this.currentScale);
             }
         }
         this.onClose();
@@ -108,9 +149,9 @@ public class BrowserUrlScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 70, 0xFFFFFF);
-        guiGraphics.drawString(this.font, "Enter URL:", this.width / 2 - 100, this.height / 2 - 52, 0xA0A0A0, false);
-        guiGraphics.drawCenteredString(this.font, "Current: " + this.liveUrl, this.width / 2, this.height / 2 + 46, 0x808080);
+        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 88, 0xFFFFFF);
+        guiGraphics.drawString(this.font, "Enter URL:", this.width / 2 - 100, this.height / 2 - 70, 0xA0A0A0, false);
+        guiGraphics.drawCenteredString(this.font, "Current: " + this.liveUrl, this.width / 2, this.height / 2 + 52, 0x808080);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 

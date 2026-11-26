@@ -32,8 +32,8 @@ public class BrowserBlockNetworkHandler {
         });
     }
 
-    public static void sendToServer(BlockPos pos, String url, double volume) {
-        PacketSetBrowserUrl pkt = new PacketSetBrowserUrl(pos, url, volume);
+    public static void sendToServer(BlockPos pos, String url, double volume, int pixelsPerBlock) {
+        PacketSetBrowserUrl pkt = new PacketSetBrowserUrl(pos, url, volume, pixelsPerBlock);
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         pkt.encode(buf);
 
@@ -48,8 +48,8 @@ public class BrowserBlockNetworkHandler {
         NetworkManager.sendToServer(REQUEST_BROWSER_URL_PACKET_ID, buf);
     }
 
-    public static void sendState(ServerPlayer player, BlockPos pos, String url, double volume) {
-        PacketBrowserState pkt = new PacketBrowserState(pos, url, volume);
+    public static void sendState(ServerPlayer player, BlockPos pos, String url, double volume, int pixelsPerBlock) {
+        PacketBrowserState pkt = new PacketBrowserState(pos, url, volume, pixelsPerBlock);
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         pkt.encode(buf);
 

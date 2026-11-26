@@ -31,6 +31,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     private int masterRelY = 0;
 
     private String currentUrl = "https://example.com/";
+    private int pixelsPerBlock = 64;
     @Nullable
     private UUID owner;
     private final Object browserLock = new Object();
@@ -74,10 +75,23 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     }
 
     public int getPixelW() {
-        return this.width * 64;
+        return this.width * this.pixelsPerBlock;
     }
     public int getPixelH() {
-        return this.height * 64;
+        return this.height * this.pixelsPerBlock;
+    }
+
+    public int getPixelsPerBlock() {
+        return this.pixelsPerBlock;
+    }
+
+    public void setPixelsPerBlock(int pixelsPerBlock) {
+        int clamped = Math.max(16, Math.min(256, pixelsPerBlock));
+        if (this.pixelsPerBlock == clamped) return;
+        this.pixelsPerBlock = clamped;
+        this.destroyBrowser();
+        this.setChanged();
+        if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
     }
     public static void clientTick(Level level, BlockPos pos, BlockState state, BrowserMasterBlockEntity be) {
         if (level.isClientSide && !be.hasInitialized && !be.isLoading) {
@@ -212,10 +226,15 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         this.masterRelY = tag.getInt("mRY");
         String oldUrl = this.currentUrl;
         double oldVol = this.volume;
+        int oldScale = this.pixelsPerBlock;
         this.currentUrl = tag.getString("Url");
         this.volume = tag.contains("Vol") ? tag.getDouble("Vol") : 1.0;
+        this.pixelsPerBlock = Math.max(16, Math.min(256, tag.contains("Scale") ? tag.getInt("Scale") : 64));
         this.owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
         if (this.level != null && this.level.isClientSide) {
+            if (oldScale != this.pixelsPerBlock) {
+                this.destroyBrowser();
+            }
             synchronized (browserLock) {
                 if (browserSubprocess != null) {
                     if (!this.currentUrl.equals(oldUrl)) {
@@ -239,6 +258,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         tag.putInt("mRY", masterRelY);
         tag.putString("Url", currentUrl);
         tag.putDouble("Vol", volume);
+        tag.putInt("Scale", pixelsPerBlock);
         if (owner != null) tag.putUUID("Owner", owner);
     }
 
