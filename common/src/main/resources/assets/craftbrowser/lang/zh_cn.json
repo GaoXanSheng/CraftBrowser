@@ -1,0 +1,6 @@
+{
+  "itemGroup.craftbrowser.browser": "CraftBrowser",
+  "block.craftbrowser.browser_master": "浏览器主方块",
+  "block.craftbrowser.browser_node": "浏览器节点方块",
+  "item.craftbrowser.browser_tab_icon": "CraftBrowser"
+}

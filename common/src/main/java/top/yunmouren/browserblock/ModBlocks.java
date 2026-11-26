@@ -3,8 +3,11 @@ package top.yunmouren.browserblock;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrySupplier;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -17,6 +20,7 @@ public class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(MOD_ID, Registries.BLOCK);
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(MOD_ID, Registries.ITEM);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(MOD_ID, Registries.BLOCK_ENTITY_TYPE);
+    public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(MOD_ID, Registries.CREATIVE_MODE_TAB);
 
     public static final RegistrySupplier<Block> BROWSER_MASTER_BLOCK = BLOCKS.register("browser_master", () ->
             new BrowserMasterBlock(BlockBehaviour.Properties.of().mapColor(MapColor.DIAMOND).strength(2.0f).noOcclusion()));
@@ -32,9 +36,23 @@ public class ModBlocks {
     public static final RegistrySupplier<BlockEntityType<BrowserNodeBlockEntity>> BROWSER_NODE_ENTITY = BLOCK_ENTITIES.register("browser_node_entity", () ->
             BlockEntityType.Builder.of(BrowserNodeBlockEntity::new, BROWSER_NODE_BLOCK.get()).build(null));
 
+    public static final RegistrySupplier<Item> BROWSER_TAB_ICON = ITEMS.register("browser_tab_icon", () ->
+            new Item(new Item.Properties()));
+
+    public static final RegistrySupplier<CreativeModeTab> BROWSER_TAB = TABS.register("browser", () ->
+            CreativeModeTab.builder(CreativeModeTab.Row.TOP, 0)
+                    .title(Component.translatable("itemGroup.craftbrowser.browser"))
+                    .icon(() -> new ItemStack(BROWSER_TAB_ICON.get()))
+                    .displayItems((params, output) -> {
+                        output.accept(BROWSER_MASTER_ITEM.get());
+                        output.accept(BROWSER_NODE_ITEM.get());
+                    })
+                    .build());
+
     public static void register() {
         BLOCKS.register();
         ITEMS.register();
         BLOCK_ENTITIES.register();
+        TABS.register();
     }
 }
