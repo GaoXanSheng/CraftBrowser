@@ -5,33 +5,39 @@ import com.sun.net.httpserver.HttpServer;
 import top.yunmouren.craftbrowser.client.config.Config;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 
 public class ServerHttp {
     private static int boundPort = Config.CLIENT.externalHttpServerPort.get();
+    private static HttpServer server;
+
     public static int getBoundPort() {
         return boundPort;
     }
 
     private static final String WEB_ROOT = "/dist";
 
-    public static void startServer() {
+    public static synchronized int ensureStarted() {
+        if (server != null) return boundPort;
         try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(boundPort), 0);
+            server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), Config.CLIENT.externalHttpServerPort.get()), 0);
             boundPort = server.getAddress().getPort();
-            // /send 接口
             server.createContext("/api", ServerHttp::handleSend);
-
-            // 静态资源
             server.createContext("/", ServerHttp::handleStatic);
-
             server.setExecutor(Executors.newFixedThreadPool(4));
             server.start();
         } catch (Exception e) {
+            server = null;
             e.printStackTrace();
         }
+        return boundPort;
+    }
+
+    public static void startServer() {
+        ensureStarted();
     }
 
     // /send POST 接口

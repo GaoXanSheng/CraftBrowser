@@ -19,6 +19,7 @@ import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.browser.Controller.IBrowserController;
 import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
+import top.yunmouren.httpserver.NcefUrls;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -136,7 +137,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
                         this.browserSubprocess = newBrowser;
                         this.browserRender = newRender;
                         if (this.browserSubprocess != null) {
-                            this.browserSubprocess.LoadUrl(this.currentUrl);
+                            this.browserSubprocess.LoadUrl(NcefUrls.resolve(this.currentUrl));
                             this.browserSubprocess.SetVolume((float) this.volume);
                         }
                     }
@@ -243,7 +244,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
             synchronized (browserLock) {
                 if (browserSubprocess != null) {
                     if (!this.currentUrl.equals(oldUrl)) {
-                        browserSubprocess.LoadUrl(this.currentUrl);
+                        browserSubprocess.LoadUrl(NcefUrls.resolve(this.currentUrl));
                     }
                     if (this.volume != oldVol) {
                         browserSubprocess.SetVolume((float) this.volume);
@@ -301,7 +302,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     public void setUrl(String url) {
         this.currentUrl = url;
         synchronized (browserLock) {
-            if (browserSubprocess != null) browserSubprocess.LoadUrl(url);
+            if (browserSubprocess != null) browserSubprocess.LoadUrl(NcefUrls.resolve(url));
         }
         this.setChanged();
         if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);

@@ -7,6 +7,7 @@ import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.Rpc.BrowserEventBus;
 import top.yunmouren.craftbrowser.client.browser.Rpc.RpcClient;
 import top.yunmouren.craftbrowser.client.config.Config;
+import top.yunmouren.httpserver.NcefUrls;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -63,7 +64,7 @@ public class BrowserAPI {
     }
 
     public IBrowserController createBrowser(String url, int width, int height, int maxFps) {
-        return RpcClient.create(IBrowserController.class, master().CreateBrowser(url, width, height, maxFps));
+        return RpcClient.create(IBrowserController.class, master().CreateBrowser(NcefUrls.resolve(url), width, height, maxFps));
     }
 
     public BrowserRender GetBrowserRender(IBrowserController browserController) {
