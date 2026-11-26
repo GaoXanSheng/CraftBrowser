@@ -5,6 +5,7 @@ import top.yunmouren.craftbrowser.Craftbrowser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,7 +25,7 @@ public final class NcefInstaller {
     public static boolean ensureInstalled(Path gameDir) {
         Path target = gameDir.resolve("NCEF");
 
-        String bundledVersion = readResource(VERSION);
+        String bundledVersion = readText(VERSION);
         if (bundledVersion == null || bundledVersion.isBlank()) {
             Craftbrowser.LOGGER.warn("[CraftBrowser] No bundled NCEF in the mod jar, expecting {} to exist already", target);
             return Files.isRegularFile(target.resolve("NCEF.exe"));
@@ -34,12 +35,14 @@ public final class NcefInstaller {
             return true;
         }
 
+        URL manifestUrl = NcefInstaller.class.getResource(RESOURCE_ROOT + INDEX);
         List<String> entries = readLines(INDEX);
-        if (entries == null) {
+        if (manifestUrl == null || entries == null) {
             Craftbrowser.LOGGER.error("[CraftBrowser] Bundled NCEF has no {}", INDEX);
             return false;
         }
-        Craftbrowser.LOGGER.info("[CraftBrowser] Bundled NCEF manifest lists {} files", entries.size());
+        Craftbrowser.LOGGER.info("[CraftBrowser] Bundled NCEF manifest at {} lists {} files", manifestUrl, entries.size());
+
         if (entries.isEmpty()) {
             Craftbrowser.LOGGER.error("[CraftBrowser] Bundled NCEF manifest is empty, nothing to extract into {}", target);
             return Files.isRegularFile(target.resolve("NCEF.exe"));
@@ -53,7 +56,7 @@ public final class NcefInstaller {
                 if (relative.isBlank()) continue;
                 Path out = target.resolve(relative).normalize();
                 if (!out.startsWith(target)) continue;
-                try (InputStream in = NcefInstaller.class.getResourceAsStream(RESOURCE_ROOT + relative)) {
+                try (InputStream in = openEntry(manifestUrl, relative)) {
                     if (in == null) {
                         Craftbrowser.LOGGER.warn("[CraftBrowser] Missing bundled resource {}", relative);
                         failed++;
@@ -66,6 +69,9 @@ public final class NcefInstaller {
                     failed++;
                     Craftbrowser.LOGGER.warn("[CraftBrowser] Could not write {}: {}", out, e.getMessage());
                 }
+            }
+            if (written == 0) {
+                Craftbrowser.LOGGER.error("[CraftBrowser] Extracted no files; the manifest was read from {}", manifestUrl);
             }
             if (failed == 0 && written > 0 && Files.isRegularFile(target.resolve("NCEF.exe"))) {
                 Files.writeString(target.resolve(STAMP), bundledVersion, StandardCharsets.UTF_8);
@@ -80,9 +86,19 @@ public final class NcefInstaller {
     }
 
     @Nullable
-    private static String readResource(String name) {
-        try (InputStream in = NcefInstaller.class.getResourceAsStream(RESOURCE_ROOT + name)) {
-            if (in == null) return null;
+    private static InputStream openEntry(URL manifestUrl, String relative) {
+        try {
+            return new URL(manifestUrl, relative).openStream();
+        } catch (IOException ignored) {
+            return NcefInstaller.class.getResourceAsStream(RESOURCE_ROOT + relative);
+        }
+    }
+
+    @Nullable
+    private static String readText(String name) {
+        URL url = NcefInstaller.class.getResource(RESOURCE_ROOT + name);
+        if (url == null) return null;
+        try (InputStream in = url.openStream()) {
             return new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
         } catch (IOException e) {
             return null;
@@ -91,7 +107,7 @@ public final class NcefInstaller {
 
     @Nullable
     private static List<String> readLines(String name) {
-        String content = readResource(name);
+        String content = readText(name);
         if (content == null) return null;
         List<String> lines = new ArrayList<>();
         for (String line : content.split("\n")) {
