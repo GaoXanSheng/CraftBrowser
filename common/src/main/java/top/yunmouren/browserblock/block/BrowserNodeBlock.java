@@ -1,5 +1,6 @@
 package top.yunmouren.browserblock.block;
 
+import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -18,9 +19,11 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 public class BrowserNodeBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public BrowserNodeBlock(Properties properties) {
         super(properties);
@@ -49,7 +52,7 @@ public class BrowserNodeBlock extends Block implements EntityBlock {
         if (level.getBlockEntity(pos) instanceof BrowserNodeBlockEntity be) {
             BrowserMasterBlockEntity master = be.getMaster();
             if (master != null) {
-                master.handleClick(be, hit, state.getValue(FACING));
+                master.handleClick(be, hit);
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
         }
@@ -63,7 +66,15 @@ public class BrowserNodeBlock extends Block implements EntityBlock {
 
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        // Form structure manually via Shift + Right Click on Master Block
+        if (level.isClientSide) return;
+        for (Direction d : Direction.values()) {
+            Block neighbor = level.getBlockState(pos.relative(d)).getBlock();
+            if (neighbor instanceof BrowserMasterBlock || neighbor instanceof BrowserNodeBlock) {
+                StructureHelper.Result result = StructureHelper.reformStructure(level, pos);
+                LOGGER.info("[CraftBrowser] Structure scan at {}: {}", pos.toShortString(), result.message());
+                return;
+            }
+        }
     }
 
     @Override
@@ -72,12 +83,12 @@ public class BrowserNodeBlock extends Block implements EntityBlock {
             if (level.getBlockEntity(pos) instanceof BrowserNodeBlockEntity node) {
                 BrowserMasterBlockEntity master = node.getMaster();
                 if (master != null) {
-                    master.destroyBrowser();
                     for (BlockPos nPos : master.getNodePositions()) {
                         if (level.getBlockEntity(nPos) instanceof BrowserNodeBlockEntity nBe) {
                             nBe.clearMaster();
                         }
                     }
+                    master.setStructureInfo(1, 1, 0, 0, java.util.Set.of());
                 }
             }
             super.onRemove(state, level, pos, newState, isMoving);

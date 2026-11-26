@@ -3,14 +3,14 @@ package top.yunmouren.browserblock.client;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import top.yunmouren.browserblock.block.BrowserMasterBlockEntity;
+import net.minecraft.core.BlockPos;
 
 @Environment(EnvType.CLIENT)
 public class BrowserClientHooks {
 
-    public static void openBrowserScreen(BrowserMasterBlockEntity be) {
+    public static void openBrowserScreen(BlockPos pos, String url, double volume) {
         Minecraft.getInstance().setScreen(
-                new BrowserUrlScreen(be)
+                new BrowserUrlScreen(pos, url, volume)
         );
     }
 }

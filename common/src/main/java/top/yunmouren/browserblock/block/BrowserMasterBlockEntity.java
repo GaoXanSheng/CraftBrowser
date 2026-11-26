@@ -21,6 +21,7 @@ import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class BrowserMasterBlockEntity extends BlockEntity {
@@ -30,6 +31,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     private int masterRelY = 0;
 
     private String currentUrl = "https://example.com/";
+    @Nullable
+    private UUID owner;
     private final Object browserLock = new Object();
     @Nullable
     private IBrowserController browserSubprocess;
@@ -39,10 +42,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     private static final int INIT_DELAY = 10;
 
     private final Set<BlockPos> nodePositions = new HashSet<>();
-    private BrowserRender browserRender;
+    private volatile BrowserRender browserRender;
     private double volume = 1.0;
-    private int lastResizedW = -1;
-    private int lastResizedH = -1;
     public Set<BlockPos> getNodePositions() {
         return this.nodePositions;
     }
@@ -51,20 +52,23 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         return this.volume;
     }
 
-    private void checkAndResize() {
+    @Nullable
+    public UUID getOwner() {
+        return this.owner;
+    }
+
+    public void setOwner(UUID owner) {
+        this.owner = owner;
+        this.setChanged();
+    }
+
+    @Nullable
+    public IBrowserController getBrowserController() {
         synchronized (browserLock) {
-            if (browserSubprocess != null) {
-                int currentW = getPixelW();
-                int currentH = getPixelH();
-                // 只有当分辨率真的变了，才通过 RPC 调 C# 的 Resize
-                if (currentW != lastResizedW || currentH != lastResizedH) {
-                    browserSubprocess.Resize(currentW, currentH, 1, false);
-                    this.lastResizedW = currentW;
-                    this.lastResizedH = currentH;
-                }
-            }
+            return this.browserSubprocess;
         }
     }
+
     public BrowserMasterBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlocks.BROWSER_MASTER_ENTITY.get(), pos, state);
     }
@@ -101,16 +105,19 @@ public class BrowserMasterBlockEntity extends BlockEntity {
                 int pW = getPixelW();
                 int pH = getPixelH();
                 IBrowserController newBrowser = BrowserAPI.getInstance().createBrowser(this.currentUrl, pW, pH, 60);
+                BrowserRender newRender = newBrowser == null ? null : BrowserAPI.getInstance().GetBrowserRender(newBrowser);
 
                 Minecraft.getInstance().execute(() -> {
                     synchronized (browserLock) {
                         if (this.isRemoved()) {
+                            if (newRender != null) newRender.close();
                             if (newBrowser != null) BrowserAPI.getInstance().removeBrowser(newBrowser);
                             this.isLoading = false;
                             return;
                         }
 
                         this.browserSubprocess = newBrowser;
+                        this.browserRender = newRender;
                         if (this.browserSubprocess != null) {
                             this.browserSubprocess.LoadUrl(this.currentUrl);
                             this.browserSubprocess.SetVolume((float) this.volume);
@@ -155,26 +162,20 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     }
 
     public int getBrowserTextureId() {
-        synchronized (browserLock) {
-            if (browserSubprocess != null) {
-                try {
-                    checkAndResize();
-                    if (browserRender == null) {
-                        browserRender = BrowserAPI.getInstance().GetBrowserRender(browserSubprocess);
-                    }
-                    return browserRender.render(getPixelW(), getPixelH());
-                } catch (Throwable e) {
-                    return -1;
-                }
-            }
+        BrowserRender render = this.browserRender;
+        if (render == null) return -1;
+        try {
+            return render.render(getPixelW(), getPixelH());
+        } catch (Throwable e) {
+            return -1;
         }
-        return -1;
     }
 
-    public void handleClick(BrowserNodeBlockEntity nodeBe, BlockHitResult hit, Direction facing) {
+    public void handleClick(BrowserNodeBlockEntity nodeBe, BlockHitResult hit) {
         synchronized (browserLock) {
             if (browserSubprocess == null) return;
             try {
+                Direction facing = this.getBlockState().getValue(BrowserMasterBlock.FACING);
                 double dx = hit.getLocation().x - nodeBe.getBlockPos().getX();
                 double dy = hit.getLocation().y - nodeBe.getBlockPos().getY();
                 double dz = hit.getLocation().z - nodeBe.getBlockPos().getZ();
@@ -213,6 +214,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         double oldVol = this.volume;
         this.currentUrl = tag.getString("Url");
         this.volume = tag.contains("Vol") ? tag.getDouble("Vol") : 1.0;
+        this.owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
         if (this.level != null && this.level.isClientSide) {
             synchronized (browserLock) {
                 if (browserSubprocess != null) {
@@ -237,6 +239,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
         tag.putInt("mRY", masterRelY);
         tag.putString("Url", currentUrl);
         tag.putDouble("Vol", volume);
+        if (owner != null) tag.putUUID("Owner", owner);
     }
 
     @Override

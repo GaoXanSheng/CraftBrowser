@@ -1,5 +1,6 @@
 package top.yunmouren.browserblock.block;
 
+import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -21,11 +22,13 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import top.yunmouren.browserblock.ModBlocks;
-import top.yunmouren.browserblock.client.BrowserClientHooks;
+import top.yunmouren.browserblock.network.BrowserBlockNetworkHandler;
 
 public class BrowserMasterBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     public BrowserMasterBlock(Properties properties) {
         super(properties);
@@ -40,7 +43,11 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         if (!level.isClientSide) {
-            StructureHelper.reformStructure(level, pos, state.getValue(FACING));
+            if (placer instanceof Player player && level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity be) {
+                if (be.getOwner() == null) be.setOwner(player.getUUID());
+            }
+            StructureHelper.Result result = StructureHelper.reformStructure(level, pos);
+            LOGGER.info("[CraftBrowser] Structure scan at {}: {}", pos.toShortString(), result.message());
         }
     }
     @Nullable
@@ -67,18 +74,15 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
 
-        if (!(level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity be)) {
+        if (!(level.getBlockEntity(pos) instanceof BrowserMasterBlockEntity)) {
             return InteractionResult.PASS;
         }
 
         if (player.isShiftKeyDown()) {
             if (!level.isClientSide) {
-                boolean success = StructureHelper.reformStructure(level, pos, state.getValue(FACING));
-                if (success) {
-                    player.displayClientMessage(Component.literal("§aBrowser structure formed successfully!"), true);
-                } else {
-                    player.displayClientMessage(Component.literal("§cFailed to form browser structure. Ensure only one Master block."), true);
-                }
+                StructureHelper.Result result = StructureHelper.reformStructure(level, pos);
+                player.displayClientMessage(
+                        Component.literal((result.ok() ? "§a" : "§c") + result.message()), true);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         } else {
@@ -86,7 +90,7 @@ public class BrowserMasterBlock extends Block implements EntityBlock {
                 return InteractionResult.PASS;
             }
             if (level.isClientSide) {
-                BrowserClientHooks.openBrowserScreen(be);
+                BrowserBlockNetworkHandler.requestState(pos);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }

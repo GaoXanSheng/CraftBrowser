@@ -21,6 +21,11 @@ public class BrowserInstance {
         return process;
     }
 
+    public static boolean isProcessAlive() {
+        Process p = process;
+        return p != null && p.isAlive();
+    }
+
     public BrowserInstance() {
         startBrowserProcess();
     }

@@ -14,6 +14,9 @@ public class Config {
         public final ConfigSpec.ConfigValue<Integer> browserMaxfps;
         public final ConfigSpec.ConfigValue<Integer> keyPressDelay;
         public final ConfigSpec.ConfigValue<Integer> scrollWheelPixels;
+        public final ConfigSpec.ConfigValue<Integer> urlEditRangeBlocks;
+        public final ConfigSpec.ConfigValue<Integer> maxStructureBlocks;
+        public final ConfigSpec.ConfigValue<Integer> urlEditPermission;
         public final ConfigSpec.ConfigValue<Boolean> customizeRpc_IDEnabled;
         public final ConfigSpec.ConfigValue<String> customizeRpc_ID;
         public final ConfigSpec.ConfigValue<Integer> customizeDebugPort;
@@ -30,6 +33,9 @@ public class Config {
             browserMaxfps = builder.comment("Maximum browser frame rate [15-240]").define("MaxFps", 120, 15, 240);
             keyPressDelay = builder.comment("Key press delay in ms [0-1000]").define("KeyPressDelay", 200, 0, 1000);
             scrollWheelPixels = builder.comment("Scroll wheel step in pixels [1-1000]").define("ScrollWheelPixels", 150, 1, 1000);
+            urlEditRangeBlocks = builder.comment("Max distance in blocks a player may be from the block to edit its URL [1-64]").define("UrlEditRangeBlocks", 16, 1, 64);
+            maxStructureBlocks = builder.comment("Max blocks one browser structure may contain [1-1024]").define("MaxStructureBlocks", 256, 1, 1024);
+            urlEditPermission = builder.comment("Who may change a browser URL: 0 = everyone, 1 = only the player who placed it [0-1]").define("UrlEditPermission", 0, 0, 1);
             browser_cli = builder.comment("Browser CLI").define("BrowserCli", "--enable-begin-frame-scheduling=1");
             builder.pop();
 

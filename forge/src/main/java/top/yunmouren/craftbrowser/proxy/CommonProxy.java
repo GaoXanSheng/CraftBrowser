@@ -35,6 +35,7 @@ public class CommonProxy {
         BrowserBlockNetworkHandler.registerC2SReceivers();
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
             HttpNetworkHandler.registerS2CReceivers();
+            BrowserBlockNetworkHandler.registerS2CReceivers();
             BrowserNetworkHandler.getInstance().registerClientReceiver();
         });
     }
