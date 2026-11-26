@@ -32,7 +32,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
     private int masterRelX = 0;
     private int masterRelY = 0;
 
-    private String currentUrl = "https://example.com/";
+    private String currentUrl = "ncef://index.html";
     private int pixelsPerBlock = 64;
     @Nullable
     private UUID owner;

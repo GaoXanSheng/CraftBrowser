@@ -136,7 +136,7 @@ public class BrowserUrlScreen extends Screen {
     private void saveAndClose() {
         String newUrl = this.urlEditBox.getValue();
         if (!newUrl.isEmpty()) {
-            if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
+            if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://") && !newUrl.startsWith("ncef://")) {
                 newUrl = "https://" + newUrl;
             }
             if (!newUrl.equals(initialUrl) || this.currentVolume != initialVolume || this.currentScale != initialScale) {
