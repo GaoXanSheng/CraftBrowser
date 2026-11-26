@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import top.yunmouren.browserblock.network.BrowserBlockNetworkHandler;
 
 public class BrowserNodeBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -52,6 +53,12 @@ public class BrowserNodeBlock extends Block implements EntityBlock {
         if (level.getBlockEntity(pos) instanceof BrowserNodeBlockEntity be) {
             BrowserMasterBlockEntity master = be.getMaster();
             if (master != null) {
+                if (player.isShiftKeyDown()) {
+                    if (level.isClientSide) {
+                        BrowserBlockNetworkHandler.requestState(master.getBlockPos());
+                    }
+                    return InteractionResult.sidedSuccess(level.isClientSide);
+                }
                 master.handleClick(be.getBlockPos(), be.getRelX(), be.getRelY(), hit);
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
