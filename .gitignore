@@ -110,3 +110,4 @@ fabric.properties
 /fabric/.gradle/
 /forge/.gradle/
 /.gradle/
+.build-check
