@@ -40,6 +40,10 @@ public final class NcefInstaller {
             return false;
         }
         Craftbrowser.LOGGER.info("[CraftBrowser] Bundled NCEF manifest lists {} files", entries.size());
+        if (entries.isEmpty()) {
+            Craftbrowser.LOGGER.error("[CraftBrowser] Bundled NCEF manifest is empty, nothing to extract into {}", target);
+            return Files.isRegularFile(target.resolve("NCEF.exe"));
+        }
 
         try {
             Files.createDirectories(target);
