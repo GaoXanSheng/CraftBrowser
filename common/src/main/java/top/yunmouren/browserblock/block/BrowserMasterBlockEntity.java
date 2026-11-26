@@ -15,6 +15,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.core.Direction;
 import org.jetbrains.annotations.Nullable;
 import top.yunmouren.browserblock.ModBlocks;
+import top.yunmouren.craftbrowser.Craftbrowser;
 import top.yunmouren.craftbrowser.client.browser.Controller.IBrowserController;
 import top.yunmouren.craftbrowser.client.browser.Core.BrowserRender;
 import top.yunmouren.craftbrowser.client.browser.api.BrowserAPI;
@@ -118,6 +119,8 @@ public class BrowserMasterBlockEntity extends BlockEntity {
             try {
                 int pW = getPixelW();
                 int pH = getPixelH();
+                Craftbrowser.LOGGER.info("[CraftBrowser] Creating browser {}x{} ({} px/block) for {}",
+                        pW, pH, this.pixelsPerBlock, this.currentUrl);
                 IBrowserController newBrowser = BrowserAPI.getInstance().createBrowser(this.currentUrl, pW, pH, 60);
                 BrowserRender newRender = newBrowser == null ? null : BrowserAPI.getInstance().GetBrowserRender(newBrowser);
 
@@ -141,7 +144,7 @@ public class BrowserMasterBlockEntity extends BlockEntity {
                     this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
                 });
             } catch (Exception e) {
-                e.printStackTrace();
+                Craftbrowser.LOGGER.error("[CraftBrowser] Failed to create the browser for {}", this.currentUrl, e);
                 Minecraft.getInstance().execute(() -> this.isLoading = false);
             }
         });

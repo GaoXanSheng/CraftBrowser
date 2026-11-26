@@ -36,6 +36,7 @@ public class RpcClient implements InvocationHandler, AutoCloseable {
 
     private static final int IDLE_WAIT_MS = 200;
     private static final long REPLY_TIMEOUT_MS = 10000;
+    private static final long CREATE_BROWSER_TIMEOUT_MS = 120000;
 
     private static final String REPLY_METHOD = "__REPLY__";
     private static final String ERROR_KEY = "__error__";
@@ -175,6 +176,10 @@ public class RpcClient implements InvocationHandler, AutoCloseable {
         if (eventHandler != null) eventHandler.accept(packet.Method, packet.Args);
     }
 
+    private static long timeoutFor(String methodName) {
+        return "CreateBrowser".equals(methodName) ? CREATE_BROWSER_TIMEOUT_MS : REPLY_TIMEOUT_MS;
+    }
+
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
         String methodName = method.getName();
@@ -201,13 +206,13 @@ public class RpcClient implements InvocationHandler, AutoCloseable {
         }
 
         try {
-            Object result = future.get(REPLY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            Object result = future.get(timeoutFor(methodName), TimeUnit.MILLISECONDS);
             if (result instanceof Map && ((Map<?, ?>) result).containsKey(ERROR_KEY)) {
                 throw new IllegalStateException("RPC error [" + methodName + "]: " + ((Map<?, ?>) result).get(ERROR_KEY));
             }
             return result == null ? null : GSON.fromJson(GSON.toJsonTree(result), method.getReturnType());
         } catch (TimeoutException e) {
-            throw new IllegalStateException("RPC timeout: " + methodName);
+            throw new IllegalStateException("RPC timeout after " + timeoutFor(methodName) + "ms: " + methodName);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("RPC interrupted: " + methodName);
