@@ -13,3 +13,46 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
     modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
 }
+
+def ncefRelease = rootProject.file('NCEF/NCEF/bin/X64/Release')
+def ncefStage = file("$buildDir/ncef-resources")
+def ncefDest = file("$ncefStage/win64")
+
+tasks.register('stageNcef') {
+    outputs.upToDateWhen { false }
+    doLast {
+        delete ncefStage
+        ncefDest.mkdirs()
+
+        if (!ncefRelease.isDirectory()) {
+            logger.warn("[craftbrowser] NCEF release output not found at ${ncefRelease}; the jar will not carry a bundled NCEF.")
+            new File(ncefDest, 'files.txt').text = ''
+            return
+        }
+
+        copy {
+            from(ncefRelease) {
+                exclude '**/*.xml', '**/*.pdb', '**/User Data/**', '**/logs/**'
+            }
+            into ncefDest
+        }
+
+        def root = ncefDest.toPath()
+        def entries = []
+        ncefDest.eachFileRecurse { f ->
+            if (f.isFile()) {
+                entries << root.relativize(f.toPath()).toString().replace('\\', '/')
+            }
+        }
+        entries.sort()
+
+        new File(ncefDest, 'files.txt').text = entries.join('\n') + '\n'
+        new File(ncefDest, 'version.txt').text = project.version.toString()
+        logger.lifecycle("[craftbrowser] staged ${entries.size()} NCEF files into ${ncefDest}")
+    }
+}
+
+sourceSets.main.resources.srcDir ncefStage
+tasks.named('processResources') {
+    dependsOn 'stageNcef'
+}

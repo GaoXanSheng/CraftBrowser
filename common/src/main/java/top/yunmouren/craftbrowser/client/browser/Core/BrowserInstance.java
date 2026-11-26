@@ -44,6 +44,12 @@ public class BrowserInstance {
 
 
     private void startBrowserProcess() {
+        Path gameDir = Minecraft.getInstance().gameDirectory.toPath();
+        if (!NcefInstaller.ensureInstalled(gameDir)) {
+            Craftbrowser.LOGGER.error("[CraftBrowser] NCEF is not installed and could not be extracted from the mod jar");
+            return;
+        }
+
         try {
             ProcessBuilder builder = getProcessBuilder();
             process = builder.start();

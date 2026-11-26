@@ -110,4 +110,5 @@ fabric.properties
 /fabric/.gradle/
 /forge/.gradle/
 /.gradle/
+/common/src/main/resources/win64/
 .build-check
